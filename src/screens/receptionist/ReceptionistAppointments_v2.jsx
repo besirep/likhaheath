@@ -1,0 +1,664 @@
+import { useState } from "react";
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const YEAR = 2026;
+const MONTH = 2; // March
+
+const appointments = [
+  {
+    id: 1, date: "2026-03-01", time: "09:00", end: "09:30", duration: 30,
+    name: "Maria Santos", age: 34, contact: "+63 912 345 6789",
+    reason: "Hypertension follow-up", doctor: "Dr. Reyes",
+    type: "follow-up", status: "checked-in", queue: "A-001", priority: null,
+  },
+  {
+    id: 2, date: "2026-03-01", time: "13:00", end: "13:30", duration: 30,
+    name: "Pedro Bautista", age: 51, contact: "+63 919 444 5566",
+    reason: "Annual physical", doctor: "Dr. Reyes",
+    type: "checkup", status: "scheduled", queue: null, priority: null,
+  },
+  {
+    id: 3, date: "2026-03-01", time: "14:30", end: "15:15", duration: 45,
+    name: "Luisa Ramos", age: 28, contact: "+63 921 333 4455",
+    reason: "Prenatal check-up", doctor: "Dr. Cruz",
+    type: "follow-up", status: "scheduled", queue: null, priority: "pregnant",
+  },
+  {
+    id: 4, date: "2026-03-01", time: "16:00", end: "16:30", duration: 30,
+    name: "Elena Cruz", age: 66, contact: "+63 915 999 8877",
+    reason: "Chest discomfort review", doctor: "Dr. Reyes",
+    type: "urgent", status: "scheduled", queue: null, priority: "elderly",
+  },
+  {
+    id: 5, date: "2026-03-03", time: "09:30", end: "10:00", duration: 30,
+    name: "Jose Dela Cruz", age: 57, contact: "+63 917 234 5678",
+    reason: "Diabetes follow-up", doctor: "Dr. Santos",
+    type: "follow-up", status: "scheduled", queue: null, priority: null,
+  },
+  {
+    id: 6, date: "2026-03-03", time: "11:00", end: "11:20", duration: 20,
+    name: "Ana Lim", age: 28, contact: "+63 918 765 4321",
+    reason: "URTI follow-up", doctor: "Dr. Santos",
+    type: "follow-up", status: "scheduled", queue: null, priority: null,
+  },
+  {
+    id: 7, date: "2026-03-05", time: "10:00", end: "11:00", duration: 60,
+    name: "Ramon Valdez", age: 45, contact: "+63 920 111 2233",
+    reason: "Back pain + PT review", doctor: "Dr. Reyes",
+    type: "follow-up", status: "scheduled", queue: null, priority: null,
+  },
+  {
+    id: 8, date: "2026-03-08", time: "09:00", end: "09:30", duration: 30,
+    name: "Celia Marcos", age: 62, contact: "+63 915 888 7766",
+    reason: "Lab results review", doctor: "Dr. Cruz",
+    type: "checkup", status: "scheduled", queue: null, priority: "elderly",
+  },
+  {
+    id: 9, date: "2026-03-10", time: "14:00", end: "14:45", duration: 45,
+    name: "Maria Santos", age: 34, contact: "+63 912 345 6789",
+    reason: "BP recheck", doctor: "Dr. Reyes",
+    type: "follow-up", status: "scheduled", queue: null, priority: null,
+  },
+  {
+    id: 10, date: "2026-03-15", time: "10:30", end: "11:00", duration: 30,
+    name: "Jose Dela Cruz", age: 57, contact: "+63 917 234 5678",
+    reason: "HbA1c review", doctor: "Dr. Santos",
+    type: "follow-up", status: "scheduled", queue: null, priority: null,
+  },
+];
+
+const typeConfig = {
+  "follow-up": { label: "Follow-up", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f" },
+  "checkup":   { label: "Check-up",  color: "#4a90d9", bg: "#eaf3fc", dot: "#4a90d9" },
+  "urgent":    { label: "Urgent",    color: "#e07050", bg: "#fde8e0", dot: "#e07050" },
+  "new":       { label: "New Visit", color: "#7b5ea7", bg: "#f0eafb", dot: "#7b5ea7" },
+};
+
+const statusConfig = {
+  scheduled:  { label: "Scheduled",  color: "#4a90d9", bg: "#eaf3fc" },
+  "checked-in": { label: "Checked In", color: "#2a9d8f", bg: "#e8f7f5" },
+  cancelled:  { label: "Cancelled",  color: "#9aabc0", bg: "#f0f4fa" },
+  "no-show":  { label: "No-show",    color: "#c05080", bg: "#fce8f0" },
+};
+
+const priorityConfig = {
+  elderly:   { label: "Senior Citizen", icon: "👴", color: "#7b5ea7" },
+  pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a" },
+  pwd:       { label: "PWD",            icon: "♿", color: "#3b7dd8" },
+  pediatric: { label: "Pedia",          icon: "👶", color: "#e09040" },
+};
+
+const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"];
+
+function Avatar({ name, size = 32 }) {
+  const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2);
+  const hue = (name.charCodeAt(0) * 37 + name.charCodeAt(1) * 17) % 360;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: `hsl(${hue},45%,72%)`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.36, fontWeight: 700,
+      color: `hsl(${hue},45%,28%)`, flexShrink: 0,
+    }}>{initials}</div>
+  );
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function Sidebar() {
+  return (
+    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
+      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>CareQueue</div>
+            <div style={{ fontSize: 11, color: "#8a9bb0" }}>Reception</div>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding: "10px 20px" }}>
+        <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
+        </div>
+      </div>
+      <nav style={{ padding: "8px 12px", flex: 1 }}>
+        {[
+          { icon: "⊞",  label: "Dashboard"                        },
+          { icon: "📋", label: "Queue"                             },
+          { icon: "➕", label: "Register Patient"                  },
+          { icon: "🗂️", label: "Patient Records"                   },
+          { icon: "📅", label: "Appointments",   badge: "3"       },
+          { icon: "📱", label: "SMS Logs"                          },
+          { icon: "📊", label: "Reports"                           },
+        ].map(item => (
+          <div key={item.label} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
+            background: item.label === "Appointments" ? "#e8f7f5" : "transparent",
+            color: item.label === "Appointments" ? "#2a9d8f" : "#4a5d75",
+            fontWeight: item.label === "Appointments" ? 600 : 400, fontSize: 14, transition: "all 0.18s",
+          }}
+            onMouseEnter={e => { if (item.label !== "Appointments") { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; }}}
+            onMouseLeave={e => { if (item.label !== "Appointments") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; }}}
+          >
+            <span style={{ fontSize: 16 }}>{item.icon}</span>
+            {item.label}
+            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{item.badge}</span>}
+          </div>
+        ))}
+      </nav>
+      <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white" }}>AR</div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
+          <div style={{ fontSize: 11, color: "#8a9bb0" }}>Front Desk</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Book Modal ────────────────────────────────────────────────────────────────
+function BookModal({ defaultDate, onClose, onSubmit }) {
+  const [form, setForm] = useState({
+    name: "", age: "", contact: "", reason: "", date: defaultDate || "",
+    time: "09:00", duration: "30", doctor: "", type: "follow-up", priority: "", notes: "",
+  });
+  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: 520, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(20,40,70,0.24)", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
+        <style>{`@keyframes popIn { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+
+        <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 26px", borderRadius: "20px 20px 0 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase" }}>New Appointment</div>
+              <div style={{ fontSize: 19, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif", marginTop: 3 }}>Book a Visit</div>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34, borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white" }}>✕</button>
+          </div>
+        </div>
+
+        <div style={{ padding: "22px 26px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Patient */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 80px", gap: 10 }}>
+            {[
+              { label: "Patient Name *", key: "name", placeholder: "Full name", type: "text" },
+              { label: "Age",            key: "age",  placeholder: "Age",       type: "number" },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>{f.label}</label>
+                <input value={form[f.key]} onChange={e => update(f.key, e.target.value)} placeholder={f.placeholder} type={f.type}
+                  style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Contact Number</label>
+            <input value={form.contact} onChange={e => update("contact", e.target.value)} placeholder="+63 9XX XXX XXXX"
+              style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+              onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Reason for Visit *</label>
+            <input value={form.reason} onChange={e => update("reason", e.target.value)} placeholder="Chief complaint"
+              style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+              onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {[
+              { label: "Date *",    key: "date",     type: "date"   },
+              { label: "Time *",    key: "time",     type: "time"   },
+              { label: "Duration",  key: "duration", type: "number" },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>{f.label}</label>
+                <input value={form[f.key]} onChange={e => update(f.key, e.target.value)} type={f.type}
+                  style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+              </div>
+            ))}
+          </div>
+
+          {/* Doctor */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>Assign Doctor</label>
+            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+              {["", ...doctors].map(d => (
+                <button key={d} onClick={() => update("doctor", d)} style={{
+                  padding: "8px 14px", border: `1.5px solid ${form.doctor === d ? "#2a9d8f" : "#e0e7ef"}`,
+                  borderRadius: 9, background: form.doctor === d ? "#e8f7f5" : "white",
+                  color: form.doctor === d ? "#2a9d8f" : "#7a8fb0",
+                  fontSize: 12, fontWeight: form.doctor === d ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
+                }}>{d || "Auto-assign"}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>Type</label>
+            <div style={{ display: "flex", gap: 7 }}>
+              {Object.entries(typeConfig).map(([key, tc]) => (
+                <button key={key} onClick={() => update("type", key)} style={{
+                  flex: 1, padding: "8px 6px", border: `2px solid ${form.type === key ? tc.color : "#e0e7ef"}`,
+                  borderRadius: 9, background: form.type === key ? tc.bg : "white",
+                  color: form.type === key ? tc.color : "#7a8fb0",
+                  fontSize: 11, fontWeight: form.type === key ? 700 : 400, cursor: "pointer", transition: "all 0.15s",
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: tc.dot, margin: "0 auto 4px" }} />
+                  {tc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>Priority</label>
+            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+              {[{ key: "", label: "None", icon: "—", color: "#8a9bb0", bg: "#f0f4fa" }, ...Object.entries(priorityConfig).map(([k, v]) => ({ key: k, ...v }))].map(p => (
+                <button key={p.key} onClick={() => update("priority", p.key)} style={{
+                  padding: "6px 12px", border: `1.5px solid ${form.priority === p.key ? p.color : "#e0e7ef"}`,
+                  borderRadius: 8, background: form.priority === p.key ? p.bg : "white",
+                  color: form.priority === p.key ? p.color : "#7a8fb0",
+                  fontSize: 12, fontWeight: form.priority === p.key ? 600 : 400, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s",
+                }}>
+                  <span>{p.icon}</span>{p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px", fontSize: 13, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
+            <button onClick={() => { onSubmit(form); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
+              ✓ Book & Send SMS
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Appointment Drawer ────────────────────────────────────────────────────────
+function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue }) {
+  if (!appt) return null;
+  const tc = typeConfig[appt.type];
+  const sc = statusConfig[appt.status];
+  const pc = appt.priority ? priorityConfig[appt.priority] : null;
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.22)", zIndex: 90 }} />
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: 400,
+        background: "white", zIndex: 100, overflowY: "auto",
+        boxShadow: "-8px 0 40px rgba(30,45,64,0.14)",
+        animation: "slideIn 0.3s cubic-bezier(0.22,1,0.36,1)",
+        display: "flex", flexDirection: "column",
+      }}>
+        <style>{`@keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }`}</style>
+
+        <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 24px", flexShrink: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <Avatar name={appt.name} size={46} />
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>{appt.name}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{appt.age} yrs · {appt.reason}</div>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+          <div style={{ display: "flex", gap: 7, marginTop: 12, flexWrap: "wrap" }}>
+            <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>{tc.label}</span>
+            <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>{sc.label}</span>
+            {pc && <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", borderRadius: 7, padding: "3px 10px", fontSize: 11 }}>{pc.icon} {pc.label}</span>}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Time */}
+          <div style={{ background: "#e8f7f5", borderRadius: 13, padding: "14px 16px", border: "1px solid #b8e4de" }}>
+            <div style={{ fontSize: 11, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Date & Time</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>
+              {new Date(appt.date + "T00:00:00").toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })}
+            </div>
+            <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, marginTop: 3 }}>{appt.time} – {appt.end} · {appt.duration} min</div>
+          </div>
+
+          {/* Info */}
+          <div style={{ background: "#f7f9fd", borderRadius: 13, padding: "14px 16px", border: "1px solid #e0e7ef" }}>
+            {[
+              { label: "Doctor",  value: appt.doctor  },
+              { label: "Contact", value: appt.contact },
+              { label: "Queue #", value: appt.queue || "Not yet assigned" },
+            ].map(r => (
+              <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #f0f3f7" }}>
+                <span style={{ fontSize: 12, color: "#8a9bb0" }}>{r.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{r.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
+            {appt.status === "scheduled" && (
+              <>
+                <button onClick={() => onCheckin(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
+                  ✓ Check In Patient
+                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button style={{ flex: 1, background: "#eaf3fc", color: "#4a90d9", border: "1px solid #c0d8f0", borderRadius: 10, padding: "9px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>✏️ Reschedule</button>
+                  <button onClick={() => onNoShow(appt)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>👻 No-show</button>
+                </div>
+                <button onClick={() => onCancel(appt)} style={{ background: "white", color: "#9aabc0", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 12, cursor: "pointer" }}>✕ Cancel Appointment</button>
+              </>
+            )}
+            {appt.status === "checked-in" && (
+              <>
+                <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "12px", textAlign: "center", color: "#2a9d8f", fontSize: 13, fontWeight: 600 }}>✓ Patient checked in · {appt.queue}</div>
+                <button onClick={() => onAddToQueue(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>➕ Add to Queue</button>
+              </>
+            )}
+            <button style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 12, cursor: "pointer" }}>📱 Send Reminder SMS</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Mini Calendar ─────────────────────────────────────────────────────────────
+function MiniCalendar({ selectedDate, onSelect, appointments }) {
+  const [vm, setVm] = useState(MONTH);
+  const [vy, setVy] = useState(YEAR);
+
+  const dim = new Date(vy, vm + 1, 0).getDate();
+  const fd  = new Date(vy, vm, 1).getDay();
+  const monthName = new Date(vy, vm).toLocaleString("en-PH", { month: "long", year: "numeric" });
+
+  const apptDates   = new Set(appointments.map(a => a.date));
+  const urgentDates = new Set(appointments.filter(a => a.type === "urgent").map(a => a.date));
+  const pad = n => String(n).padStart(2, "0");
+
+  return (
+    <div style={{ background: "white", borderRadius: 16, padding: "16px", border: "1px solid #e0e7ef", boxShadow: "0 2px 10px rgba(100,120,150,0.06)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <button onClick={() => vm === 0 ? (setVm(11), setVy(y => y-1)) : setVm(m => m-1)} style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", color: "#7a8fb0", padding: "4px 8px" }}>‹</button>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{monthName}</div>
+        <button onClick={() => vm === 11 ? (setVm(0), setVy(y => y+1)) : setVm(m => m+1)} style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", color: "#7a8fb0", padding: "4px 8px" }}>›</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 4 }}>
+        {["S","M","T","W","T","F","S"].map((d, i) => <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "#b0beca", padding: "2px 0" }}>{d}</div>)}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+        {Array.from({ length: fd }).map((_, i) => <div key={`e${i}`} />)}
+        {Array.from({ length: dim }, (_, i) => {
+          const day = i + 1;
+          const ds = `${vy}-${pad(vm+1)}-${pad(day)}`;
+          const isSel   = selectedDate === ds;
+          const hasAppt = apptDates.has(ds);
+          const isUrg   = urgentDates.has(ds);
+          const isToday = ds === "2026-03-01";
+          return (
+            <div key={day} onClick={() => onSelect(ds)} style={{
+              textAlign: "center", padding: "5px 2px", borderRadius: 7, cursor: "pointer",
+              background: isSel ? "#2a9d8f" : isToday ? "#e8f7f5" : "transparent",
+              color: isSel ? "white" : isToday ? "#2a9d8f" : "#1e2d40",
+              fontWeight: isSel || isToday ? 700 : 400, fontSize: 12,
+              transition: "background 0.15s",
+            }}
+              onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = "#f4f7fb"; }}
+              onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = isToday ? "#e8f7f5" : "transparent"; }}
+            >
+              {day}
+              {hasAppt && <div style={{ width: 4, height: 4, borderRadius: "50%", margin: "1px auto 0", background: isSel ? "rgba(255,255,255,0.8)" : isUrg ? "#e07050" : "#2a9d8f" }} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Day List ──────────────────────────────────────────────────────────────────
+function DayList({ date, appointments, onSelect, selectedId }) {
+  const dayAppts = appointments.filter(a => a.date === date).sort((a, b) => a.time.localeCompare(b.time));
+  const dateLabel = date
+    ? new Date(date + "T00:00:00").toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+    : "Select a date";
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ padding: "14px 22px", background: "white", borderBottom: "1px solid #e0e7ef", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{dateLabel}</div>
+          <div style={{ fontSize: 12, color: "#7a8fb0", marginTop: 1 }}>{dayAppts.length} appointment{dayAppts.length !== 1 ? "s" : ""}</div>
+        </div>
+        {dayAppts.filter(a => a.priority).length > 0 && (
+          <div style={{ background: "#f0eafb", color: "#7b5ea7", borderRadius: 9, padding: "5px 12px", fontSize: 12, fontWeight: 700 }}>
+            ⭐ {dayAppts.filter(a => a.priority).length} priority
+          </div>
+        )}
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px", background: "#f7f9fb" }}>
+        {date ? (
+          dayAppts.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {dayAppts.map(appt => {
+                const tc = typeConfig[appt.type];
+                const sc = statusConfig[appt.status];
+                const pc = appt.priority ? priorityConfig[appt.priority] : null;
+                const isSelected = selectedId === appt.id;
+                return (
+                  <div key={appt.id} onClick={() => onSelect(appt)} style={{
+                    background: "white", borderRadius: 14, padding: "14px 16px",
+                    border: `2px solid ${isSelected ? tc.color : "#e0e7ef"}`,
+                    cursor: "pointer", transition: "all 0.18s",
+                    boxShadow: isSelected ? `0 4px 16px ${tc.color}25` : "0 2px 8px rgba(100,120,150,0.06)",
+                    display: "flex", alignItems: "center", gap: 14,
+                  }}
+                    onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = "#c8deda"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(42,157,143,0.1)"; }}}
+                    onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = "#e0e7ef"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(100,120,150,0.06)"; }}}
+                  >
+                    {/* Time column */}
+                    <div style={{ textAlign: "center", minWidth: 56, flexShrink: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isSelected ? tc.color : "#1e2d40", fontFamily: "'Fraunces',serif" }}>{appt.time}</div>
+                      <div style={{ fontSize: 10, color: "#b0beca" }}>{appt.duration}m</div>
+                    </div>
+                    <div style={{ width: 1, background: "#e8edf7", alignSelf: "stretch" }} />
+                    {/* Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Avatar name={appt.name} size={28} />
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#1e2d40" }}>{appt.name}</div>
+                          <div style={{ fontSize: 11, color: "#7a8fb0" }}>{appt.reason}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                        <span style={{ background: tc.bg, color: tc.color, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>{tc.label}</span>
+                        <span style={{ background: sc.bg, color: sc.color, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>{sc.label}</span>
+                        {pc && <span style={{ background: "#f0eafb", color: pc.color, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 600 }}>{pc.icon} {pc.label}</span>}
+                        <span style={{ color: "#8a9bb0", fontSize: 10, display: "flex", alignItems: "center" }}>{appt.doctor}</span>
+                      </div>
+                    </div>
+                    {/* Status indicator */}
+                    {appt.status === "checked-in" && (
+                      <div style={{ background: "#e8f7f5", borderRadius: 8, padding: "6px 10px", fontSize: 11, color: "#2a9d8f", fontWeight: 700, flexShrink: 0 }}>✓ In</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "60px 0", color: "#8a9bb0" }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>📅</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>No appointments</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>Nothing scheduled for this day</div>
+            </div>
+          )
+        ) : (
+          <div style={{ textAlign: "center", padding: "60px 0", color: "#8a9bb0" }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>📅</div>
+            <div style={{ fontSize: 14 }}>Pick a date from the calendar</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Upcoming list ─────────────────────────────────────────────────────────────
+function UpcomingList({ appointments, onSelect, selectedId }) {
+  const list = appointments.filter(a => a.status === "scheduled").sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif", marginBottom: 14 }}>All Upcoming</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {list.map(appt => {
+          const tc = typeConfig[appt.type];
+          const pc = appt.priority ? priorityConfig[appt.priority] : null;
+          const isSel = selectedId === appt.id;
+          return (
+            <div key={appt.id} onClick={() => onSelect(appt)} style={{
+              background: "white", borderRadius: 12, padding: "12px 14px",
+              border: `1.5px solid ${isSel ? tc.color : "#e0e7ef"}`,
+              cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 10,
+            }}
+              onMouseEnter={e => { if (!isSel) e.currentTarget.style.borderColor = "#c8deda"; }}
+              onMouseLeave={e => { if (!isSel) e.currentTarget.style.borderColor = "#e0e7ef"; }}
+            >
+              <Avatar name={appt.name} size={32} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{appt.name}</div>
+                  <span style={{ background: tc.bg, color: tc.color, borderRadius: 5, padding: "1px 7px", fontSize: 10, fontWeight: 600 }}>{tc.label}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "#7a8fb0", marginTop: 2 }}>{appt.reason}</div>
+                <div style={{ fontSize: 11, color: "#b0beca", marginTop: 2 }}>
+                  {new Date(appt.date + "T00:00:00").toLocaleDateString("en-PH", { month: "short", day: "numeric" })} · {appt.time} · {appt.doctor}
+                  {pc && <span style={{ marginLeft: 6 }}>{pc.icon}</span>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+export default function ReceptionistAppointments({ onNavigate }) {
+  const [appts, setAppts]         = useState(appointments);
+  const [selectedDate, setSelectedDate] = useState("2026-03-01");
+  const [selectedAppt, setSelectedAppt] = useState(null);
+  const [showBook, setShowBook]   = useState(false);
+  const [view, setView]           = useState("day");
+
+  const handleSelect = (a) => setSelectedAppt(prev => prev?.id === a.id ? null : a);
+  const handleCheckin = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "checked-in", queue: "A-009" } : x)); setSelectedAppt(null); };
+  const handleCancel  = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "cancelled" } : x)); setSelectedAppt(null); };
+  const handleNoShow  = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "no-show" } : x)); setSelectedAppt(null); };
+  const handleAddToQueue = (a) => { if (onNavigate) onNavigate("queue"); };
+  const handleNewAppt = (f) => {
+    setAppts(old => [{ ...f, id: Date.now(), status: "scheduled", time: f.time, end: f.time, queue: null }, ...old]);
+  };
+
+  const today    = appts.filter(a => a.date === "2026-03-01");
+  const upcoming = appts.filter(a => a.status === "scheduled").length;
+  const priority = appts.filter(a => a.priority && a.status === "scheduled").length;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f4f7fb", fontFamily: "'DM Sans',sans-serif", display: "flex" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{`* { box-sizing: border-box; } ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: #c8deda; border-radius: 4px; }`}</style>
+
+      <Sidebar />
+      {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onSubmit={handleNewAppt} />}
+      <ApptDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCheckin={handleCheckin} onCancel={handleCancel} onNoShow={handleNoShow} onAddToQueue={handleAddToQueue} />
+
+      <div style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+
+        {/* Top bar */}
+        <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 24, fontFamily: "'Fraunces',serif", fontWeight: 700, color: "#1e2d40" }}>Appointments</h1>
+            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>{today.length} today · {upcoming} upcoming · {priority} priority</div>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ display: "flex", background: "white", border: "1px solid #e0e7ef", borderRadius: 10, overflow: "hidden" }}>
+              {[{ key: "day", label: "📅 Day" }, { key: "upcoming", label: "📋 Upcoming" }].map(v => (
+                <button key={v.key} onClick={() => setView(v.key)} style={{
+                  padding: "8px 16px", border: "none", cursor: "pointer",
+                  background: view === v.key ? "#1e2d40" : "transparent",
+                  color: view === v.key ? "white" : "#7a8fb0",
+                  fontSize: 12, fontWeight: view === v.key ? 600 : 400,
+                  transition: "all 0.15s", fontFamily: "'DM Sans',sans-serif",
+                }}>{v.label}</button>
+              ))}
+            </div>
+            <button onClick={() => setShowBook(true)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
+              ➕ Book Appointment
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "220px 1fr", overflow: "hidden" }}>
+
+          {/* Left panel */}
+          <div style={{ background: "white", borderRight: "1px solid #e0e7ef", padding: "16px 14px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+            <MiniCalendar selectedDate={selectedDate} onSelect={setSelectedDate} appointments={appts} />
+
+            {/* Stats */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "Today",     value: today.length,  color: "#2a9d8f", bg: "#e8f7f5" },
+                { label: "Upcoming",  value: upcoming,      color: "#4a90d9", bg: "#eaf3fc" },
+                { label: "Priority",  value: priority,      color: "#7b5ea7", bg: "#f0eafb" },
+              ].map(s => (
+                <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: s.color }}>{s.label}</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: s.color, fontFamily: "'Fraunces',serif" }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Legend */}
+            <div style={{ background: "#f7f9fb", borderRadius: 12, padding: "12px" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#b0beca", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>Legend</div>
+              {Object.entries(typeConfig).map(([key, tc]) => (
+                <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: tc.dot }} />
+                  <span style={{ fontSize: 12, color: "#4a5d75" }}>{tc.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right panel */}
+          <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {view === "day"
+              ? <DayList date={selectedDate} appointments={appts} onSelect={handleSelect} selectedId={selectedAppt?.id} />
+              : <UpcomingList appointments={appts} onSelect={handleSelect} selectedId={selectedAppt?.id} />
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
