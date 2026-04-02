@@ -54,12 +54,3 @@ npm run dev
 
 ---
 
-## Default Login
-| Username | Password | Role |
-|----------|----------|------|
-| admin | likhaheath2025 | Admin |
-
----
-
-## API Base URL
-`http://localhost:5000/api`
