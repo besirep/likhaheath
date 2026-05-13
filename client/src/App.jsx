@@ -167,6 +167,10 @@ export default function App() {
   const [registrationDraft, setRegistrationDraft] = useState(null);
   const clearDraft = useCallback(() => setRegistrationDraft(null), []);
 
+  // ── Doctor consultation session: carries active patient from Queue → Consult
+  const [activePatient, setActivePatient] = useState(null);
+  const clearActivePatient = useCallback(() => setActivePatient(null), []);
+
   // Called by Login after a successful API login
   const handleLogin = (role) => async (username, password) => {
     const userObj = await login(username, password);
@@ -240,6 +244,21 @@ export default function App() {
                 draft={registrationDraft}
                 onDraftChange={setRegistrationDraft}
                 onDraftClear={clearDraft}
+              />
+            : activeScreen?.id === 'dr-queue'
+            ? <DoctorQueue
+                key="dr-queue"
+                onNavigate={setActiveId}
+                onStartConsult={setActivePatient}
+                user={user}
+              />
+            : activeScreen?.id === 'dr-consult'
+            ? <DoctorConsultations
+                key="dr-consult-persistent"
+                activePatient={activePatient}
+                onConsultComplete={clearActivePatient}
+                onNavigate={setActiveId}
+                user={user}
               />
             : <Screen key={resolvedActiveId} onNavigate={setActiveId} user={user} />
         )}

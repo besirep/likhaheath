@@ -1,60 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { consultationsApi } from "../../lib/api/consultations.js";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const initialQueue = [
-  {
-    id: 1, queue: "A-001", name: "Maria Santos",   age: 34, gender: "F",
-    reason: "Hypertension follow-up",  status: "in-consultation",
-    wait: "0m",  arrived: "8:45 AM", priority: null,
-    vitals: { bp: "138/88", temp: "36.7", hr: "82", spo2: "98", weight: "62", height: "158" },
-    nurse: "Nurse Dela Cruz",
-  },
-  {
-    id: 2, queue: "A-004", name: "Jose Dela Cruz", age: 57, gender: "M",
-    reason: "Diabetes check-up",       status: "vitals-done",
-    wait: "14m", arrived: "9:02 AM", priority: null,
-    vitals: { bp: "142/90", temp: "36.5", hr: "78", spo2: "97", weight: "78", height: "165" },
-    nurse: "Nurse Dela Cruz",
-  },
-  {
-    id: 3, queue: "A-006", name: "Ana Lim",         age: 28, gender: "F",
-    reason: "Fever & cough",           status: "waiting",
-    wait: "28m", arrived: "9:18 AM", priority: null,
-    vitals: null, nurse: null,
-  },
-  {
-    id: 4, queue: "A-008", name: "Elena Cruz",      age: 66, gender: "F",
-    reason: "Chest discomfort",        status: "waiting",
-    wait: "42m", arrived: "9:30 AM", priority: "elderly",
-    vitals: null, nurse: null,
-  },
-  {
-    id: 5, queue: "A-010", name: "Celia Marcos",    age: 62, gender: "F",
-    reason: "Lab results review",      status: "waiting",
-    wait: "56m", arrived: "9:45 AM", priority: "elderly",
-    vitals: null, nurse: null,
-  },
-  {
-    id: 6, queue: "A-002", name: "Mark Reyes",      age: 33, gender: "M",
-    reason: "Skin rash assessment",    status: "done",
-    wait: "—",   arrived: "8:10 AM", priority: null,
-    vitals: { bp: "118/76", temp: "36.4", hr: "70", spo2: "99", weight: "70", height: "172" },
-    nurse: "Nurse Santos",
-  },
-  {
-    id: 7, queue: "A-003", name: "Pedro Bautista",  age: 51, gender: "M",
-    reason: "Annual physical",         status: "done",
-    wait: "—",   arrived: "8:30 AM", priority: null,
-    vitals: { bp: "120/80", temp: "36.6", hr: "74", spo2: "99", weight: "68", height: "170" },
-    nurse: "Nurse Santos",
-  },
-  {
-    id: 8, queue: "A-005", name: "Luisa Ramos",     age: 28, gender: "F",
-    reason: "Prenatal check-up",       status: "skipped",
-    wait: "—",   arrived: "9:10 AM", priority: "pregnant",
-    vitals: null, nurse: null,
-  },
-];
+// ── Utility: map API status → UI status key ───────────────────────────────────
+const mapStatus = s => {
+  if (!s) return "waiting";
+  const m = { Waiting: "waiting", "In-Progress": "in-consultation", Done: "done", Skipped: "skipped" };
+  return m[s] || s.toLowerCase();
+};
+
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#0047AB", bg: "#EBF0FA", dot: "#0047AB", pulse: true  },
@@ -300,12 +253,12 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
         {selected.status === "in-consultation" && (
-          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
+          <button onClick={() => startConsult(selected)} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
             🩺 Resume Consultation →
           </button>
         )}
-        {selected.status === "vitals-done" && (
-          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
+        {(selected.status === "vitals-done" || selected.status === "waiting") && selected.status !== "done" && (
+          <button onClick={() => startConsult(selected)} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
             🩺 Start Consultation →
           </button>
         )}
@@ -334,24 +287,97 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorQueue({ onNavigate }) {
-  const [queue, setQueue]         = useState(initialQueue);
-  const [filter, setFilter]       = useState("all");
+export default function DoctorQueue({ onNavigate, onStartConsult }) {
+  const [queue, setQueue]             = useState([]);
+  const [filter, setFilter]           = useState("all");
   const [vitalsModal, setVitalsModal] = useState(null);
-  const [selectedId, setSelectedId]   = useState(1);
-  const [notifOpen, setNotifOpen] = useState(false);
+  const [selectedId, setSelectedId]   = useState(null);
+  const [notifOpen, setNotifOpen]     = useState(false);
+  const [loading, setLoading]         = useState(false);
+
+  const loadQueue = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await consultationsApi.getDoctorQueue();
+      // Normalize API response to match component shape
+      const normalized = data.map(p => ({
+        id:         p.queueId,
+        queue:      `Q-${String(p.queueNumber).padStart(3, "0")}`,
+        name:       p.name,
+        age:        p.age,
+        gender:     p.sex?.[0] || "—",
+        reason:     p.visitReason || "General consultation",
+        status:     mapStatus(p.status),
+        arrived:    new Date(p.scheduledDate || Date.now()).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }),
+        wait:       "—",
+        priority:   null,
+        vitals:     p.vitals ? { bp: p.vitals.bp, temp: p.vitals.temp, hr: String(p.vitals.hr), spo2: String(p.vitals.spo2), weight: String(p.vitals.weight), height: String(p.vitals.height) } : null,
+        nurse:      p.vitals?.nurse || null,
+        // keep raw API fields for API calls
+        queueId:       p.queueId,
+        appointmentId: p.appointmentId,
+        patientId:     p.patientId,
+      }));
+      setQueue(normalized);
+      if (normalized.length > 0 && !selectedId) setSelectedId(normalized[0].id);
+    } catch (e) {
+      console.error("Failed to load queue:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
 
   const selected = queue.find(p => p.id === selectedId);
 
   const filtered = queue.filter(p => {
-    if (filter === "all")             return p.status !== "done" && p.status !== "skipped";
-    if (filter === "done")            return p.status === "done";
-    if (filter === "skipped")         return p.status === "skipped";
+    if (filter === "all")              return p.status !== "done" && p.status !== "skipped";
+    if (filter === "done")             return p.status === "done";
+    if (filter === "skipped")          return p.status === "skipped";
     return p.status === filter;
   });
 
-  const markDone  = id => setQueue(q => q.map(p => p.id === id ? { ...p, status: "done"    } : p));
-  const requeue   = id => setQueue(q => q.map(p => p.id === id ? { ...p, status: "waiting" } : p));
+  const markDone = async id => {
+    const p = queue.find(q => q.id === id);
+    if (!p) return;
+    try {
+      await consultationsApi.updateQueueStatus(p.queueId, "Done");
+      setQueue(q => q.map(e => e.id === id ? { ...e, status: "done" } : e));
+    } catch { /* silent fail – user can reload */ }
+  };
+
+  const requeue = async id => {
+    const p = queue.find(q => q.id === id);
+    if (!p) return;
+    try {
+      await consultationsApi.updateQueueStatus(p.queueId, "Waiting");
+      setQueue(q => q.map(e => e.id === id ? { ...e, status: "waiting" } : e));
+    } catch { }
+  };
+
+  const startConsult = async (patient) => {
+    try {
+      await consultationsApi.updateQueueStatus(patient.queueId, "In-Progress");
+      setQueue(q => q.map(e => e.id === patient.id ? { ...e, status: "in-consultation" } : e));
+      // Pass patient data to parent so DoctorConsultations receives it
+      if (onStartConsult) {
+        onStartConsult({
+          queueId:       patient.queueId,
+          appointmentId: patient.appointmentId,
+          patientId:     patient.patientId,
+          name:          patient.name,
+          age:           patient.age,
+          sex:           patient.gender,
+          queueNumber:   patient.queue,
+          visitReason:   patient.reason,
+          vitals:        patient.vitals,
+        });
+      }
+      if (onNavigate) onNavigate("dr-consult");
+    } catch { }
+  };
+
   const callNext  = () => {
     const next = queue.find(p => p.status === "vitals-done" || p.status === "waiting");
     if (next) setSelectedId(next.id);
