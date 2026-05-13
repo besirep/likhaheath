@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "./lib/api/useAuth.js";
 
 // Auth
@@ -160,11 +160,12 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   // useAuth hydrates from localStorage on mount — no flash of login screen on refresh
-  const { user, login, logout, setUser } = useAuth();
-  const [activeId, setActiveId] = useState(() => {
-    // If we already have a user (hydrated from token), default to first screen
-    return null;
-  });
+  const { user, login, logout } = useAuth();
+  const [activeId, setActiveId] = useState(null);
+
+  // ── Registration session: persists form draft across tab switches ─────────
+  const [registrationDraft, setRegistrationDraft] = useState(null);
+  const clearDraft = useCallback(() => setRegistrationDraft(null), []);
 
   // Called by Login after a successful API login
   const handleLogin = (role) => async (username, password) => {
@@ -229,8 +230,19 @@ export default function App() {
           </div>
         </div>
 
-        {/* Screen content — pass onNavigate so screens can cross-navigate */}
-        {Screen && <Screen key={resolvedActiveId} onNavigate={setActiveId} user={user} />}
+        {/* Screen content — pass onNavigate + registration session */}
+        {Screen && (
+          activeScreen?.id === 'register'
+            ? <PatientRegistration
+                key="register-persistent"
+                onNavigate={setActiveId}
+                user={user}
+                draft={registrationDraft}
+                onDraftChange={setRegistrationDraft}
+                onDraftClear={clearDraft}
+              />
+            : <Screen key={resolvedActiveId} onNavigate={setActiveId} user={user} />
+        )}
       </div>
     </div>
   );
