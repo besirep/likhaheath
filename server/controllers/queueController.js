@@ -4,14 +4,14 @@ const db = require('../config/db');
 exports.getToday = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT q.*, 
+      `SELECT q.*,
          a.scheduled_date, a.status AS appointment_status,
-         CONCAT(p.first_name,' ',p.last_name) AS patient_name, p.contact_number,
-         CONCAT(d.first_name,' ',d.last_name) AS doctor_name
+         CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+         CONCAT(s.first_name,' ',s.last_name) AS doctor_name
        FROM queue q
        JOIN appointments a ON q.appointment_id = a.id
        JOIN patients     p ON a.patient_id = p.id
-       LEFT JOIN doctors d ON a.doctor_id  = d.id
+       LEFT JOIN staff   s ON a.doctor_id  = s.id
        WHERE DATE(a.scheduled_date) = CURDATE()
        ORDER BY q.queue_number ASC`
     );
@@ -43,7 +43,7 @@ exports.getNext = async (req, res) => {
 // PATCH /api/queue/:id/status
 exports.updateStatus = async (req, res) => {
   const { status } = req.body;
-  const allowed = ['Waiting','In-Progress','Done','Skipped'];
+  const allowed = ['Waiting', 'In-Progress', 'Done', 'Skipped'];
   if (!allowed.includes(status))
     return res.status(400).json({ error: `Status must be one of: ${allowed.join(', ')}` });
   try {

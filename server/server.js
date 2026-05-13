@@ -1,6 +1,7 @@
 const express = require('express');
 const cors    = require('cors');
-require('dotenv').config();
+const path    = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
@@ -10,15 +11,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── ROUTES ───────────────────────────────────────────────────
-app.use('/api/auth',         require('./routes/auth'));
-app.use('/api/patients',     require('./routes/patients'));
-app.use('/api/doctors',      require('./routes/doctors'));
-app.use('/api/staff',        require('./routes/staff'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/queue',        require('./routes/queue'));
+app.use('/api/auth',            require('./routes/auth'));
+app.use('/api/patients',        require('./routes/patients'));
+app.use('/api/staff',           require('./routes/staff'));
+app.use('/api/appointments',    require('./routes/appointments'));
+app.use('/api/queue',           require('./routes/queue'));
 app.use('/api/medical-records', require('./routes/medicalRecords'));
-app.use('/api/sms',          require('./routes/sms'));
-app.use('/api/dashboard',    require('./routes/dashboard'));
+app.use('/api/sms',             require('./routes/sms'));
+app.use('/api/dashboard',       require('./routes/dashboard'));
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────
 app.get('/', (req, res) => {

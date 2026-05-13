@@ -28,9 +28,9 @@ const hourlyFlow = [
 ];
 
 const priorityBreakdown = [
-  { name: "Regular",       value: 28, color: "#4a90d9" },
-  { name: "Senior Citizen",value: 8,  color: "#7b5ea7" },
-  { name: "PWD",           value: 4,  color: "#3b7dd8" },
+  { name: "Regular",       value: 28, color: "#0047AB" },
+  { name: "Senior Citizen",value: 8,  color: "#8B5FBF" },
+  { name: "PWD",           value: 4,  color: "#0047AB" },
   { name: "Pregnant",      value: 5,  color: "#d4709a" },
   { name: "Pediatric",     value: 7,  color: "#e09040" },
 ];
@@ -65,15 +65,15 @@ const waitTimeWeek = [
 
 const doctorLoad = [
   { doctor: "Dr. Reyes",  patients: 19, color: "#2a9d8f" },
-  { doctor: "Dr. Santos", patients: 15, color: "#4a90d9" },
-  { doctor: "Dr. Cruz",   patients: 13, color: "#7b5ea7" },
+  { doctor: "Dr. Santos", patients: 15, color: "#0047AB" },
+  { doctor: "Dr. Cruz",   patients: 13, color: "#8B5FBF" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px 14px", boxShadow: "0 4px 16px rgba(20,40,70,0.1)", fontSize: 12 }}>
+    <div style={{ background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px 14px", boxShadow: "0 4px 16px rgba(20,40,70,0.1)", fontSize: 14 }}>
       <div style={{ color: "#8a9bb0", marginBottom: 6, fontWeight: 600 }}>{label}</div>
       {payload.map(p => (
         <div key={p.name} style={{ color: p.color || "#1e2d40", marginBottom: 2 }}>
@@ -91,15 +91,15 @@ function Sidebar() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>CareQueue</div>
-            <div style={{ fontSize: 11, color: "#8a9bb0" }}>Reception</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
+            <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
           </div>
         </div>
       </div>
       <div style={{ padding: "10px 20px" }}>
         <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
         </div>
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
@@ -124,15 +124,15 @@ function Sidebar() {
           >
             <span style={{ fontSize: 16 }}>{item.icon}</span>
             {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{item.badge}</span>}
+            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
         ))}
       </nav>
       <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white" }}>AR</div>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>AR</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
-          <div style={{ fontSize: 11, color: "#8a9bb0" }}>Front Desk</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
+          <div style={{ fontSize: 14, color: "#8a9bb0" }}>Front Desk</div>
         </div>
       </div>
     </div>
@@ -145,14 +145,14 @@ function StatCard({ icon, label, value, sub, color, bg, trend }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div style={{ fontSize: 22 }}>{icon}</div>
         {trend !== undefined && (
-          <div style={{ fontSize: 11, fontWeight: 600, color: trend >= 0 ? "#2a9d8f" : "#e07050", background: trend >= 0 ? "#e8f7f5" : "#fde8e0", borderRadius: 6, padding: "2px 8px" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: trend >= 0 ? "#2a9d8f" : "#CC0000", background: trend >= 0 ? "#e8f7f5" : "#fde8e0", borderRadius: 6, padding: "2px 8px" }}>
             {trend >= 0 ? "↑" : "↓"} {Math.abs(trend)}%
           </div>
         )}
       </div>
-      <div style={{ fontSize: 32, fontWeight: 700, color: color || "#1e2d40", fontFamily: "'Fraunces',serif", lineHeight: 1, marginTop: 10 }}>{value}</div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40", marginTop: 4 }}>{label}</div>
-      {sub && <div style={{ fontSize: 11, color: "#8a9bb0", marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 32, fontWeight: 700, color: color || "#1e2d40", lineHeight: 1, marginTop: 10 }}>{value}</div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", marginTop: 4 }}>{label}</div>
+      {sub && <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -161,8 +161,8 @@ function SectionHeader({ title, subtitle, action }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
       <div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 12, color: "#8a9bb0", marginTop: 2 }}>{subtitle}</div>}
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>{subtitle}</div>}
       </div>
       {action}
     </div>
@@ -176,6 +176,32 @@ export default function Reports() {
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(null), 2800); };
 
+  const exportCSV = () => {
+    const rows = [
+      ['Date', 'Total', 'Completed', 'Skipped'],
+      ...weeklyQueue.map(r => [r.day, r.total, r.completed, r.skipped]),
+      [],
+      ['Priority Category', 'Count'],
+      ...priorityBreakdown.map(r => [r.name, r.value]),
+      [],
+      ['Hour', 'Patients'],
+      ...hourlyFlow.map(r => [r.hour, r.patients]),
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `likhahealth-report-${period}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('📊 Report downloaded as CSV');
+  };
+
+  const exportPDF = () => {
+    showToast('📄 Opening print dialog...');
+    setTimeout(() => window.print(), 400);
+  };
+
   const todayTotal     = 47;
   const todayCompleted = 42;
   const todaySkipped   = 3;
@@ -185,30 +211,23 @@ export default function Reports() {
   const totalPriority  = 24;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", fontFamily: "'DM Sans',sans-serif", display: "flex" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{`
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #c8deda; border-radius: 4px; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
+      
+      
 
       {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 13, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "fadeUp 0.3s ease" }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "fadeUp 0.3s ease" }}>
           {toast}
         </div>
       )}
 
-      <Sidebar />
-
-      <div style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontFamily: "'Fraunces',serif", fontWeight: 700, color: "#1e2d40" }}>Reports</h1>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>Health Center — March 1, 2026</div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Reports</h1>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>Health Center — March 1, 2026</div>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {/* Period toggle */}
@@ -218,16 +237,16 @@ export default function Reports() {
                   padding: "8px 16px", border: "none", cursor: "pointer",
                   background: period === p ? "#1e2d40" : "transparent",
                   color: period === p ? "white" : "#7a8fb0",
-                  fontSize: 12, fontWeight: period === p ? 600 : 400,
-                  transition: "all 0.15s", fontFamily: "'DM Sans',sans-serif",
+                  fontSize: 14, fontWeight: period === p ? 600 : 400,
+                  transition: "all 0.15s",
                   textTransform: "capitalize",
                 }}>{p}</button>
               ))}
             </div>
-            <button onClick={() => showToast("📄 Report exported as PDF")} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px 16px", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
+            <button onClick={exportPDF} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px 16px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
               📄 Export PDF
             </button>
-            <button onClick={() => showToast("📊 Report exported as CSV")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
+            <button onClick={exportCSV} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
               📊 Export CSV
             </button>
           </div>
@@ -246,8 +265,8 @@ export default function Reports() {
               <StatCard icon="⏭"  label="Skipped"          value={todaySkipped}   sub="Called, no response"    color="#c05080" bg="#fce8f0" trend={0} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
-              <StatCard icon="📱" label="SMS Sent"         value={smsSent}        sub={`${smsFailed} failed · ${Math.round(smsSent/(smsSent+smsFailed)*100)}% delivery`} color="#4a90d9" bg="#eaf3fc" />
-              <StatCard icon="⭐" label="Priority Patients" value={totalPriority}  sub="Elderly, PWD, Pregnant, Pedia" color="#7b5ea7" bg="#f0eafb" />
+              <StatCard icon="📱" label="SMS Sent"         value={smsSent}        sub={`${smsFailed} failed · ${Math.round(smsSent/(smsSent+smsFailed)*100)}% delivery`} color="#0047AB" bg="#E5EDF8" />
+              <StatCard icon="⭐" label="Priority Patients" value={totalPriority}  sub="Elderly, PWD, Pregnant, Pedia" color="#8B5FBF" bg="#f0eafb" />
               <StatCard icon="🩺" label="Active Consultations" value={2}           sub="2 doctors seeing patients"      color="#2a9d8f" bg="#e8f7f5" />
             </div>
           </div>
@@ -259,17 +278,17 @@ export default function Reports() {
               subtitle="Total patients registered vs completed per day"
               action={
                 <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#2a9d8f" }} /><span style={{ fontSize: 12, color: "#7a8fb0" }}>Completed</span></div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#e8f2f0" }} /><span style={{ fontSize: 12, color: "#7a8fb0" }}>Total</span></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#2a9d8f" }} /><span style={{ fontSize: 14, color: "#7a8fb0" }}>Completed</span></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#e8f2f0" }} /><span style={{ fontSize: 14, color: "#7a8fb0" }}>Total</span></div>
                 </div>
               }
             />
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={weeklyQueue} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f3f7" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false}
+                <XAxis dataKey="day" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false}
                   tickFormatter={v => v.split(" ")[0]} />
-                <YAxis tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="total"     name="Total"     fill="#e8f2f0" radius={[6,6,0,0]} />
                 <Bar dataKey="completed" name="Completed" fill="#2a9d8f" radius={[6,6,0,0]} />
@@ -286,8 +305,8 @@ export default function Reports() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={hourlyFlow}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f3f7" vertical={false} />
-                  <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="hour" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="patients" name="Patients" radius={[6,6,0,0]}>
                     {hourlyFlow.map((entry, i) => (
@@ -296,7 +315,7 @@ export default function Reports() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <div style={{ marginTop: 10, fontSize: 12, color: "#7a8fb0", textAlign: "center" }}>
+              <div style={{ marginTop: 10, fontSize: 14, color: "#7a8fb0", textAlign: "center" }}>
                 Peak hour: <strong style={{ color: "#2a9d8f" }}>9:00 AM</strong> — 14 patients
               </div>
             </div>
@@ -317,9 +336,9 @@ export default function Reports() {
                   {priorityBreakdown.map(p => (
                     <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: "#4a5d75", flex: 1 }}>{p.name}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{p.value}</span>
-                      <span style={{ fontSize: 11, color: "#8a9bb0", minWidth: 30 }}>{Math.round(p.value/todayTotal*100)}%</span>
+                      <span style={{ fontSize: 14, color: "#4a5d75", flex: 1 }}>{p.name}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>{p.value}</span>
+                      <span style={{ fontSize: 14, color: "#8a9bb0", minWidth: 30 }}>{Math.round(p.value/todayTotal*100)}%</span>
                     </div>
                   ))}
                 </div>
@@ -336,8 +355,8 @@ export default function Reports() {
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={waitTimeWeek}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f3f7" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} domain={[0, 40]} />
+                  <XAxis dataKey="day" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} domain={[0, 40]} />
                   <Tooltip content={<CustomTooltip />} />
                   {/* 30-min target line */}
                   <Line type="monotone" dataKey={() => 30} name="Target (30m)" stroke="#f0c8a0" strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
@@ -345,8 +364,8 @@ export default function Reports() {
                 </LineChart>
               </ResponsiveContainer>
               <div style={{ display: "flex", gap: 14, marginTop: 8, justifyContent: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 16, height: 2, background: "#e09040", borderRadius: 2 }} /><span style={{ fontSize: 11, color: "#8a9bb0" }}>Avg wait</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 16, height: 2, background: "#f0c8a0", borderRadius: 2, borderTop: "2px dashed #f0c8a0" }} /><span style={{ fontSize: 11, color: "#8a9bb0" }}>30-min target</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 16, height: 2, background: "#e09040", borderRadius: 2 }} /><span style={{ fontSize: 14, color: "#8a9bb0" }}>Avg wait</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 16, height: 2, background: "#f0c8a0", borderRadius: 2, borderTop: "2px dashed #f0c8a0" }} /><span style={{ fontSize: 14, color: "#8a9bb0" }}>30-min target</span></div>
               </div>
             </div>
 
@@ -356,16 +375,16 @@ export default function Reports() {
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={smsWeekly} barGap={2}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f3f7" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="sent"   name="Sent"   fill="#2a9d8f" radius={[5,5,0,0]} stackId="a" />
                   <Bar dataKey="failed" name="Failed" fill="#f5c8b0" radius={[5,5,0,0]} stackId="a" />
                 </BarChart>
               </ResponsiveContainer>
               <div style={{ display: "flex", gap: 14, marginTop: 8, justifyContent: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#2a9d8f" }} /><span style={{ fontSize: 11, color: "#8a9bb0" }}>Sent</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#f5c8b0" }} /><span style={{ fontSize: 11, color: "#8a9bb0" }}>Failed</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#2a9d8f" }} /><span style={{ fontSize: 14, color: "#8a9bb0" }}>Sent</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: "#f5c8b0" }} /><span style={{ fontSize: 14, color: "#8a9bb0" }}>Failed</span></div>
               </div>
             </div>
           </div>
@@ -380,15 +399,15 @@ export default function Reports() {
                 {topReasons.map((r, i) => (
                   <div key={r.reason}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                      <span style={{ fontSize: 13, color: "#1e2d40", fontWeight: i === 0 ? 600 : 400 }}>{r.reason}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#2a9d8f", fontFamily: "'Fraunces',serif" }}>{r.count}</span>
+                      <span style={{ fontSize: 14, color: "#1e2d40", fontWeight: i === 0 ? 600 : 400 }}>{r.reason}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#2a9d8f" }}>{r.count}</span>
                     </div>
                     <div style={{ height: 7, background: "#f0f3f7", borderRadius: 10, overflow: "hidden" }}>
                       <div style={{
                         height: "100%", borderRadius: 10, transition: "width 0.6s ease",
                         width: `${r.pct}%`,
                         background: i === 0 ? "linear-gradient(90deg,#2a9d8f,#52c4b8)"
-                          : i === 1 ? "linear-gradient(90deg,#4a90d9,#7ab8f5)"
+                          : i === 1 ? "linear-gradient(90deg,#0047AB,#7ab8f5)"
                           : "#d0e8e4",
                       }} />
                     </div>
@@ -407,12 +426,12 @@ export default function Reports() {
                     <div key={d.doctor}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: d.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: d.color }}>
+                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: d.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: d.color }}>
                             {d.doctor.split(" ")[1][0]}
                           </div>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{d.doctor}</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{d.doctor}</span>
                         </div>
-                        <span style={{ fontSize: 18, fontWeight: 700, color: d.color, fontFamily: "'Fraunces',serif" }}>{d.patients}</span>
+                        <span style={{ fontSize: 18, fontWeight: 700, color: d.color }}>{d.patients}</span>
                       </div>
                       <div style={{ height: 8, background: "#f0f3f7", borderRadius: 10, overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${(d.patients / maxPts) * 100}%`, background: d.color, borderRadius: 10, transition: "width 0.6s ease" }} />
@@ -421,8 +440,8 @@ export default function Reports() {
                   );
                 })}
                 <div style={{ marginTop: 4, paddingTop: 14, borderTop: "1px solid #f0f3f7", display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, color: "#8a9bb0" }}>Total patients seen</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{doctorLoad.reduce((a, d) => a + d.patients, 0)}</span>
+                  <span style={{ fontSize: 14, color: "#8a9bb0" }}>Total patients seen</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>{doctorLoad.reduce((a, d) => a + d.patients, 0)}</span>
                 </div>
               </div>
             </div>
@@ -434,8 +453,8 @@ export default function Reports() {
               title="Weekly Summary Table"
               subtitle="Full breakdown for the past 7 days"
               action={
-                <button onClick={() => showToast("📊 Table exported")} style={{ background: "#f4f7fb", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 9, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
-                  ↓ Export
+                <button onClick={exportCSV} style={{ background: "#f4f7fb", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 9, padding: "6px 14px", fontSize: 14, cursor: "pointer" }}>
+                  ↓ Export CSV
                 </button>
               }
             />
@@ -444,7 +463,7 @@ export default function Reports() {
                 <thead>
                   <tr style={{ background: "#f7f9fb" }}>
                     {["Date", "Total", "Completed", "Skipped", "Completion %", "Avg Wait", "SMS Sent", "SMS Failed"].map(h => (
-                      <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e8edf7", whiteSpace: "nowrap" }}>{h}</th>
+                      <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e8edf7", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -457,26 +476,26 @@ export default function Reports() {
                         onMouseEnter={e => e.currentTarget.style.background = "#f7f9fb"}
                         onMouseLeave={e => e.currentTarget.style.background = "white"}
                       >
-                        <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{row.day}</td>
-                        <td style={{ padding: "12px 14px", fontSize: 13, color: "#1e2d40", fontFamily: "'Fraunces',serif", fontWeight: 700 }}>{row.total}</td>
-                        <td style={{ padding: "12px 14px" }}><span style={{ color: "#2a9d8f", fontWeight: 700, fontSize: 13, fontFamily: "'Fraunces',serif" }}>{row.completed}</span></td>
-                        <td style={{ padding: "12px 14px" }}><span style={{ color: row.skipped > 3 ? "#c05080" : "#8a9bb0", fontWeight: row.skipped > 3 ? 700 : 400, fontSize: 13 }}>{row.skipped}</span></td>
+                        <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{row.day}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 14, color: "#1e2d40", fontWeight: 700 }}>{row.total}</td>
+                        <td style={{ padding: "12px 14px" }}><span style={{ color: "#2a9d8f", fontWeight: 700, fontSize: 14 }}>{row.completed}</span></td>
+                        <td style={{ padding: "12px 14px" }}><span style={{ color: row.skipped > 3 ? "#c05080" : "#8a9bb0", fontWeight: row.skipped > 3 ? 700 : 400, fontSize: 14 }}>{row.skipped}</span></td>
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <div style={{ width: 50, height: 5, background: "#f0f3f7", borderRadius: 5, overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${compPct}%`, background: compPct >= 90 ? "#2a9d8f" : compPct >= 75 ? "#e09040" : "#e07050", borderRadius: 5 }} />
+                              <div style={{ height: "100%", width: `${compPct}%`, background: compPct >= 90 ? "#2a9d8f" : compPct >= 75 ? "#e09040" : "#CC0000", borderRadius: 5 }} />
                             </div>
-                            <span style={{ fontSize: 12, color: compPct >= 90 ? "#2a9d8f" : "#e09040", fontWeight: 600 }}>{compPct}%</span>
+                            <span style={{ fontSize: 14, color: compPct >= 90 ? "#2a9d8f" : "#e09040", fontWeight: 600 }}>{compPct}%</span>
                           </div>
                         </td>
                         <td style={{ padding: "12px 14px" }}>
-                          <span style={{ fontSize: 13, color: waitTimeWeek[i]?.avg > 30 ? "#e07050" : "#1e2d40", fontWeight: waitTimeWeek[i]?.avg > 30 ? 700 : 400 }}>
+                          <span style={{ fontSize: 14, color: waitTimeWeek[i]?.avg > 30 ? "#CC0000" : "#1e2d40", fontWeight: waitTimeWeek[i]?.avg > 30 ? 700 : 400 }}>
                             {waitTimeWeek[i]?.avg}m
                           </span>
                         </td>
-                        <td style={{ padding: "12px 14px", fontSize: 13, color: "#2a9d8f", fontWeight: 600 }}>{sms?.sent}</td>
+                        <td style={{ padding: "12px 14px", fontSize: 14, color: "#2a9d8f", fontWeight: 600 }}>{sms?.sent}</td>
                         <td style={{ padding: "12px 14px" }}>
-                          <span style={{ fontSize: 13, color: sms?.failed > 3 ? "#e07050" : "#8a9bb0", fontWeight: sms?.failed > 3 ? 700 : 400 }}>{sms?.failed}</span>
+                          <span style={{ fontSize: 14, color: sms?.failed > 3 ? "#CC0000" : "#8a9bb0", fontWeight: sms?.failed > 3 ? 700 : 400 }}>{sms?.failed}</span>
                         </td>
                       </tr>
                     );
@@ -484,18 +503,18 @@ export default function Reports() {
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "#f0f7f5", borderTop: "2px solid #c8e8e0" }}>
-                    <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 700, color: "#1e2d40" }}>Totals</td>
-                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{weeklyQueue.reduce((a, r) => a + r.total, 0)}</td>
-                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#2a9d8f", fontFamily: "'Fraunces',serif" }}>{weeklyQueue.reduce((a, r) => a + r.completed, 0)}</td>
-                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#c05080", fontFamily: "'Fraunces',serif" }}>{weeklyQueue.reduce((a, r) => a + r.skipped, 0)}</td>
-                    <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 700, color: "#2a9d8f" }}>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>Totals</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>{weeklyQueue.reduce((a, r) => a + r.total, 0)}</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#2a9d8f" }}>{weeklyQueue.reduce((a, r) => a + r.completed, 0)}</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#c05080" }}>{weeklyQueue.reduce((a, r) => a + r.skipped, 0)}</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#2a9d8f" }}>
                       {Math.round(weeklyQueue.reduce((a, r) => a + r.completed, 0) / weeklyQueue.reduce((a, r) => a + r.total, 0) * 100)}%
                     </td>
-                    <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 700, color: "#1e2d40" }}>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>
                       {Math.round(waitTimeWeek.reduce((a, r) => a + r.avg, 0) / waitTimeWeek.length)}m avg
                     </td>
-                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#2a9d8f", fontFamily: "'Fraunces',serif" }}>{smsWeekly.reduce((a, r) => a + r.sent, 0)}</td>
-                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#e07050", fontFamily: "'Fraunces',serif" }}>{smsWeekly.reduce((a, r) => a + r.failed, 0)}</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#2a9d8f" }}>{smsWeekly.reduce((a, r) => a + r.sent, 0)}</td>
+                    <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 700, color: "#CC0000" }}>{smsWeekly.reduce((a, r) => a + r.failed, 0)}</td>
                   </tr>
                 </tfoot>
               </table>

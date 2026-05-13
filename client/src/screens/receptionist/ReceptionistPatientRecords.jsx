@@ -97,14 +97,14 @@ const patients = [
 
 const statusStyle = {
   active:   { color: "#2a9d8f", bg: "#e8f7f5", label: "Active"   },
-  priority: { color: "#7b5ea7", bg: "#f0eafb", label: "Priority" },
+  priority: { color: "#8B5FBF", bg: "#f0eafb", label: "Priority" },
   inactive: { color: "#9aabc0", bg: "#f0f4fa", label: "Inactive" },
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#7b5ea7", bg: "#f0eafb" },
+  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb" },
   pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f3" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#3b7dd8", bg: "#eef3fc" },
+  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA" },
   pediatric: { label: "Pedia",          icon: "👶", color: "#e09040", bg: "#fdf3e8" },
   solo:      { label: "Solo Parent",    icon: "👨‍👧", color: "#2a9d8f", bg: "#e8f7f5" },
 };
@@ -131,15 +131,15 @@ function Sidebar() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>CareQueue</div>
-            <div style={{ fontSize: 11, color: "#8a9bb0" }}>Reception</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
+            <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
           </div>
         </div>
       </div>
       <div style={{ padding: "10px 20px" }}>
         <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
         </div>
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
@@ -164,15 +164,15 @@ function Sidebar() {
           >
             <span style={{ fontSize: 16 }}>{item.icon}</span>
             {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{item.badge}</span>}
+            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
         ))}
       </nav>
       <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white" }}>AR</div>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>AR</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
-          <div style={{ fontSize: 11, color: "#8a9bb0" }}>Front Desk</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
+          <div style={{ fontSize: 14, color: "#8a9bb0" }}>Front Desk</div>
         </div>
       </div>
     </div>
@@ -180,7 +180,7 @@ function Sidebar() {
 }
 
 // ── Visit Detail Drawer ───────────────────────────────────────────────────────
-function VisitDrawer({ visit, patient, onClose }) {
+function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
   if (!visit) return null;
   return (
     <>
@@ -198,15 +198,15 @@ function VisitDrawer({ visit, patient, onClose }) {
         <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 24px", flexShrink: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>Consultation Record</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>{visit.diagnosis}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient?.name} · {visit.date} · {visit.time}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>Consultation Record</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{visit.diagnosis}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient?.name} · {visit.date} · {visit.time}</div>
             </div>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             {[visit.queue, visit.duration, visit.doctor].map(tag => (
-              <span key={tag} style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", borderRadius: 7, padding: "3px 10px", fontSize: 11 }}>{tag}</span>
+              <span key={tag} style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>{tag}</span>
             ))}
           </div>
         </div>
@@ -214,27 +214,27 @@ function VisitDrawer({ visit, patient, onClose }) {
         {/* Body — read-only info */}
         <div style={{ flex: 1, padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ background: "#e8f7f5", borderRadius: 13, padding: "16px 18px", border: "1px solid #c0e0dc" }}>
-            <div style={{ fontSize: 11, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 6 }}>Chief Complaint</div>
+            <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 6 }}>Chief Complaint</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>{visit.reason}</div>
           </div>
 
           <div style={{ background: "#f7f9fd", borderRadius: 13, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-            <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 6 }}>Diagnosis</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{visit.diagnosis}</div>
+            <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 6 }}>Diagnosis</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>{visit.diagnosis}</div>
           </div>
 
           {/* Read-only notice */}
           <div style={{ background: "#fdf3e8", borderRadius: 11, padding: "10px 14px", border: "1px solid #f5ddb8", display: "flex", gap: 10, alignItems: "center" }}>
             <span style={{ fontSize: 16 }}>🔒</span>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#b07030" }}>Read-only Access</div>
-              <div style={{ fontSize: 11, color: "#9a6a40" }}>Clinical notes visible to doctors only. You can view basic visit info.</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#b07030" }}>Read-only Access</div>
+              <div style={{ fontSize: 14, color: "#9a6a40" }}>Clinical notes visible to doctors only. You can view basic visit info.</div>
             </div>
           </div>
 
           {/* Visit meta */}
           <div style={{ background: "white", borderRadius: 13, padding: "14px 16px", border: "1px solid #e0e7ef" }}>
-            <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>Visit Details</div>
+            <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>Visit Details</div>
             {[
               { label: "Date",     value: visit.date     },
               { label: "Time",     value: visit.time     },
@@ -243,18 +243,18 @@ function VisitDrawer({ visit, patient, onClose }) {
               { label: "Duration", value: visit.duration },
             ].map(r => (
               <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #f0f3f7" }}>
-                <span style={{ fontSize: 12, color: "#8a9bb0" }}>{r.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{r.value}</span>
+                <span style={{ fontSize: 14, color: "#8a9bb0" }}>{r.label}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{r.value}</span>
               </div>
             ))}
           </div>
 
           {/* Actions available to receptionist */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
-            <button style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.25)" }}>
+            <button onClick={() => { onBook && onBook(patient); onClose(); }} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.25)" }}>
               📅 Book Follow-up Appointment
             </button>
-            <button style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px", fontSize: 12, cursor: "pointer", fontWeight: 500 }}>
+            <button onClick={() => { onSms && onSms(patient.name); onClose(); }} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
               📱 Send Visit Summary SMS
             </button>
           </div>
@@ -265,14 +265,14 @@ function VisitDrawer({ visit, patient, onClose }) {
 }
 
 // ── Profile Panel ─────────────────────────────────────────────────────────────
-function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
+function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onSms }) {
   const [tab, setTab] = useState("overview");
 
   if (!patient) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "#8a9bb0" }}>
       <div style={{ fontSize: 52 }}>🗂️</div>
       <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>Select a patient</div>
-      <div style={{ fontSize: 13 }}>Click any record from the list</div>
+      <div style={{ fontSize: 14 }}>Click any record from the list</div>
     </div>
   );
 
@@ -291,21 +291,21 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
               {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 16 }}>{pc.icon}</div>}
             </div>
             <div>
-              <div style={{ fontSize: 21, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>{patient.name}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · DOB: {patient.dob}</div>
+              <div style={{ fontSize: 21, fontWeight: 700, color: "white" }}>{patient.name}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · DOB: {patient.dob}</div>
               <div style={{ display: "flex", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
-                <span style={{ background: ss.bg, color: ss.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>{ss.label}</span>
-                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 11 }}>🩸 {patient.bloodType}</span>
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 11 }}>📋 {patient.totalVisits} visits</span>
+                <span style={{ background: ss.bg, color: ss.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700 }}>{ss.label}</span>
+                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>🩸 {patient.bloodType}</span>
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>📋 {patient.totalVisits} visits</span>
               </div>
             </div>
           </div>
 
           {/* Receptionist actions */}
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📱 SMS</button>
-            <button style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>➕ Add to Queue</button>
+            <button onClick={() => onSms && onSms(patient.name)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>📱 SMS</button>
+            <button onClick={() => onAddQueue && onAddQueue(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>➕ Add to Queue</button>
           </div>
         </div>
 
@@ -316,7 +316,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
             { icon: "📍", v: patient.address },
             { icon: "🏥", v: `PhilHealth: ${patient.philhealth}` },
           ].map(i => (
-            <div key={i.v} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+            <div key={i.v} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
               <span>{i.icon}</span>{i.v}
             </div>
           ))}
@@ -331,11 +331,11 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             background: "none", border: "none", padding: "14px 18px",
-            fontSize: 13, fontWeight: tab === t.key ? 700 : 400,
+            fontSize: 14, fontWeight: tab === t.key ? 700 : 400,
             color: tab === t.key ? "#2a9d8f" : "#7a8fb0",
             borderBottom: tab === t.key ? "2.5px solid #2a9d8f" : "2.5px solid transparent",
             cursor: "pointer", marginBottom: -1, transition: "color 0.15s",
-            fontFamily: "'DM Sans',sans-serif",
+            fontFamily: "'Afacad', sans-serif",
           }}>{t.label}</button>
         ))}
       </div>
@@ -351,31 +351,31 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {/* Conditions */}
               <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-                <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>🏥 Conditions</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>🏥 Conditions</div>
                 {patient.conditions.length > 0 ? patient.conditions.map(c => (
                   <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f", flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: "#1e2d40", fontWeight: 500 }}>{c}</span>
+                    <span style={{ fontSize: 14, color: "#1e2d40", fontWeight: 500 }}>{c}</span>
                   </div>
-                )) : <div style={{ fontSize: 13, color: "#8a9bb0" }}>None recorded</div>}
+                )) : <div style={{ fontSize: 14, color: "#8a9bb0" }}>None recorded</div>}
               </div>
 
               {/* Allergies */}
               <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-                <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>⚠️ Allergies</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>⚠️ Allergies</div>
                 {patient.allergies.length > 0 ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {patient.allergies.map(a => (
-                      <span key={a} style={{ background: "#fde8e0", color: "#e07050", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 600, border: "1px solid #f5c8b0" }}>⚠ {a}</span>
+                      <span key={a} style={{ background: "#fde8e0", color: "#CC0000", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, border: "1px solid #f5c8b0" }}>⚠ {a}</span>
                     ))}
                   </div>
-                ) : <div style={{ fontSize: 13, color: "#8a9bb0" }}>No known allergies</div>}
+                ) : <div style={{ fontSize: 14, color: "#8a9bb0" }}>No known allergies</div>}
               </div>
             </div>
 
             {/* Personal info */}
             <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-              <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 14 }}>👤 Patient Details</div>
+              <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 14 }}>👤 Patient Details</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
                 {[
                   { label: "Date of Birth",  value: patient.dob         },
@@ -386,8 +386,8 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
                   { label: "Total Visits",   value: `${patient.totalVisits} visits` },
                 ].map((f, i) => (
                   <div key={f.label} style={{ padding: "11px 0", borderBottom: i < 3 ? "1px solid #f0f3f7" : "none", paddingRight: 14 }}>
-                    <div style={{ fontSize: 10, color: "#8a9bb0", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.4 }}>{f.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{f.value}</div>
+                    <div style={{ fontSize: 14, color: "#8a9bb0", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.4 }}>{f.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{f.value}</div>
                   </div>
                 ))}
               </div>
@@ -397,16 +397,16 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
             {patient.visits[0] && (
               <div onClick={() => { onVisitSelect(patient.visits[0]); setTab("history"); }}
                 style={{ background: "linear-gradient(135deg,#e8f7f5,#d4ede9)", borderRadius: 14, padding: "16px 18px", border: "1px solid #b8e4de", cursor: "pointer" }}>
-                <div style={{ fontSize: 11, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>🩺 Last Visit — click to view</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{patient.visits[0].diagnosis}</div>
-                <div style={{ fontSize: 13, color: "#5a8f80", marginTop: 3 }}>{patient.visits[0].date} · {patient.visits[0].doctor}</div>
+                <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>🩺 Last Visit — click to view</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>{patient.visits[0].diagnosis}</div>
+                <div style={{ fontSize: 14, color: "#5a8f80", marginTop: 3 }}>{patient.visits[0].date} · {patient.visits[0].doctor}</div>
               </div>
             )}
 
             {/* Read-only notice */}
             <div style={{ background: "#fdf3e8", borderRadius: 12, padding: "12px 14px", border: "1px solid #f5ddb8", display: "flex", gap: 10, alignItems: "center" }}>
               <span>🔒</span>
-              <div style={{ fontSize: 12, color: "#9a6a40" }}>Clinical notes and prescriptions are visible to doctors only. As reception, you can view basic patient info, visit history, and manage scheduling.</div>
+              <div style={{ fontSize: 14, color: "#9a6a40" }}>Clinical notes and prescriptions are visible to doctors only. As reception, you can view basic patient info, visit history, and manage scheduling.</div>
             </div>
           </div>
         )}
@@ -414,7 +414,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
         {/* Visit History */}
         {tab === "history" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 0, animation: "fadeUp 0.2s ease" }}>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginBottom: 14 }}>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginBottom: 14 }}>
               {patient.visits.length} visit record{patient.visits.length !== 1 ? "s" : ""} — click any to view details
             </div>
 
@@ -452,19 +452,19 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{v.diagnosis}</div>
-                          <div style={{ fontSize: 12, color: "#7a8fb0", marginTop: 3 }}>{v.reason}</div>
-                          <div style={{ fontSize: 11, color: "#b0beca", marginTop: 4 }}>{v.doctor} · {v.queue} · {v.duration}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>{v.diagnosis}</div>
+                          <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 3 }}>{v.reason}</div>
+                          <div style={{ fontSize: 14, color: "#b0beca", marginTop: 4 }}>{v.doctor} · {v.queue} · {v.duration}</div>
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: i === 0 ? "#2a9d8f" : "#7a8fb0" }}>{v.date}</div>
-                          <div style={{ fontSize: 11, color: "#b0beca", marginTop: 2 }}>{v.time}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: i === 0 ? "#2a9d8f" : "#7a8fb0" }}>{v.date}</div>
+                          <div style={{ fontSize: 14, color: "#b0beca", marginTop: 2 }}>{v.time}</div>
                           <div style={{
                             marginTop: 8, display: "inline-block",
                             background: isSelected ? "#2a9d8f" : "#f0f3f7",
                             color: isSelected ? "white" : "#2a9d8f",
                             border: `1px solid ${isSelected ? "#2a9d8f" : "#c8deda"}`,
-                            borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 600,
+                            borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600,
                             transition: "all 0.15s",
                           }}>
                             {isSelected ? "Viewing →" : "View →"}
@@ -483,12 +483,55 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId }) {
   );
 }
 
+// ── Add to Queue Modal ──────────────────────────────────────────────────────
+function AddToQueueModal({ patient, onClose, onConfirm }) {
+  const [reason, setReason] = useState(patient?.reason || '');
+  const [doctor, setDoctor] = useState('Dr. Reyes');
+  if (!patient) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: 440, boxShadow: "0 24px 64px rgba(20,40,70,0.22)", overflow: "hidden", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
+        <style>{`@keyframes popIn{from{transform:scale(0.93);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
+        <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "white" }}>Add to Queue</div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white" }}>✕</button>
+          </div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient.name} · {patient.age} yrs</div>
+        </div>
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Chief Complaint / Reason</label>
+            <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Enter reason for visit..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Assign Doctor</label>
+            <select value={doctor} onChange={e => setDoctor(e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
+              <option>Dr. Reyes</option>
+              <option>Dr. Santos</option>
+              <option>Dr. Cruz</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #e0e7ef", borderRadius: 10, padding: "11px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
+            <button onClick={() => { onConfirm(patient, reason, doctor); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>Add to Queue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function ReceptionistPatientRecords() {
+export default function ReceptionistPatientRecords({ onNavigate }) {
   const [selected, setSelected]       = useState(patients[0]);
   const [activeVisit, setActiveVisit] = useState(null);
   const [search, setSearch]           = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [addQueueModal, setAddQueueModal] = useState(null);
+  const [toast, setToast]             = useState(null);
+
+  const showToast = (msg) => { setToast(null); setTimeout(() => setToast(msg), 10); };
 
   const handlePatientSelect = (p) => { setSelected(p); setActiveVisit(null); };
 
@@ -502,19 +545,29 @@ export default function ReceptionistPatientRecords() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", fontFamily: "'DM Sans',sans-serif", display: "flex" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{`
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #c8deda; border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
+      
+      
 
-      <Sidebar />
-      <VisitDrawer visit={activeVisit} patient={selected} onClose={() => setActiveVisit(null)} />
+      <AddToQueueModal
+        patient={addQueueModal}
+        onClose={() => setAddQueueModal(null)}
+        onConfirm={(p, reason, doctor) => showToast(`✅ ${p.name} added to queue for ${doctor}`)}
+      />
 
-      <div style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "fadeUp 0.3s ease" }}>{toast}</div>
+      )}
+
+      <VisitDrawer
+        visit={activeVisit}
+        patient={selected}
+        onClose={() => setActiveVisit(null)}
+        onBook={(p) => showToast(`📅 Follow-up booking initiated for ${p.name}`)}
+        onSms={(name) => showToast(`📱 Visit summary SMS queued for ${name}`)}
+      />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{
@@ -522,14 +575,14 @@ export default function ReceptionistPatientRecords() {
           padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0,
         }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontFamily: "'Fraunces',serif", fontWeight: 700, color: "#1e2d40" }}>Patient Records</h1>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Patient Records</h1>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
               {patients.length} patients · {patients.reduce((a, p) => a + p.visits.length, 0)} total visits
             </div>
           </div>
-          <button style={{
+          <button onClick={() => onNavigate && onNavigate('register')} style={{
             background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",
-            borderRadius: 10, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer",
             boxShadow: "0 4px 14px rgba(42,157,143,0.28)", display: "flex", alignItems: "center", gap: 6,
           }}>➕ Register New Patient</button>
         </div>
@@ -543,10 +596,10 @@ export default function ReceptionistPatientRecords() {
             {/* Search */}
             <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid #f0f3f7" }}>
               <div style={{ position: "relative", marginBottom: 10 }}>
-                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#8a9bb0" }}>🔍</span>
+                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}>🔍</span>
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Name, PhilHealth, condition..."
-                  style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", background: "#f7f9fb" }}
+                  style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", background: "#f7f9fb" }}
                   onFocus={e => e.target.style.borderColor = "#2a9d8f"}
                   onBlur={e => e.target.style.borderColor = "#e0e7ef"}
                 />
@@ -557,7 +610,7 @@ export default function ReceptionistPatientRecords() {
                     background: statusFilter === s ? "#1e2d40" : "#f4f7fb",
                     color: statusFilter === s ? "white" : "#7a8fb0",
                     border: "none", borderRadius: 7, padding: "4px 10px",
-                    fontSize: 11, fontWeight: statusFilter === s ? 600 : 400,
+                    fontSize: 14, fontWeight: statusFilter === s ? 600 : 400,
                     cursor: "pointer", textTransform: "capitalize", transition: "all 0.15s",
                   }}>{s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}</button>
                 ))}
@@ -584,20 +637,20 @@ export default function ReceptionistPatientRecords() {
                     <div style={{ display: "flex", gap: 10, paddingLeft: p.priority ? 6 : 0 }}>
                       <div style={{ position: "relative" }}>
                         <Avatar name={p.name} size={36} />
-                        {pc && <div style={{ position: "absolute", bottom: -1, right: -1, fontSize: 11 }}>{pc.icon}</div>}
+                        {pc && <div style={{ position: "absolute", bottom: -1, right: -1, fontSize: 14 }}>{pc.icon}</div>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
-                          <span style={{ background: ss.bg, color: ss.color, borderRadius: 5, padding: "1px 6px", fontSize: 10, fontWeight: 600, flexShrink: 0, marginLeft: 4 }}>{ss.label}</span>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
+                          <span style={{ background: ss.bg, color: ss.color, borderRadius: 5, padding: "1px 6px", fontSize: 14, fontWeight: 600, flexShrink: 0, marginLeft: 4 }}>{ss.label}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#7a8fb0", marginTop: 1 }}>{p.age} yrs · {p.gender} · {p.bloodType}</div>
-                        <div style={{ fontSize: 11, color: "#8a9bb0", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 1 }}>{p.age} yrs · {p.gender} · {p.bloodType}</div>
+                        <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {p.conditions.length > 0 ? p.conditions.join(" · ") : "No conditions"}
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
-                          <span style={{ fontSize: 10, color: "#b0beca" }}>Last: {p.lastVisit}</span>
-                          <span style={{ fontSize: 10, color: "#8a9bb0", fontWeight: 500 }}>{p.visits.length} visits</span>
+                          <span style={{ fontSize: 14, color: "#b0beca" }}>Last: {p.lastVisit}</span>
+                          <span style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 500 }}>{p.visits.length} visits</span>
                         </div>
                       </div>
                     </div>
@@ -607,7 +660,7 @@ export default function ReceptionistPatientRecords() {
               {filtered.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 16px", color: "#8a9bb0" }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-                  <div style={{ fontSize: 13 }}>No patients found</div>
+                  <div style={{ fontSize: 14 }}>No patients found</div>
                 </div>
               )}
             </div>
@@ -619,6 +672,8 @@ export default function ReceptionistPatientRecords() {
               patient={selected}
               onVisitSelect={setActiveVisit}
               selectedVisitId={activeVisit?.id}
+              onAddQueue={(p) => setAddQueueModal(p)}
+              onSms={(name) => showToast(`📱 SMS queued for ${name}`)}
             />
           </div>
         </div>

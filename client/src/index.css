@@ -1,2 +1,54 @@
+/* ── LikhaHealth Design System ─────────────────────────────── */
+/* Municipality colors: Blue #0047AB · Red #CC0000              */
+
+:root {
+  /* Brand */
+  --brand-blue:       #0047AB;  /* Municipality primary blue  */
+  --brand-blue-light: #1565D8;  /* Lighter gradient stop      */
+  --brand-blue-dim:   #E8EEFA;  /* Tinted background          */
+  --brand-blue-border:#B0C8EC;  /* Border/divider             */
+  --brand-red:        #CC0000;  /* Municipality accent red    */
+  --brand-red-light:  #FF1A1A;  /* Lighter gradient stop      */
+  --brand-red-dim:    #FDEAEA;  /* Red tinted background      */
+  --brand-red-border: #F5BCBC;  /* Red border/divider         */
+
+  /* Health-staff teal (kept for receptionist/medical success states) */
+  --teal:             #2a9d8f;
+  --teal-light:       #52c4b8;
+  --teal-dim:         #e8f7f5;
+  --teal-border:      #b8e4de;
+
+  /* Neutrals */
+  --navy:             #1e2d40;
+  --text-primary:     #1e2d40;
+  --text-muted:       #7a8fb0;
+  --bg-page:          #f4f7fb;
+  --border:           #e0e7ef;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; padding: 0; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Afacad', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1e2d40;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: var(--brand-blue-border); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Common animations */
+@keyframes fadeUp    { from { opacity: 0; transform: translateY(8px);  } to { opacity: 1; transform: translateY(0);  } }
+@keyframes fadeIn    { from { opacity: 0; transform: translateY(6px);  } to { opacity: 1; transform: translateY(0);  } }
+@keyframes slideIn   { from { transform: translateX(100%); }              to { transform: translateX(0);              } }
+@keyframes popIn     { from { transform: scale(0.93); opacity: 0; }       to { transform: scale(1);    opacity: 1;    } }
+@keyframes pulse     { 0%, 100% { opacity: 1; } 50% { opacity: .35; }                                                  }
+@keyframes fadeSlide { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0);  } }
+@keyframes toastIn   { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0);  opacity: 1; } }

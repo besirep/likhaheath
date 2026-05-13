@@ -18,16 +18,16 @@ const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"];
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: true  },
-  "vitals-done":     { label: "Vitals Ready",    color: "#4a90d9", bg: "#eaf3fc", dot: "#4a90d9", pulse: false },
+  "vitals-done":     { label: "Vitals Ready",    color: "#0047AB", bg: "#E5EDF8", dot: "#0047AB", pulse: false },
   "waiting":         { label: "Waiting",          color: "#e09040", bg: "#fdf3e8", dot: "#e09040", pulse: false },
   "skipped":         { label: "Skipped",          color: "#c05080", bg: "#fce8f0", dot: "#c05080", pulse: false },
   "done":            { label: "Done",             color: "#9aabc0", bg: "#f0f4fa", dot: "#9aabc0", pulse: false },
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#7b5ea7", bg: "#f0eafb", stripe: "#7b5ea7" },
+  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
   pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f3", stripe: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#3b7dd8", bg: "#eef3fc", stripe: "#3b7dd8" },
+  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
   pediatric: { label: "Pedia (0–5)",    icon: "👶", color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
@@ -35,7 +35,7 @@ const priorityConfig = {
 const bpFlag   = bp => { if (!bp) return "normal"; const s = Number(bp.split("/")[0]); return s >= 140 ? "high" : s < 90 ? "low" : "normal"; };
 const tempFlag = v  => { if (!v)  return "normal"; const n = Number(v); return n >= 37.8 ? "high" : n < 36 ? "low" : "normal"; };
 const spo2Flag = v  => !v ? "normal" : Number(v) < 95 ? "low" : "normal";
-const flagColor = { high: "#e07050", low: "#c04080", normal: "#2a9d8f" };
+const flagColor = { high: "#CC0000", low: "#c04080", normal: "#2a9d8f" };
 const flagBg    = { high: "#fdeee8", low: "#fce8f0", normal: "#e8f7f5" };
 
 function Avatar({ name, size = 34 }) {
@@ -56,15 +56,15 @@ function Sidebar() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>CareQueue</div>
-            <div style={{ fontSize: 11, color: "#8a9bb0" }}>Reception</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
+            <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
           </div>
         </div>
       </div>
       <div style={{ padding: "10px 20px" }}>
         <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
         </div>
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
@@ -89,15 +89,15 @@ function Sidebar() {
           >
             <span style={{ fontSize: 16 }}>{item.icon}</span>
             {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{item.badge}</span>}
+            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
         ))}
       </nav>
       <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white" }}>AR</div>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>AR</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
-          <div style={{ fontSize: 11, color: "#8a9bb0" }}>Front Desk</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
+          <div style={{ fontSize: 14, color: "#8a9bb0" }}>Front Desk</div>
         </div>
       </div>
     </div>
@@ -108,7 +108,7 @@ function Sidebar() {
 function Toast({ msg, onDone }) {
   useState(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); });
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 13, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "toastIn 0.3s ease" }}>
+    <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "toastIn 0.3s ease" }}>
       📱 {msg}
     </div>
   );
@@ -159,16 +159,16 @@ function RecordVitalsModal({ patient, onClose, onSubmit }) {
         <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 26px", borderRadius: "22px 22px 0 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>Record Vitals</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>{patient.name}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>Record Vitals</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "white" }}>{patient.name}</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
             </div>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34, borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
           {patient.priority && (
             <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: "4px 12px" }}>
               <span>{priorityConfig[patient.priority].icon}</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{priorityConfig[patient.priority].label}</span>
+              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{priorityConfig[patient.priority].label}</span>
             </div>
           )}
         </div>
@@ -177,36 +177,36 @@ function RecordVitalsModal({ patient, onClose, onSubmit }) {
         <div style={{ padding: "22px 26px" }}>
           {/* BP — full width */}
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              ❤️ Blood Pressure <span style={{ color: "#e07050" }}>*</span>
+            <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              ❤️ Blood Pressure <span style={{ color: "#CC0000" }}>*</span>
             </label>
             <div style={{ position: "relative" }}>
               <input value={form.bp} onChange={e => update("bp", e.target.value)} placeholder="e.g. 120/80"
-                style={{ width: "100%", padding: "11px 14px 11px 14px", paddingRight: 56, border: `1.5px solid ${errors.bp ? "#e07050" : "#e0e7f3"}`, borderRadius: 11, fontSize: 15, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
+                style={{ width: "100%", padding: "11px 14px 11px 14px", paddingRight: 56, border: `1.5px solid ${errors.bp ? "#CC0000" : "#D8E4F2"}`, borderRadius: 11, fontSize: 15, color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
                 onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-                onBlur={e => e.target.style.borderColor = errors.bp ? "#e07050" : "#e0e7f3"}
+                onBlur={e => e.target.style.borderColor = errors.bp ? "#CC0000" : "#D8E4F2"}
               />
-              <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "#8a9bb0", fontWeight: 500 }}>mmHg</span>
+              <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0", fontWeight: 500 }}>mmHg</span>
             </div>
-            {errors.bp && <div style={{ fontSize: 11, color: "#e07050", marginTop: 4 }}>Blood pressure is required</div>}
+            {errors.bp && <div style={{ fontSize: 14, color: "#CC0000", marginTop: 4 }}>Blood pressure is required</div>}
           </div>
 
           {/* 2-col grid for rest */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
             {fields.filter(f => f.half).map(f => (
               <div key={f.key}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  {f.icon} {f.label} <span style={{ color: "#e07050" }}>*</span>
+                <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+                  {f.icon} {f.label} <span style={{ color: "#CC0000" }}>*</span>
                 </label>
                 <div style={{ position: "relative" }}>
                   <input value={form[f.key]} onChange={e => update(f.key, e.target.value)} placeholder={f.placeholder} type="number" step="0.1"
-                    style={{ width: "100%", padding: "10px 12px", paddingRight: 44, border: `1.5px solid ${errors[f.key] ? "#e07050" : "#e0e7f3"}`, borderRadius: 11, fontSize: 14, fontFamily: "'DM Sans',sans-serif", color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
+                    style={{ width: "100%", padding: "10px 12px", paddingRight: 44, border: `1.5px solid ${errors[f.key] ? "#CC0000" : "#D8E4F2"}`, borderRadius: 11, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
                     onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-                    onBlur={e => e.target.style.borderColor = errors[f.key] ? "#e07050" : "#e0e7f3"}
+                    onBlur={e => e.target.style.borderColor = errors[f.key] ? "#CC0000" : "#D8E4F2"}
                   />
-                  <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#8a9bb0" }}>{f.unit}</span>
+                  <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}>{f.unit}</span>
                 </div>
-                {errors[f.key] && <div style={{ fontSize: 11, color: "#e07050", marginTop: 3 }}>Required</div>}
+                {errors[f.key] && <div style={{ fontSize: 14, color: "#CC0000", marginTop: 3 }}>Required</div>}
               </div>
             ))}
           </div>
@@ -215,26 +215,26 @@ function RecordVitalsModal({ patient, onClose, onSubmit }) {
           {bmi && (
             <div style={{ background: "linear-gradient(135deg,#e8f7f5,#d4f0eb)", borderRadius: 12, padding: "12px 16px", marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #b8e4de" }}>
               <div>
-                <div style={{ fontSize: 11, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>📐 BMI (auto-calculated)</div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif", lineHeight: 1.1, marginTop: 2 }}>{bmi}</div>
+                <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>📐 BMI (auto-calculated)</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: "#1e2d40", lineHeight: 1.1, marginTop: 2 }}>{bmi}</div>
               </div>
-              <div style={{ fontSize: 13, color: "#4a7d70", fontWeight: 500, textAlign: "right" }}>
+              <div style={{ fontSize: 14, color: "#4a7d70", fontWeight: 500, textAlign: "right" }}>
                 {Number(bmi) < 18.5 ? "Underweight" : Number(bmi) < 25 ? "Normal weight" : Number(bmi) < 30 ? "Overweight" : "Obese"}
-                <div style={{ fontSize: 11, color: "#8a9bb0", marginTop: 2 }}>kg/m²</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>kg/m²</div>
               </div>
             </div>
           )}
 
           {/* Actions */}
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #e0e7f3", borderRadius: 12, padding: "12px", fontSize: 13, color: "#4a5d75", cursor: "pointer", fontWeight: 500 }}>
+            <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #D8E4F2", borderRadius: 12, padding: "12px", fontSize: 14, color: "#4a5d75", cursor: "pointer", fontWeight: 500 }}>
               Cancel
             </button>
             <button onClick={handleSubmit} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(42,157,143,0.32)" }}>
               ✓ Save Vitals & Mark Ready
             </button>
           </div>
-          <div style={{ textAlign: "center", fontSize: 11, color: "#8a9bb0", marginTop: 10 }}>
+          <div style={{ textAlign: "center", fontSize: 14, color: "#8a9bb0", marginTop: 10 }}>
             Status will automatically update to <strong>Vitals Ready</strong>
           </div>
         </div>
@@ -244,7 +244,7 @@ function RecordVitalsModal({ patient, onClose, onSubmit }) {
 }
 
 // ── Patient Detail Drawer ─────────────────────────────────────────────────────
-function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
+function PatientDrawer({ patient, onClose, onAction, onRecordVitals, onNavigate }) {
   if (!patient) return null;
   const sc = statusConfig[patient.status];
   const pc = patient.priority ? priorityConfig[patient.priority] : null;
@@ -263,18 +263,18 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
                 {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{pc.icon}</span>}
               </div>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>{patient.name}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{patient.name}</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
               </div>
             </div>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
           <div style={{ display: "flex", gap: 7, marginTop: 14, flexWrap: "wrap" }}>
-            <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>
+            <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, display: "inline-block", marginRight: 5, animation: sc.pulse ? "pulse 1.4s infinite" : "none" }} />
               {sc.label}
             </span>
-            {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>{pc.icon} {pc.label}</span>}
+            {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>{pc.icon} {pc.label}</span>}
           </div>
         </div>
 
@@ -290,8 +290,8 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
               { label: "Contact",          value: patient.contact },
             ].map(r => (
               <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #eef1f8" }}>
-                <span style={{ fontSize: 11, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.4 }}>{r.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40", textAlign: "right", maxWidth: 200 }}>{r.value}</span>
+                <span style={{ fontSize: 14, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.4 }}>{r.label}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", textAlign: "right", maxWidth: 200 }}>{r.value}</span>
               </div>
             ))}
           </div>
@@ -299,7 +299,7 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
           {/* Vitals */}
           {patient.vitals ? (
             <div>
-              <div style={{ fontSize: 11, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Vitals Recorded</div>
+              <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Vitals Recorded</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {[
                   { label: "Blood Pressure", value: `${patient.vitals.bp} mmHg`, flag: bpFlag(patient.vitals.bp),   icon: "❤️" },
@@ -307,11 +307,11 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
                   { label: "Heart Rate",     value: `${patient.vitals.hr} bpm`,   flag: "normal",                     icon: "💓" },
                   { label: "SpO₂",           value: `${patient.vitals.spo2}%`,    flag: spo2Flag(patient.vitals.spo2), icon: "🫁" },
                 ].map(f => (
-                  <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 10, padding: "10px 12px", border: `1px solid ${f.flag !== "normal" ? flagColor[f.flag] + "30" : "#e0e7f3"}` }}>
+                  <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 10, padding: "10px 12px", border: `1px solid ${f.flag !== "normal" ? flagColor[f.flag] + "30" : "#D8E4F2"}` }}>
                     <div style={{ fontSize: 14, marginBottom: 3 }}>{f.icon}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag], fontFamily: "'Fraunces',serif" }}>{f.value}</div>
-                    <div style={{ fontSize: 10, color: "#8a9bb0", marginTop: 1, textTransform: "uppercase" }}>{f.label}</div>
-                    {f.flag !== "normal" && <div style={{ fontSize: 9, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}>⚠ {f.flag}</div>}
+                    <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag] }}>{f.value}</div>
+                    <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 1, textTransform: "uppercase" }}>{f.label}</div>
+                    {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}>⚠ {f.flag}</div>}
                   </div>
                 ))}
               </div>
@@ -319,8 +319,8 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
           ) : (
             <div style={{ background: "#fdf3e8", borderRadius: 13, padding: "14px 16px", border: "1px solid #f0d8b8", textAlign: "center" }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>⏳</div>
-              <div style={{ fontSize: 13, color: "#c07030", fontWeight: 600 }}>Vitals not yet recorded</div>
-              <div style={{ fontSize: 12, color: "#b0893a", marginTop: 3 }}>Nurse should record before consultation</div>
+              <div style={{ fontSize: 14, color: "#c07030", fontWeight: 600 }}>Vitals not yet recorded</div>
+              <div style={{ fontSize: 14, color: "#b0893a", marginTop: 3 }}>Nurse should record before consultation</div>
             </div>
           )}
 
@@ -339,8 +339,8 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
             )}
             {patient.status === "waiting" && (
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⏭ Skip</button>
-                <button onClick={() => onAction("call", patient)} style={{ flex: 1, background: "#eef3fc", color: "#3b7dd8", border: "1px solid #c0d4f5", borderRadius: 10, padding: "9px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📣 Call Directly</button>
+                <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>⏭ Skip</button>
+                <button onClick={() => onAction("call", patient)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>📣 Call Directly</button>
               </div>
             )}
             {patient.status === "skipped" && (
@@ -354,11 +354,11 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals }) {
               </button>
             )}
             {patient.status === "done" && (
-              <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 13, fontWeight: 600 }}>✓ Consultation complete</div>
+              <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>✓ Consultation complete</div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => onAction("sms", patient)} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #e0e7f3", borderRadius: 10, padding: "9px", fontSize: 12, cursor: "pointer" }}>📱 Send SMS</button>
-              <button style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #e0e7f3", borderRadius: 10, padding: "9px", fontSize: 12, cursor: "pointer" }}>🗂️ View Record</button>
+              <button onClick={() => onAction("sms", patient)} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>📱 Send SMS</button>
+              <button onClick={() => { onClose(); onNavigate && onNavigate('records'); }} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>🗂️ View Record</button>
             </div>
           </div>
         </div>
@@ -390,27 +390,27 @@ function QueueCard({ patient, index, onSelect, isSelected, onRecordVitals }) {
       <div style={{ paddingLeft: pc ? 8 : 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
           <Avatar name={patient.name} size={38} />
-          {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{pc.icon}</div>}
+          {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{pc.icon}</div>}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 15, color: isSelected ? "#2a9d8f" : "#1e2d40" }}>{patient.queue}</span>
-                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
-                {patient.status === "skipped" && <span style={{ background: "#fce8f0", color: "#c05080", borderRadius: 5, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>SKIPPED</span>}
+                <span style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 700, fontSize: 15, color: isSelected ? "#2a9d8f" : "#1e2d40" }}>{patient.queue}</span>
+                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
+                {patient.status === "skipped" && <span style={{ background: "#fce8f0", color: "#c05080", borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}>SKIPPED</span>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", marginTop: 1 }}>{patient.name}</div>
-              <div style={{ fontSize: 12, color: "#7a8fb0" }}>{patient.age} yrs · {patient.gender} · {patient.reason}</div>
+              <div style={{ fontSize: 14, color: "#7a8fb0" }}>{patient.age} yrs · {patient.gender} · {patient.reason}</div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: sc.dot, animation: sc.pulse ? "pulse 1.4s infinite" : "none" }} />
-                <span style={{ fontSize: 12, color: sc.color, fontWeight: 500 }}>{sc.label}</span>
+                <span style={{ fontSize: 14, color: sc.color, fontWeight: 500 }}>{sc.label}</span>
               </div>
-              <div style={{ fontSize: 11, color: "#b0beca", marginTop: 3 }}>Arrived {patient.arrived}</div>
-              {patient.doctor && <div style={{ fontSize: 11, color: "#8a9bb0", marginTop: 2 }}>{patient.doctor}</div>}
+              <div style={{ fontSize: 14, color: "#b0beca", marginTop: 3 }}>Arrived {patient.arrived}</div>
+              {patient.doctor && <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>{patient.doctor}</div>}
             </div>
           </div>
 
@@ -423,7 +423,7 @@ function QueueCard({ patient, index, onSelect, isSelected, onRecordVitals }) {
                   { v: `${patient.vitals.temp}°C`, label: "T", flag: tempFlag(patient.vitals.temp) },
                   { v: `${patient.vitals.spo2}%`, label: "SpO₂", flag: spo2Flag(patient.vitals.spo2) },
                 ].map(c => (
-                  <span key={c.label} style={{ background: flagBg[c.flag], color: flagColor[c.flag], borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
+                  <span key={c.label} style={{ background: flagBg[c.flag], color: flagColor[c.flag], borderRadius: 6, padding: "2px 8px", fontSize: 14, fontWeight: 500 }}>
                     {c.label}: {c.v}
                   </span>
                 ))}
@@ -431,13 +431,13 @@ function QueueCard({ patient, index, onSelect, isSelected, onRecordVitals }) {
             ) : patient.status === "waiting" ? (
               <button onClick={e => { e.stopPropagation(); onRecordVitals(patient); }} style={{
                 background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",
-                borderRadius: 8, padding: "4px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                borderRadius: 8, padding: "4px 12px", fontSize: 14, fontWeight: 700, cursor: "pointer",
                 boxShadow: "0 2px 8px rgba(42,157,143,0.3)",
               }}>
                 📋 Record Vitals
               </button>
             ) : (
-              <span style={{ fontSize: 11, color: "#b0beca", background: "#f4f7fb", borderRadius: 6, padding: "2px 8px" }}>⏳ Awaiting vitals</span>
+              <span style={{ fontSize: 14, color: "#b0beca", background: "#f4f7fb", borderRadius: 6, padding: "2px 8px" }}>⏳ Awaiting vitals</span>
             )}
           </div>
         </div>
@@ -499,31 +499,20 @@ export default function ReceptionistQueue({ onNavigate }) {
   });
 
   return (
-    <div style={{ height: "100vh", background: "#f4f7fb", fontFamily: "'DM Sans',sans-serif", display: "flex", overflow: "hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{`
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #c8e0db; border-radius: 4px; }
-        @keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @keyframes fadeSlide { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes slideIn   { from{transform:translateX(100%)} to{transform:translateX(0)} }
-        @keyframes popIn     { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
-        @keyframes toastIn   { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
-      `}</style>
+    <div style={{ height: "100vh", background: "#f4f7fb", display: "flex", overflow: "hidden" }}>
+      
+      
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
       {vitalsPatient && <RecordVitalsModal patient={vitalsPatient} onClose={() => setVitalsPatient(null)} onSubmit={handleVitalsSubmit} />}
-      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onRecordVitals={handleRecordVitals} />
-      <Sidebar />
-
-      <div style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onRecordVitals={handleRecordVitals} onNavigate={onNavigate} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontFamily: "'Fraunces',serif", fontWeight: 700, color: "#1e2d40" }}>Queue Management</h1>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>Sunday, March 1, 2026 · Shared Queue</div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Queue Management</h1>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>Sunday, March 1, 2026 · Shared Queue</div>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{ position: "relative" }}>
@@ -533,14 +522,14 @@ export default function ReceptionistQueue({ onNavigate }) {
               </button>
               {notifOpen && (
                 <div style={{ position: "absolute", right: 0, top: 48, width: 280, background: "white", borderRadius: 14, border: "1px solid #dde8e5", boxShadow: "0 12px 40px rgba(30,45,64,0.14)", zIndex: 100 }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3f7", fontSize: 13, fontWeight: 700, color: "#1e2d40" }}>Alerts</div>
-                  {skipped > 0  && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⏭</span><div style={{ fontSize: 13, color: "#1e2d40" }}>{skipped} patient{skipped > 1 ? "s" : ""} skipped</div></div>}
-                  {priority > 0 && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⭐</span><div style={{ fontSize: 13, color: "#1e2d40" }}>{priority} priority patient{priority > 1 ? "s" : ""} waiting</div></div>}
-                  {vitalsDone > 0 && <div style={{ padding: "10px 16px", display: "flex", gap: 10 }}><span>✅</span><div style={{ fontSize: 13, color: "#1e2d40" }}>{vitalsDone} patient{vitalsDone > 1 ? "s" : ""} vitals ready</div></div>}
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3f7", fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>Alerts</div>
+                  {skipped > 0  && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⏭</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{skipped} patient{skipped > 1 ? "s" : ""} skipped</div></div>}
+                  {priority > 0 && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⭐</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{priority} priority patient{priority > 1 ? "s" : ""} waiting</div></div>}
+                  {vitalsDone > 0 && <div style={{ padding: "10px 16px", display: "flex", gap: 10 }}><span>✅</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{vitalsDone} patient{vitalsDone > 1 ? "s" : ""} vitals ready</div></div>}
                 </div>
               )}
             </div>
-            <button onClick={() => onNavigate && onNavigate("register")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => onNavigate && onNavigate("register")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)", display: "flex", alignItems: "center", gap: 6 }}>
               ➕ Register Patient
             </button>
           </div>
@@ -556,14 +545,14 @@ export default function ReceptionistQueue({ onNavigate }) {
               {[
                 { label: "In Consult",  value: inConsult,  color: "#2a9d8f", bg: "#e8f7f5", icon: "🩺" },
                 { label: "Waiting",     value: waiting,    color: "#e09040", bg: "#fdf3e8", icon: "⏳" },
-                { label: "Vitals Ready",value: vitalsDone, color: "#4a90d9", bg: "#eaf3fc", icon: "✅" },
+                { label: "Vitals Ready",value: vitalsDone, color: "#0047AB", bg: "#E5EDF8", icon: "✅" },
                 { label: "Skipped",     value: skipped,    color: "#c05080", bg: "#fce8f0", icon: "⏭" },
-                { label: "Priority",    value: priority,   color: "#7b5ea7", bg: "#f0eafb", icon: "⭐" },
+                { label: "Priority",    value: priority,   color: "#8B5FBF", bg: "#f0eafb", icon: "⭐" },
               ].map(s => (
                 <div key={s.label} style={{ background: s.bg, borderRadius: 13, padding: "13px 14px", border: `1.5px solid ${s.color}20` }}>
                   <div style={{ fontSize: 20, marginBottom: 3 }}>{s.icon}</div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: s.color, opacity: 0.8, marginTop: 3, fontWeight: 500 }}>{s.label}</div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 14, color: s.color, opacity: 0.8, marginTop: 3, fontWeight: 500 }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -571,13 +560,13 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Active consultations banner */}
             {activeConsultPatients.length > 0 && (
               <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", borderRadius: 14, padding: "13px 18px", marginBottom: 16, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>🩺 {activeConsultPatients.length} In Consultation</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>🩺 {activeConsultPatients.length} In Consultation</div>
                 {activeConsultPatients.map(p => (
                   <div key={p.id} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9, padding: "5px 12px", display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#52c4b8", animation: "pulse 1.4s infinite" }} />
-                    <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 13, color: "white" }}>{p.queue}</span>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{p.name}</span>
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>→ {p.doctor}</span>
+                    <span style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 700, fontSize: 14, color: "white" }}>{p.queue}</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>{p.name}</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>→ {p.doctor}</span>
                   </div>
                 ))}
               </div>
@@ -596,17 +585,17 @@ export default function ReceptionistQueue({ onNavigate }) {
                     background: filter === f.key ? "#1e2d40" : "white",
                     color: filter === f.key ? "white" : "#7a8fb0",
                     border: filter === f.key ? "none" : "1px solid #dde8e5",
-                    borderRadius: 9, padding: "7px 14px", fontSize: 12,
+                    borderRadius: 9, padding: "7px 14px", fontSize: 14,
                     fontWeight: filter === f.key ? 600 : 400, cursor: "pointer",
-                    fontFamily: "'DM Sans',sans-serif", transition: "all 0.18s",
+                    fontFamily: "'Afacad', sans-serif", transition: "all 0.18s",
                   }}>
                     {f.label}
-                    {f.count > 0 && <span style={{ marginLeft: 6, background: f.key === "priority" ? "#7b5ea7" : "#c05080", color: "white", borderRadius: 10, padding: "0 6px", fontSize: 10, fontWeight: 700 }}>{f.count}</span>}
+                    {f.count > 0 && <span style={{ marginLeft: 6, background: f.key === "priority" ? "#8B5FBF" : "#c05080", color: "white", borderRadius: 10, padding: "0 6px", fontSize: 14, fontWeight: 700 }}>{f.count}</span>}
                   </button>
                 ))}
               </div>
               {vitalsDone > 0 && (
-                <button onClick={callNext} style={{ background: "#2a9d8f", color: "white", border: "none", borderRadius: 9, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>
+                <button onClick={callNext} style={{ background: "#2a9d8f", color: "white", border: "none", borderRadius: 9, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>
                   📣 Call Next ({vitalsDone}) →
                 </button>
               )}
@@ -618,7 +607,7 @@ export default function ReceptionistQueue({ onNavigate }) {
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#8a9bb0" }}>
                   <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>All clear!</div>
-                  <div style={{ fontSize: 13, marginTop: 4 }}>No patients in this category.</div>
+                  <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>
               ) : filtered.map((p, i) => (
                 <QueueCard key={p.id} patient={p} index={i} onSelect={setSelected} isSelected={selected?.id === p.id} onRecordVitals={handleRecordVitals} />
@@ -631,17 +620,17 @@ export default function ReceptionistQueue({ onNavigate }) {
 
             {/* Doctor status */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>Doctor Status</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>Doctor Status</div>
               {doctors.map(doc => {
                 const docPatient = queue.find(p => p.doctor === doc && p.status === "in-consultation");
                 return (
                   <div key={doc} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid #f0f3f7" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: docPatient ? "#2a9d8f" : "#d0dbe8", animation: docPatient ? "pulse 1.4s infinite" : "none", flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{doc}</div>
-                      {docPatient ? <div style={{ fontSize: 11, color: "#2a9d8f" }}>Seeing {docPatient.queue} · {docPatient.name}</div> : <div style={{ fontSize: 11, color: "#b0beca" }}>Available</div>}
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{doc}</div>
+                      {docPatient ? <div style={{ fontSize: 14, color: "#2a9d8f" }}>Seeing {docPatient.queue} · {docPatient.name}</div> : <div style={{ fontSize: 14, color: "#b0beca" }}>Available</div>}
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: docPatient ? "#2a9d8f" : "#b0beca" }}>{docPatient ? "Busy" : "Free"}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: docPatient ? "#2a9d8f" : "#b0beca" }}>{docPatient ? "Busy" : "Free"}</div>
                   </div>
                 );
               })}
@@ -650,18 +639,18 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Priority waiting */}
             {queue.filter(p => p.priority && ["waiting","vitals-done"].includes(p.status)).length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⭐ Priority Waiting</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⭐ Priority Waiting</div>
                 {queue.filter(p => p.priority && ["waiting","vitals-done"].includes(p.status)).map(p => {
                   const pc = priorityConfig[p.priority];
                   return (
                     <div key={p.id} onClick={() => setSelected(p)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: pc.bg, border: `1.5px solid ${pc.color}30`, marginBottom: 8, cursor: "pointer" }}>
                       <span style={{ fontSize: 20 }}>{pc.icon}</span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
-                        <div style={{ fontSize: 11, color: pc.color, fontWeight: 500 }}>{pc.label} · {p.queue}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
+                        <div style={{ fontSize: 14, color: pc.color, fontWeight: 500 }}>{pc.label} · {p.queue}</div>
                       </div>
                       {p.status === "waiting" && !p.vitals && (
-                        <button onClick={e => { e.stopPropagation(); handleRecordVitals(p); }} style={{ background: pc.color, color: "white", border: "none", borderRadius: 7, padding: "4px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>Vitals</button>
+                        <button onClick={e => { e.stopPropagation(); handleRecordVitals(p); }} style={{ background: pc.color, color: "white", border: "none", borderRadius: 7, padding: "4px 8px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Vitals</button>
                       )}
                     </div>
                   );
@@ -672,15 +661,15 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Skipped */}
             {queue.filter(p => p.status === "skipped").length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⏭ Skipped</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⏭ Skipped</div>
                 {queue.filter(p => p.status === "skipped").map(p => (
                   <div key={p.id} onClick={() => setSelected(p)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fce8f0", border: "1px solid #f0c0d830", marginBottom: 8, cursor: "pointer" }}>
                     <Avatar name={p.name} size={30} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: "#c05080" }}>{p.queue} · No response</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
+                      <div style={{ fontSize: 14, color: "#c05080" }}>{p.queue} · No response</div>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); handleAction("requeue", p); }} style={{ background: "#c05080", color: "white", border: "none", borderRadius: 7, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>↺</button>
+                    <button onClick={e => { e.stopPropagation(); handleAction("requeue", p); }} style={{ background: "#c05080", color: "white", border: "none", borderRadius: 7, padding: "4px 10px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>↺</button>
                   </div>
                 ))}
               </div>
@@ -688,7 +677,7 @@ export default function ReceptionistQueue({ onNavigate }) {
 
             {/* Summary */}
             <div style={{ background: "#f7f9fd", borderRadius: 13, padding: "14px 16px", marginTop: "auto" }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Today's Summary</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Today's Summary</div>
               {[
                 { label: "Total Registered", value: queue.length },
                 { label: "Consultations Done", value: done },
@@ -696,8 +685,8 @@ export default function ReceptionistQueue({ onNavigate }) {
                 { label: "SMS Sent",         value: "14" },
               ].map(r => (
                 <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #edf1f7" }}>
-                  <span style={{ fontSize: 12, color: "#8a9bb0" }}>{r.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#1e2d40", fontFamily: "'Fraunces',serif" }}>{r.value}</span>
+                  <span style={{ fontSize: 14, color: "#8a9bb0" }}>{r.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>{r.value}</span>
                 </div>
               ))}
             </div>

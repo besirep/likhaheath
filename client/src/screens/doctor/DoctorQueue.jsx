@@ -57,7 +57,7 @@ const initialQueue = [
 ];
 
 const statusConfig = {
-  "in-consultation": { label: "In Consultation", color: "#3b7dd8", bg: "#eef3fc", dot: "#3b7dd8", pulse: true  },
+  "in-consultation": { label: "In Consultation", color: "#0047AB", bg: "#EBF0FA", dot: "#0047AB", pulse: true  },
   "vitals-done":     { label: "Vitals Ready",    color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: false },
   "waiting":         { label: "Waiting",          color: "#e09040", bg: "#fdf3e8", dot: "#e09040", pulse: false },
   "done":            { label: "Done",             color: "#9aabc0", bg: "#f0f4fa", dot: "#9aabc0", pulse: false },
@@ -65,9 +65,9 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#7b5ea7", bg: "#f0eafb", stripe: "#7b5ea7" },
+  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
   pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f4", stripe: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#3b7dd8", bg: "#eef3fc", stripe: "#3b7dd8" },
+  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
   pediatric: { label: "Pedia (0–5)",    icon: "👶", color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
@@ -75,8 +75,8 @@ const priorityConfig = {
 function bpFlag(bp)   { if (!bp) return null; const [s] = bp.split("/").map(Number); return s >= 140 ? "high" : s < 90 ? "low" : "normal"; }
 function spo2Flag(v)  { return !v ? null : Number(v) < 95 ? "low" : "normal"; }
 function tempFlag(v)  { if (!v) return null; const n = Number(v); return n >= 37.8 ? "high" : n < 36 ? "low" : "normal"; }
-const flagColor = { high: "#e07050", low: "#c04080", normal: "#1a2540" };
-const flagBg    = { high: "#fdeee8", low: "#fce8f0", normal: "#eef3fc" };
+const flagColor = { high: "#CC0000", low: "#c04080", normal: "#1a2540" };
+const flagBg    = { high: "#fdeee8", low: "#fce8f0", normal: "#EBF0FA" };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function Avatar({ name, size = 36 }) {
@@ -94,8 +94,8 @@ function VitalChip({ label, value, flag }) {
   const f = flag || "normal";
   return (
     <div style={{ background: flagBg[f], borderRadius: 7, padding: "3px 9px", display: "flex", flexDirection: "column", alignItems: "center", minWidth: 48 }}>
-      <span style={{ fontSize: 12, fontWeight: 700, color: flagColor[f], lineHeight: 1.3 }}>{value}</span>
-      <span style={{ fontSize: 9, color: "#9aabc0", letterSpacing: 0.4, textTransform: "uppercase" }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, color: flagColor[f], lineHeight: 1.3 }}>{value}</span>
+      <span style={{ fontSize: 11, color: "#9aabc0", letterSpacing: 0.4, textTransform: "uppercase" }}>{label}</span>
     </div>
   );
 }
@@ -114,11 +114,11 @@ function VitalsModal({ patient, onClose }) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Avatar name={patient.name} size={44} />
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#1a2540", fontFamily: "'Fraunces',serif" }}>{patient.name}</div>
-              <div style={{ fontSize: 13, color: "#7a8fb0" }}>{patient.age} yrs · {patient.queue} · {patient.reason}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#1a2540" }}>{patient.name}</div>
+              <div style={{ fontSize: 14, color: "#7a8fb0" }}>{patient.age} yrs · {patient.queue} · {patient.reason}</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: "#f0f4fb", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "#7a8fb0" }}>✕</button>
+          <button onClick={onClose} style={{ background: "#EBF0FA", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "#7a8fb0" }}>✕</button>
         </div>
         {v ? (
           <>
@@ -132,22 +132,22 @@ function VitalsModal({ patient, onClose }) {
                 { label: "Height",         value: `${v.height} cm`, flag: "normal",        icon: "📏" },
               ].map(f => (
                 <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 12, padding: "14px 16px", border: `1.5px solid ${f.flag !== "normal" ? flagColor[f.flag] + "40" : "#e8edf7"}` }}>
-                  <div style={{ fontSize: 11, color: "#9aabc0", marginBottom: 4 }}>{f.icon} {f.label}</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: flagColor[f.flag], fontFamily: "'Fraunces',serif" }}>{f.value}</div>
-                  {f.flag !== "normal" && <div style={{ fontSize: 10, color: flagColor[f.flag], marginTop: 3, fontWeight: 600, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
+                  <div style={{ fontSize: 14, color: "#9aabc0", marginBottom: 4 }}>{f.icon} {f.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: flagColor[f.flag] }}>{f.value}</div>
+                  {f.flag !== "normal" && <div style={{ fontSize: 14, color: flagColor[f.flag], marginTop: 3, fontWeight: 600, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
                 </div>
               ))}
             </div>
-            <div style={{ background: "#f0f4fb", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "#EBF0FA", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 11, color: "#9aabc0" }}>📐 BMI (auto-calculated)</div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#1a2540", fontFamily: "'Fraunces',serif" }}>{bmi}</div>
+                <div style={{ fontSize: 14, color: "#9aabc0" }}>📐 BMI (auto-calculated)</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#1a2540" }}>{bmi}</div>
               </div>
-              <div style={{ fontSize: 13, color: "#7a8fb0" }}>
+              <div style={{ fontSize: 14, color: "#7a8fb0" }}>
                 {Number(bmi) < 18.5 ? "Underweight" : Number(bmi) < 25 ? "Normal weight" : Number(bmi) < 30 ? "Overweight" : "Obese"}
               </div>
             </div>
-            <div style={{ marginTop: 14, fontSize: 12, color: "#9aabc0" }}>Recorded by {patient.nurse} · {patient.arrived}</div>
+            <div style={{ marginTop: 14, fontSize: 14, color: "#9aabc0" }}>Recorded by {patient.nurse} · {patient.arrived}</div>
           </>
         ) : (
           <div style={{ textAlign: "center", padding: "32px 0", color: "#9aabc0" }}>
@@ -166,17 +166,17 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#3b7dd8,#5b9af0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "white", fontFamily: "'Fraunces',serif" }}>CareQueue</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
           </div>
         </div>
       </div>
       <div style={{ padding: "12px 20px" }}>
-        <div style={{ background: "rgba(59,125,216,0.18)", border: "1px solid rgba(59,125,216,0.35)", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#5b9af0" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#7eb3f5", letterSpacing: 0.4 }}>PHYSICIAN MODE</span>
+        <div style={{ background: "rgba(0,71,171,0.18)", border: "1px solid rgba(0,71,171,0.35)", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#1565D8" }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#7eb3f5", letterSpacing: 0.4 }}>PHYSICIAN MODE</span>
         </div>
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
@@ -190,7 +190,7 @@ function Sidebar() {
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
-            background: item.active ? "rgba(59,125,216,0.22)" : "transparent",
+            background: item.active ? "rgba(0,71,171,0.22)" : "transparent",
             color: item.active ? "#7eb3f5" : "rgba(255,255,255,0.55)",
             fontWeight: item.active ? 600 : 400, fontSize: 14, transition: "background 0.2s",
           }}
@@ -199,15 +199,15 @@ function Sidebar() {
           >
             <span style={{ fontSize: 16 }}>{item.icon}</span>
             {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#3b7dd8", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>{item.badge}</span>}
+            {item.badge && <span style={{ marginLeft: "auto", background: "#0047AB", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
         ))}
       </nav>
       <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#5b9af0,#3b7dd8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "white" }}>DR</div>
+        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#1565D8,#0047AB)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>DR</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Dr. Reyes</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Internal Medicine</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>Dr. Reyes</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Internal Medicine</div>
         </div>
       </div>
     </div>
@@ -217,10 +217,10 @@ function Sidebar() {
 // ── Detail Panel ──────────────────────────────────────────────────────────────
 function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) {
   if (!selected) return (
-    <div style={{ background: "white", borderLeft: "1px solid #dce5f3", display: "flex", alignItems: "center", justifyContent: "center", color: "#9aabc0" }}>
+    <div style={{ background: "white", borderLeft: "1px solid #CCDAF0", display: "flex", alignItems: "center", justifyContent: "center", color: "#9aabc0" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>👈</div>
-        <div style={{ fontSize: 13 }}>Select a patient to view details</div>
+        <div style={{ fontSize: 14 }}>Select a patient to view details</div>
       </div>
     </div>
   );
@@ -229,7 +229,7 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
   const pc = selected.priority ? priorityConfig[selected.priority] : null;
 
   return (
-    <div style={{ background: "white", borderLeft: "1px solid #dce5f3", overflowY: "auto", padding: "24px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
+    <div style={{ background: "white", borderLeft: "1px solid #CCDAF0", overflowY: "auto", padding: "24px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
 
       {/* Patient header */}
       <div style={{ textAlign: "center" }}>
@@ -237,15 +237,15 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
           <Avatar name={selected.name} size={56} />
           {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 16 }}>{pc.icon}</span>}
         </div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2540", fontFamily: "'Fraunces',serif", marginTop: 10 }}>{selected.name}</div>
-        <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>{selected.age} yrs · {selected.gender} · {selected.queue}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2540", marginTop: 10 }}>{selected.name}</div>
+        <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{selected.age} yrs · {selected.gender} · {selected.queue}</div>
         <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 8, flexWrap: "wrap" }}>
-          <span style={{ background: sc.bg, color: sc.color, borderRadius: 8, padding: "3px 12px", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ background: sc.bg, color: sc.color, borderRadius: 8, padding: "3px 12px", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, display: "inline-block", animation: sc.pulse ? "pulse 1.4s infinite" : "none" }} />
             {sc.label}
           </span>
           {pc && (
-            <span style={{ background: pc.bg, color: pc.color, borderRadius: 8, padding: "3px 12px", fontSize: 11, fontWeight: 600 }}>
+            <span style={{ background: pc.bg, color: pc.color, borderRadius: 8, padding: "3px 12px", fontSize: 14, fontWeight: 600 }}>
               {pc.icon} {pc.label}
             </span>
           )}
@@ -261,15 +261,15 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
           { label: "Nurse",             value: selected.nurse || "—" },
         ].map(r => (
           <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #eef1f8" }}>
-            <span style={{ fontSize: 11, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.4 }}>{r.label}</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a2540" }}>{r.value}</span>
+            <span style={{ fontSize: 14, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.4 }}>{r.label}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#1a2540" }}>{r.value}</span>
           </div>
         ))}
       </div>
 
       {/* Vitals */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "#b0bdd6", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>Vitals</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#b0bdd6", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>Vitals</div>
         {selected.vitals ? (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -280,18 +280,18 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
                 { label: "SpO₂",           value: `${selected.vitals.spo2}%`,    flag: spo2Flag(selected.vitals.spo2), icon: "🫁" },
               ].map(f => (
                 <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 10, padding: "10px 12px", border: `1px solid ${f.flag !== "normal" ? flagColor[f.flag] + "40" : "#e8edf7"}` }}>
-                  <div style={{ fontSize: 10, color: "#9aabc0" }}>{f.icon} {f.label}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag], fontFamily: "'Fraunces',serif", marginTop: 3 }}>{f.value}</div>
-                  {f.flag !== "normal" && <div style={{ fontSize: 9, color: flagColor[f.flag], marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
+                  <div style={{ fontSize: 14, color: "#9aabc0" }}>{f.icon} {f.label}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag], marginTop: 3 }}>{f.value}</div>
+                  {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
                 </div>
               ))}
             </div>
-            <button onClick={() => onVitals(selected)} style={{ marginTop: 8, width: "100%", background: "#f0f4fb", border: "1px solid #dce5f3", borderRadius: 9, padding: "8px", fontSize: 12, color: "#3b7dd8", cursor: "pointer", fontWeight: 600 }}>
+            <button onClick={() => onVitals(selected)} style={{ marginTop: 8, width: "100%", background: "#EBF0FA", border: "1px solid #CCDAF0", borderRadius: 9, padding: "8px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>
               View Full Vitals + BMI
             </button>
           </>
         ) : (
-          <div style={{ background: "#f7f9fd", borderRadius: 10, padding: "16px", textAlign: "center", color: "#9aabc0", fontSize: 13 }}>
+          <div style={{ background: "#f7f9fd", borderRadius: 10, padding: "16px", textAlign: "center", color: "#9aabc0", fontSize: 14 }}>
             ⏳ Awaiting nurse to record vitals
           </div>
         )}
@@ -300,33 +300,33 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
         {selected.status === "in-consultation" && (
-          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#3b7dd8", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(59,125,216,0.3)" }}>
+          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
             🩺 Resume Consultation →
           </button>
         )}
         {selected.status === "vitals-done" && (
-          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#3b7dd8", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(59,125,216,0.3)" }}>
+          <button onClick={() => onNavigate && onNavigate("dr-consult")} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
             🩺 Start Consultation →
           </button>
         )}
         {selected.status === "waiting" && (
-          <button style={{ background: "#eef3fc", color: "#3b7dd8", border: "1.5px solid #c0d4f5", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={() => onNavigate && onNavigate("dr-records")} style={{ background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #B0C8E8", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
             📋 View Patient Record
           </button>
         )}
         {selected.status === "skipped" && (
-          <button onClick={() => onRequeue(selected.id)} style={{ background: "linear-gradient(135deg,#3b7dd8,#5b9af0)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(59,125,216,0.28)" }}>
+          <button onClick={() => onRequeue(selected.id)} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.28)" }}>
             ↩ Re-queue Patient
           </button>
         )}
         {(selected.status === "waiting" || selected.status === "vitals-done") && (
           <div style={{ display: "flex", gap: 8 }}>
-            <button style={{ flex: 1, background: "white", color: "#7a8fb0", border: "1px solid #dce5f3", borderRadius: 9, padding: "9px", fontSize: 12, cursor: "pointer" }}>📅 Reschedule</button>
-            <button onClick={() => onMarkDone(selected.id)} style={{ flex: 1, background: "white", color: "#2a9d8f", border: "1px solid #c0e0dc", borderRadius: 9, padding: "9px", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>✓ Mark Done</button>
+            <button onClick={() => onNavigate && onNavigate("dr-appts")} style={{ flex: 1, background: "white", color: "#7a8fb0", border: "1px solid #CCDAF0", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer" }}>📅 Reschedule</button>
+            <button onClick={() => onMarkDone(selected.id)} style={{ flex: 1, background: "white", color: "#2a9d8f", border: "1px solid #c0e0dc", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>✓ Mark Done</button>
           </div>
         )}
         {selected.status === "done" && (
-          <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 13, fontWeight: 600 }}>✓ Consultation complete</div>
+          <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>✓ Consultation complete</div>
         )}
       </div>
     </div>
@@ -365,59 +365,51 @@ export default function DoctorQueue({ onNavigate }) {
   const priority    = queue.filter(p => p.priority && p.status !== "done").length;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4fb", fontFamily: "'DM Sans',sans-serif", display: "flex" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{`
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #c8d9f5; border-radius: 4px; }
-        @keyframes pulse      { 0%,100%{opacity:1} 50%{opacity:.35} }
-        @keyframes fadeSlide  { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes popIn      { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "#EBF0FA", display: "flex" }}>
+      
+      
 
       <VitalsModal patient={vitalsModal} onClose={() => setVitalsModal(null)} />
-      <Sidebar />
 
-      <div style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* ── Top bar ── */}
-        <div style={{ background: "#f0f4fb", borderBottom: "1px solid #dce5f3", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ background: "#EBF0FA", borderBottom: "1px solid #CCDAF0", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontFamily: "'Fraunces',serif", fontWeight: 700, color: "#1a2540" }}>Queue Management</h1>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>Room 1 · Dr. Reyes · Sunday, March 1, 2026</div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1a2540" }}>Queue Management</h1>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>Room 1 · Dr. Reyes · Sunday, March 1, 2026</div>
           </div>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             {/* Stat pills — aligned with Dashboard cards */}
             <div style={{ display: "flex", gap: 7 }}>
               {[
-                { label: "Serving",   value: nowServing, color: "#3b7dd8", bg: "#eef3fc"  },
+                { label: "Serving",   value: nowServing, color: "#0047AB", bg: "#EBF0FA"  },
                 { label: "Waiting",   value: waiting,    color: "#e09040", bg: "#fdf3e8"  },
                 { label: "Done",      value: completed,  color: "#2a7d5f", bg: "#e8f7f1"  },
                 { label: "Skipped",   value: skipped,    color: "#c05080", bg: "#fce8f0"  },
-                { label: "Priority",  value: priority,   color: "#7b5ea7", bg: "#f0eafb"  },
+                { label: "Priority",  value: priority,   color: "#8B5FBF", bg: "#f0eafb"  },
               ].map(s => (
                 <div key={s.label} onClick={() => s.label === "Skipped" ? setFilter("skipped") : s.label === "Done" ? setFilter("done") : setFilter("all")}
                   style={{ background: s.bg, borderRadius: 10, padding: "6px 14px", textAlign: "center", cursor: "pointer", transition: "transform 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
                 >
-                  <div style={{ fontSize: 18, fontWeight: 700, color: s.color, fontFamily: "'Fraunces',serif", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: 10, color: s.color, opacity: 0.8, letterSpacing: 0.3 }}>{s.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 14, color: s.color, opacity: 0.8, letterSpacing: 0.3 }}>{s.label}</div>
                 </div>
               ))}
             </div>
 
             {/* Bell */}
             <div style={{ position: "relative" }}>
-              <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #dce5f3", borderRadius: 10, width: 40, height: 40, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 10, width: 40, height: 40, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                 🔔
-                <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#e07050", border: "1.5px solid #f0f4fb" }} />
+                <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#CC0000", border: "1.5px solid #EBF0FA" }} />
               </button>
               {notifOpen && (
-                <div style={{ position: "absolute", right: 0, top: 48, width: 280, background: "white", borderRadius: 14, border: "1px solid #dce5f3", boxShadow: "0 12px 40px rgba(20,40,90,0.14)", zIndex: 100, animation: "popIn 0.2s ease" }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3fa", fontSize: 13, fontWeight: 700, color: "#1a2540" }}>Alerts</div>
+                <div style={{ position: "absolute", right: 0, top: 48, width: 280, background: "white", borderRadius: 14, border: "1px solid #CCDAF0", boxShadow: "0 12px 40px rgba(20,40,90,0.14)", zIndex: 100, animation: "popIn 0.2s ease" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3fa", fontSize: 14, fontWeight: 700, color: "#1a2540" }}>Alerts</div>
                   {[
                     { icon: "👴", text: "Elena Cruz — Senior Citizen priority", time: "5m ago"  },
                     { icon: "🧪", text: "Lab results ready: Jose Dela Cruz",    time: "22m ago" },
@@ -426,8 +418,8 @@ export default function DoctorQueue({ onNavigate }) {
                     <div key={i} style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}>
                       <span>{n.icon}</span>
                       <div>
-                        <div style={{ fontSize: 13, color: "#1a2540" }}>{n.text}</div>
-                        <div style={{ fontSize: 11, color: "#b0bdd6" }}>{n.time}</div>
+                        <div style={{ fontSize: 14, color: "#1a2540" }}>{n.text}</div>
+                        <div style={{ fontSize: 14, color: "#b0bdd6" }}>{n.time}</div>
                       </div>
                     </div>
                   ))}
@@ -441,7 +433,7 @@ export default function DoctorQueue({ onNavigate }) {
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 360px", overflow: "hidden" }}>
 
           {/* Queue list */}
-          <div style={{ overflowY: "auto", padding: "18px 22px", background: "#f0f4fb" }}>
+          <div style={{ overflowY: "auto", padding: "18px 22px", background: "#EBF0FA" }}>
 
             {/* Filter tabs */}
             <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
@@ -455,21 +447,21 @@ export default function DoctorQueue({ onNavigate }) {
                 <button key={t.key} onClick={() => setFilter(t.key)} style={{
                   background: filter === t.key ? "#1a2540" : "white",
                   color: filter === t.key ? "white" : "#7a8fb0",
-                  border: filter === t.key ? "none" : "1px solid #dce5f3",
-                  borderRadius: 9, padding: "7px 14px", fontSize: 12,
+                  border: filter === t.key ? "none" : "1px solid #CCDAF0",
+                  borderRadius: 9, padding: "7px 14px", fontSize: 14,
                   fontWeight: filter === t.key ? 600 : 400, cursor: "pointer",
-                  fontFamily: "'DM Sans',sans-serif", transition: "all 0.18s",
+                  fontFamily: "'Afacad', sans-serif", transition: "all 0.18s",
                 }}>{t.label}</button>
               ))}
             </div>
 
             {/* Call Next banner */}
             {vitalsDone > 0 && (
-              <div style={{ background: "linear-gradient(135deg,#eef3fc,#ddeafc)", border: "1.5px solid #c0d4f5", borderRadius: 14, padding: "13px 18px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ background: "linear-gradient(135deg,#EBF0FA,#ddeafc)", border: "1.5px solid #B0C8E8", borderRadius: 14, padding: "13px 18px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 14, color: "#1a2540" }}>
-                  <strong style={{ color: "#3b7dd8" }}>{vitalsDone}</strong> patient{vitalsDone > 1 ? "s" : ""} ready — vitals recorded
+                  <strong style={{ color: "#0047AB" }}>{vitalsDone}</strong> patient{vitalsDone > 1 ? "s" : ""} ready — vitals recorded
                 </div>
-                <button onClick={callNext} style={{ background: "#3b7dd8", color: "white", border: "none", borderRadius: 9, padding: "8px 18px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(59,125,216,0.3)" }}>
+                <button onClick={callNext} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 9, padding: "8px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)" }}>
                   Call Next →
                 </button>
               </div>
@@ -485,14 +477,14 @@ export default function DoctorQueue({ onNavigate }) {
                 return (
                   <div key={p.id} onClick={() => setSelectedId(p.id)} style={{
                     background: "white",
-                    border: `2px solid ${isSelected ? "#3b7dd8" : pc ? pc.stripe + "55" : "#e8edf7"}`,
+                    border: `2px solid ${isSelected ? "#0047AB" : pc ? pc.stripe + "55" : "#e8edf7"}`,
                     borderRadius: 14, padding: "15px 18px", cursor: "pointer",
-                    boxShadow: isSelected ? "0 4px 20px rgba(59,125,216,0.14)" : "0 2px 8px rgba(60,90,140,0.05)",
+                    boxShadow: isSelected ? "0 4px 20px rgba(0,71,171,0.14)" : "0 2px 8px rgba(60,90,140,0.05)",
                     transition: "all 0.18s",
                     animation: `fadeSlide 0.3s ease ${i * 0.04}s both`,
                     position: "relative", overflow: "hidden",
                   }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.boxShadow = "0 4px 14px rgba(59,125,216,0.1)"; }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,71,171,0.1)"; }}
                     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.boxShadow = "0 2px 8px rgba(60,90,140,0.05)"; }}
                   >
                     {/* Priority stripe */}
@@ -502,26 +494,26 @@ export default function DoctorQueue({ onNavigate }) {
                       {/* Avatar with priority overlay */}
                       <div style={{ position: "relative", flexShrink: 0 }}>
                         <Avatar name={p.name} size={40} />
-                        {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 12 }}>{pc.icon}</span>}
+                        {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{pc.icon}</span>}
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                           <div>
                             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 1 }}>
-                              <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: 14, color: isSelected ? "#3b7dd8" : "#1a2540" }}>{p.queue}</span>
-                              {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 10, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
+                              <span style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 700, fontSize: 14, color: isSelected ? "#0047AB" : "#1a2540" }}>{p.queue}</span>
+                              {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
                             </div>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "#1a2540" }}>{p.name}</div>
-                            <div style={{ fontSize: 12, color: "#7a8fb0" }}>{p.age} yrs · {p.gender} · {p.reason}</div>
+                            <div style={{ fontSize: 14, color: "#7a8fb0" }}>{p.age} yrs · {p.gender} · {p.reason}</div>
                           </div>
                           <div style={{ textAlign: "right", flexShrink: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
                               <div style={{ width: 7, height: 7, borderRadius: "50%", background: sc.dot, animation: sc.pulse ? "pulse 1.4s infinite" : "none" }} />
-                              <span style={{ fontSize: 11, color: sc.color, fontWeight: 500 }}>{sc.label}</span>
+                              <span style={{ fontSize: 14, color: sc.color, fontWeight: 500 }}>{sc.label}</span>
                             </div>
-                            <div style={{ fontSize: 11, color: "#b0bdd6", marginTop: 3 }}>Arrived {p.arrived}</div>
-                            <div style={{ fontSize: 11, color: "#b0bdd6" }}>{p.wait} wait</div>
+                            <div style={{ fontSize: 14, color: "#b0bdd6", marginTop: 3 }}>Arrived {p.arrived}</div>
+                            <div style={{ fontSize: 14, color: "#b0bdd6" }}>{p.wait} wait</div>
                           </div>
                         </div>
 
@@ -533,10 +525,10 @@ export default function DoctorQueue({ onNavigate }) {
                               <VitalChip label="Temp" value={`${p.vitals.temp}°`} flag={tempFlag(p.vitals.temp)} />
                               <VitalChip label="HR"   value={p.vitals.hr}         flag="normal" />
                               <VitalChip label="SpO₂" value={`${p.vitals.spo2}%`} flag={spo2Flag(p.vitals.spo2)} />
-                              <button onClick={e => { e.stopPropagation(); setVitalsModal(p); }} style={{ marginLeft: "auto", background: "none", border: "1px solid #dce5f3", borderRadius: 7, padding: "3px 10px", fontSize: 11, color: "#3b7dd8", cursor: "pointer", fontWeight: 600 }}>Full Vitals</button>
+                              <button onClick={e => { e.stopPropagation(); setVitalsModal(p); }} style={{ marginLeft: "auto", background: "none", border: "1px solid #CCDAF0", borderRadius: 7, padding: "3px 10px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>Full Vitals</button>
                             </>
                           ) : (
-                            <span style={{ fontSize: 12, color: "#b0bdd6", background: "#f7f9fd", borderRadius: 7, padding: "3px 10px" }}>⏳ Awaiting vitals from nurse</span>
+                            <span style={{ fontSize: 14, color: "#b0bdd6", background: "#f7f9fd", borderRadius: 7, padding: "3px 10px" }}>⏳ Awaiting vitals from nurse</span>
                           )}
                         </div>
                       </div>
@@ -549,7 +541,7 @@ export default function DoctorQueue({ onNavigate }) {
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#9aabc0" }}>
                   <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1a2540" }}>All clear!</div>
-                  <div style={{ fontSize: 13, marginTop: 4 }}>No patients in this category.</div>
+                  <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>
               )}
             </div>
