@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:5000/api';
+import { API_BASE_URL as BASE } from './config.js';
 
 export const authApi = {
   /**
