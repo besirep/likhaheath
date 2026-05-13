@@ -5,12 +5,12 @@ exports.getAll = async (req, res) => {
   const { date, status, doctor_id } = req.query;
   try {
     let query = `
-      SELECT a.*, 
-        CONCAT(p.first_name,' ',p.last_name) AS patient_name, p.contact_number AS patient_contact,
-        CONCAT(d.first_name,' ',d.last_name) AS doctor_name
+      SELECT a.*,
+        CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+        CONCAT(s.first_name,' ',s.last_name) AS doctor_name
       FROM appointments a
       JOIN patients p ON a.patient_id = p.id
-      LEFT JOIN doctors d ON a.doctor_id = d.id
+      LEFT JOIN staff s ON a.doctor_id = s.id
       WHERE 1=1`;
     const params = [];
     if (date)      { query += ' AND DATE(a.scheduled_date) = ?'; params.push(date); }
@@ -28,16 +28,16 @@ exports.getAll = async (req, res) => {
 exports.getToday = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT a.*, 
+      `SELECT a.*,
          CONCAT(p.first_name,' ',p.last_name) AS patient_name,
-         CONCAT(d.first_name,' ',d.last_name) AS doctor_name,
-         q.status AS queue_status
+         CONCAT(s.first_name,' ',s.last_name) AS doctor_name,
+         q.status AS queue_status, q.queue_number
        FROM appointments a
        JOIN patients p ON a.patient_id = p.id
-       LEFT JOIN doctors d ON a.doctor_id = d.id
+       LEFT JOIN staff s ON a.doctor_id = s.id
        LEFT JOIN queue q ON a.id = q.appointment_id
        WHERE DATE(a.scheduled_date) = CURDATE()
-       ORDER BY a.queue_number ASC`
+       ORDER BY q.queue_number ASC`
     );
     res.json(rows);
   } catch (err) {
@@ -49,17 +49,20 @@ exports.getToday = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT a.*, 
+      `SELECT a.*,
          CONCAT(p.first_name,' ',p.last_name) AS patient_name,
-         CONCAT(d.first_name,' ',d.last_name) AS doctor_name
+         CONCAT(s.first_name,' ',s.last_name) AS doctor_name
        FROM appointments a
        JOIN patients p ON a.patient_id = p.id
-       LEFT JOIN doctors d ON a.doctor_id = d.id
+       LEFT JOIN staff s ON a.doctor_id = s.id
        WHERE a.id = ?`,
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Appointment not found.' });
-    const [services] = await db.query('SELECT * FROM appointment_services WHERE appointment_id = ?', [req.params.id]);
+    const [services] = await db.query(
+      'SELECT * FROM appointment_services WHERE appointment_id = ?',
+      [req.params.id]
+    );
     res.json({ ...rows[0], services });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -71,8 +74,11 @@ exports.create = async (req, res) => {
   const { patient_id, doctor_id, scheduled_date, services } = req.body;
   if (!patient_id || !scheduled_date)
     return res.status(400).json({ error: 'patient_id and scheduled_date are required.' });
+
+  const created_by_id = req.user.staffId; // from JWT payload
+
   try {
-    // Get next queue number for today
+    // Get next queue number for the given day
     const [[{ max_q }]] = await db.query(
       `SELECT MAX(queue_number) AS max_q FROM appointments WHERE DATE(scheduled_date) = DATE(?)`,
       [scheduled_date]
@@ -80,12 +86,13 @@ exports.create = async (req, res) => {
     const queueNumber = (max_q || 0) + 1;
 
     const [result] = await db.query(
-      `INSERT INTO appointments (patient_id, doctor_id, scheduled_date, queue_number) VALUES (?, ?, ?, ?)`,
-      [patient_id, doctor_id || null, scheduled_date, queueNumber]
+      `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, queue_number)
+       VALUES (?, ?, ?, ?, ?)`,
+      [patient_id, doctor_id || null, created_by_id, scheduled_date, queueNumber]
     );
     const appointmentId = result.insertId;
 
-    // Add to queue
+    // Create queue entry
     await db.query(
       `INSERT INTO queue (appointment_id, queue_number) VALUES (?, ?)`,
       [appointmentId, queueNumber]
@@ -93,7 +100,12 @@ exports.create = async (req, res) => {
 
     // Add services if provided
     if (services && services.length > 0) {
-      const serviceValues = services.map(s => [appointmentId, s.service_name, s.quantity || 1, s.notes || null]);
+      const serviceValues = services.map(s => [
+        appointmentId,
+        s.service_name,
+        s.quantity || 1,
+        s.notes || null,
+      ]);
       await db.query(
         `INSERT INTO appointment_services (appointment_id, service_name, quantity, notes) VALUES ?`,
         [serviceValues]
@@ -112,7 +124,7 @@ exports.update = async (req, res) => {
   try {
     await db.query(
       `UPDATE appointments SET patient_id=?, doctor_id=?, scheduled_date=?, status=? WHERE id=?`,
-      [patient_id, doctor_id, scheduled_date, status, req.params.id]
+      [patient_id, doctor_id || null, scheduled_date, status, req.params.id]
     );
     res.json({ message: 'Appointment updated.' });
   } catch (err) {
@@ -120,7 +132,7 @@ exports.update = async (req, res) => {
   }
 };
 
-// DELETE /api/appointments/:id
+// DELETE /api/appointments/:id  (soft cancel)
 exports.remove = async (req, res) => {
   try {
     await db.query('UPDATE appointments SET status="Cancelled" WHERE id=?', [req.params.id]);
