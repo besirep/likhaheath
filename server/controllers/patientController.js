@@ -23,10 +23,30 @@ async function resolveId(conn, table, column, value) {
 async function getNextQueueNumber(conn) {
   const today = new Date().toISOString().slice(0, 10);
   const [rows] = await conn.query(
-    `SELECT COUNT(*) AS cnt FROM patients WHERE DATE(created_at) = ?`,
+    `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
+     FROM queue q
+     JOIN appointments a ON q.appointment_id = a.id
+     WHERE DATE(a.scheduled_date) = ?`,
     [today]
   );
-  return (rows[0].cnt || 0) + 1;
+  return (rows[0].max_q || 0) + 1;
+}
+
+// Shared helper: create appointment + queue entry for a patient
+async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, priority, notes, staff_id }) {
+  const now = new Date();
+  const queue_number = await getNextQueueNumber(conn);
+  const [apptResult] = await conn.query(
+    `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, queue_number, status, notes)
+     VALUES (?, ?, ?, ?, ?, 'Scheduled', ?)`,
+    [patient_id, doctor_id || null, staff_id || null, now, queue_number, notes || null]
+  );
+  const appointment_id = apptResult.insertId;
+  await conn.query(
+    `INSERT INTO queue (appointment_id, queue_number, status) VALUES (?, ?, 'Waiting')`,
+    [appointment_id, queue_number]
+  );
+  return { appointment_id, queue_number };
 }
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -46,21 +66,23 @@ exports.getAll = async (req, res) => {
               a.barangay, a.municipality,
               ci.value AS primary_contact
        FROM patients p
-       LEFT JOIN sex_options   sx ON p.sex_id           = sx.id
-       LEFT JOIN civil_statuses cs ON p.civil_status_id  = cs.id
-       LEFT JOIN blood_types   bt ON p.blood_type_id     = bt.id
-       LEFT JOIN addresses      a ON p.address_id         = a.id
-       LEFT JOIN contact_info  ci ON p.id = ci.patient_id AND ci.is_primary = 1 AND ci.type = 'phone'
+       LEFT JOIN sex_options    sx ON p.sex_id          = sx.id
+       LEFT JOIN civil_statuses cs ON p.civil_status_id = cs.id
+       LEFT JOIN blood_types    bt ON p.blood_type_id   = bt.id
+       LEFT JOIN addresses       a ON p.address_id      = a.id
+       LEFT JOIN contact_info   ci ON p.id = ci.patient_id AND ci.is_primary = 1 AND ci.type = 'phone'
        WHERE p.is_deleted = 0
-         AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.philhealth_no LIKE ?)
+         AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.philhealth_no LIKE ? OR ci.value LIKE ?)
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-      [like, like, like, parseInt(limit), parseInt(offset)]
+      [like, like, like, like, parseInt(limit), parseInt(offset)]
     );
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM patients WHERE is_deleted = 0
-         AND (first_name LIKE ? OR last_name LIKE ? OR philhealth_no LIKE ?)`,
-      [like, like, like]
+      `SELECT COUNT(*) AS total FROM patients p
+       LEFT JOIN contact_info ci ON p.id = ci.patient_id AND ci.is_primary = 1 AND ci.type = 'phone'
+       WHERE p.is_deleted = 0
+         AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.philhealth_no LIKE ? OR ci.value LIKE ?)`,
+      [like, like, like, like]
     );
     res.json({ data: rows, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
@@ -149,10 +171,18 @@ exports.create = async (req, res) => {
       );
     }
 
-    const queue_number = await getNextQueueNumber(conn);
+    // Resolve doctor FK if a doctor name was sent
+    const { visit_reason, send_sms, priority, notes, doctor_id } = req.body;
+    const staff_id = req.user?.staffId || null;
+
+    const { appointment_id, queue_number } = await createVisitEntry(conn, {
+      patient_id, doctor_id: doctor_id || null,
+      visit_reason, priority, notes, staff_id,
+    });
+
     await conn.commit();
 
-    res.status(201).json({ patient_id, queue_number, message: 'Patient registered successfully.' });
+    res.status(201).json({ patient_id, appointment_id, queue_number, message: 'Patient registered successfully.' });
   } catch (err) {
     await conn.rollback();
     res.status(500).json({ error: err.message });
@@ -212,5 +242,39 @@ exports.remove = async (req, res) => {
     res.json({ message: 'Patient removed.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /api/patients/:id/visit — queue a returning (existing) patient
+// Body: { visit_reason, doctor_id?, notes?, priority?, send_sms? }
+exports.createVisit = async (req, res) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    const patient_id = parseInt(req.params.id, 10);
+    const [patients] = await conn.query(
+      `SELECT id, first_name, last_name FROM patients WHERE id = ? AND is_deleted = 0`,
+      [patient_id]
+    );
+    if (!patients.length) return res.status(404).json({ error: 'Patient not found.' });
+
+    const { visit_reason, doctor_id, notes, priority } = req.body;
+    const staff_id = req.user?.staffId || null;
+    const { appointment_id, queue_number } = await createVisitEntry(conn, {
+      patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id,
+    });
+
+    await conn.commit();
+    const p = patients[0];
+    res.status(201).json({
+      patient_id, appointment_id, queue_number,
+      patient_name: `${p.first_name} ${p.last_name}`,
+      message: 'Patient added to queue.',
+    });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ error: err.message });
+  } finally {
+    conn.release();
   }
 };
