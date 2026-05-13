@@ -12,6 +12,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ─── DROP ALL TABLES (clean slate) ──────────────────────────
 DROP TABLE IF EXISTS
   medical_records,
+  vitals,
   appointment_services,
   queue,
   appointments,
@@ -187,6 +188,21 @@ CREATE TABLE queue (
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE vitals (
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id    INT NOT NULL UNIQUE,
+  blood_pressure    VARCHAR(20),            -- e.g. "120/80"
+  temperature       DECIMAL(4,1),           -- °C
+  heart_rate        INT,                    -- bpm
+  spo2              INT,                    -- %
+  weight_kg         DECIMAL(5,2),
+  height_cm         DECIMAL(5,2),
+  recorded_by_id    INT,                   -- FK → staff (nurse)
+  recorded_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (appointment_id)  REFERENCES appointments(id) ON DELETE CASCADE,
+  FOREIGN KEY (recorded_by_id)  REFERENCES staff(id)        ON DELETE SET NULL
 );
 
 CREATE TABLE medical_records (

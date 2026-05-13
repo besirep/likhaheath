@@ -17,6 +17,7 @@ app.use('/api/staff',           require('./routes/staff'));
 app.use('/api/appointments',    require('./routes/appointments'));
 app.use('/api/queue',           require('./routes/queue'));
 app.use('/api/medical-records', require('./routes/medicalRecords'));
+app.use('/api/consultations',   require('./routes/consultations'));
 app.use('/api/sms',             require('./routes/sms'));
 app.use('/api/dashboard',       require('./routes/dashboard'));
 
