@@ -564,7 +564,6 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   )}
 </div>
 )}
-</div>
 
           </div>
 {/* ── Right: Recent registrations ── */}
