@@ -1,23 +1,14 @@
-import { tokenStore } from './auth.js';
-import { API_BASE_URL as BASE } from './config.js';
-
-const authHeaders = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${tokenStore.get()}`,
-});
+import { apiFetch } from './apiFetch.js';
 
 export const staffApi = {
   /**
-   * GET /api/staff?position=Doctor
-   * Fetches all active staff, optionally filtered by position.
+   * GET /api/staff?search=&position=
+   * @param {{ search?: string, position?: string }} params
+   * @returns {Promise<Array>}
    */
   getAll: async ({ search = '', position = '' } = {}) => {
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    if (position) params.set('position', position);
-    const res = await fetch(`${BASE}/staff?${params}`, {
-      headers: authHeaders(),
-    });
+    const qs  = new URLSearchParams({ search, position });
+    const res = await apiFetch(`/staff?${qs}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch staff.');
     return data;
@@ -27,11 +18,40 @@ export const staffApi = {
    * GET /api/staff/:id
    */
   getOne: async (id) => {
-    const res = await fetch(`${BASE}/staff/${id}`, {
-      headers: authHeaders(),
-    });
+    const res  = await apiFetch(`/staff/${id}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Staff not found.');
+    return data;
+  },
+
+  /**
+   * POST /api/staff
+   * Required: { first_name, last_name, position, health_center_id }
+   */
+  create: async (payload) => {
+    const res  = await apiFetch('/staff', { method: 'POST', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create staff.');
+    return data;
+  },
+
+  /**
+   * PUT /api/staff/:id
+   */
+  update: async (id, payload) => {
+    const res  = await apiFetch(`/staff/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update staff.');
+    return data;
+  },
+
+  /**
+   * PATCH /api/staff/:id/status
+   */
+  toggleStatus: async (id) => {
+    const res  = await apiFetch(`/staff/${id}/status`, { method: 'PATCH' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to toggle staff status.');
     return data;
   },
 };

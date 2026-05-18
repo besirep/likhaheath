@@ -1,20 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { consultationsApi } from "../../lib/api/consultations.js";
+import { printConsultationSummary, printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const myQueue = [
-  { id: 1, name: "Maria Santos",   queue: "A-001", age: 34, reason: "Hypertension follow-up", status: "in-consultation", wait: "0m",  priority: null,     vitals: { bp: "138/88", temp: "36.7°C", hr: "82 bpm" } },
-  { id: 2, name: "Jose Dela Cruz", queue: "A-004", age: 57, reason: "Diabetes check-up",      status: "waiting",         wait: "12m", priority: null,     vitals: null },
-  { id: 3, name: "Ana Lim",        queue: "A-006", age: 28, reason: "Fever & cough",           status: "waiting",         wait: "26m", priority: null,     vitals: null },
-  { id: 4, name: "Elena Cruz",     queue: "A-008", age: 66, reason: "Chest discomfort review", status: "waiting",         wait: "40m", priority: "elderly", vitals: null },
-  { id: 5, name: "Celia Marcos",   queue: "A-010", age: 62, reason: "Lab results review",      status: "waiting",         wait: "54m", priority: "elderly", vitals: null },
-];
-
-// All active consultations across all doctors (shared queue context)
-const allConsultations = [
-  { doctor: "Dr. Reyes",  room: "Room 1", patient: "Maria Santos",  queue: "A-001", reason: "Hypertension follow-up" },
-  { doctor: "Dr. Santos", room: "Room 2", patient: "Ramon Valdez",  queue: "A-002", reason: "Back pain + PT review"  },
-  { doctor: "Dr. Cruz",   room: "Room 3", patient: "Luisa Ramos",   queue: "A-003", reason: "Prenatal check-up"      },
-];
+// Status mapping: API → UI key
+const mapStatus = s => {
+  if (!s) return "waiting";
+  const m = { Waiting: "waiting", "In-Progress": "in-consultation", Done: "done", Skipped: "skipped" };
+  return m[s] || s.toLowerCase();
+};
 
 const appointments = [
   { time: "1:00 PM", name: "Pedro Bautista", age: 51, reason: "Annual physical",     type: "scheduled" },
@@ -90,18 +83,13 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
   if (!patient) return null;
 
   const handlePrint = () => {
-    const win = window.open("", "_blank");
-    win.document.write(`<html><body style="font-family:sans-serif;padding:24px">
-      <h2>Consultation Summary — ${patient.name}</h2>
-      <p><b>Queue:</b> ${patient.queue} &nbsp; <b>Age:</b> ${patient.age} yrs</p>
-      <p><b>Reason:</b> ${patient.reason}</p>
-      <hr/>
-      <p><b>Diagnosis:</b> ${diagnosis || '(not set)'}</p>
-      <p><b>Notes:</b><br/>${notes.replace(/\n/g,'<br/>') || '(none)'}</p>
-      <p style="margin-top:32px;color:#888">Printed on ${new Date().toLocaleString()}</p>
-    </body></html>`);
-    win.print();
-    win.close();
+    printConsultationSummary({
+      patient,
+      diagnosis,
+      notes,
+      vitals: patient.vitals || null,
+      staffName: 'Dr. Reyes',
+    });
   };
 
   return (
@@ -486,10 +474,11 @@ function QueueRow({ patient, index, onStartConsult }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorDashboard({ user }) {
+export default function DoctorDashboard({ user, onNavigate }) {
   const [time, setTime]             = useState(new Date());
   const [activeConsult, setActiveConsult] = useState(null);
   const [notifOpen, setNotifOpen]   = useState(false);
+  const [myQueue, setMyQueue]       = useState([]);
 
   // Derive display name: "Dr. Dela Cruz" from full name
   const lastName   = user?.name?.split(" ").slice(-1)[0] ?? "Doctor";
@@ -501,6 +490,34 @@ export default function DoctorDashboard({ user }) {
   const queueFade    = useFadeIn(420);
   const apptFade     = useFadeIn(450);
 
+  // ── Live queue fetch (same API as DoctorQueue) ──────────────────────────────
+  const loadQueue = useCallback(async () => {
+    try {
+      const data = await consultationsApi.getDoctorQueue();
+      const normalized = data.map(p => ({
+        id:       p.queueId,
+        queue:    `Q-${String(p.queueNumber).padStart(3, "0")}`,
+        name:     p.name,
+        age:      p.age,
+        reason:   p.visitReason || "General consultation",
+        status:   mapStatus(p.status),
+        wait:     "—",
+        priority: null,
+        vitals:   p.vitals ? { bp: p.vitals.bp, temp: `${p.vitals.temp}°C`, hr: `${p.vitals.hr} bpm` } : null,
+      }));
+      setMyQueue(normalized);
+    } catch (e) {
+      console.error("[DoctorDashboard] Failed to load queue:", e);
+    }
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const t = setInterval(loadQueue, 30_000);
+    return () => clearInterval(t);
+  }, [loadQueue]);
+
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
@@ -511,12 +528,19 @@ export default function DoctorDashboard({ user }) {
   const hour     = time.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  // Queue stats derived from data
-  const nowServing = allConsultations.length;
+  // Queue stats derived from live data
+  const inConsult  = myQueue.filter(p => p.status === "in-consultation");
+  const nowServing = inConsult.length;
   const waiting    = myQueue.filter(p => p.status === "waiting").length;
-  const completed  = 13;
-  const skipped    = 2;
+  const completed  = myQueue.filter(p => p.status === "done").length;
+  const skipped    = myQueue.filter(p => p.status === "skipped").length;
   const priority   = myQueue.filter(p => p.priority).length;
+
+  // Build allConsultations from live in-consultation entries
+  const allConsultations = inConsult.map(p => ({
+    doctor: displayName, room: "Room 1", patient: p.name, queue: p.queue, reason: p.reason,
+  }));
+
 
   return (
     <div style={{ minHeight: "100vh", background: "#EBF0FA" }}>
@@ -643,7 +667,11 @@ export default function DoctorDashboard({ user }) {
 
             <div style={{ padding: "11px 20px", borderTop: "1px solid #f0f3fa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 14, color: "#b0bdd6" }}>{myQueue.filter(p => p.status === "waiting").length} patients waiting</span>
-              <button onClick={() => onNavigate && onNavigate('dr-queue')} style={{ background: "none", border: "none", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>Full Queue View →</button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button onClick={() => printQueueReport({ queue: myQueue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: displayName })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>🖨 PDF</button>
+                <button onClick={() => downloadQueueCSV({ queue: myQueue })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>📥 CSV</button>
+                <button onClick={() => onNavigate && onNavigate('dr-queue')} style={{ background: "none", border: "none", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>Full Queue View →</button>
+              </div>
             </div>
           </div>
 

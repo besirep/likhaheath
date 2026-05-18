@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { printDailyReport } from "../../lib/utils/printUtils.js";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -198,8 +199,26 @@ export default function Reports() {
   };
 
   const exportPDF = () => {
-    showToast('📄 Opening print dialog...');
-    setTimeout(() => window.print(), 400);
+    showToast('📄 Generating branded PDF...');
+    printDailyReport({
+      stats: {
+        total: todayTotal,
+        completed: todayCompleted,
+        skipped: todaySkipped,
+        waiting: todayTotal - todayCompleted - todaySkipped,
+        priority: totalPriority,
+        avgWait: `${avgWait}m`,
+      },
+      queue: weeklyQueue.map(r => ({
+        queue: r.day,
+        name: `${r.total} patients`,
+        age: '—',
+        reason: `${r.completed} completed`,
+        status: `${r.skipped} skipped`,
+        doctor: '—',
+      })),
+      staffName: 'Ana R. · Front Desk',
+    });
   };
 
   const todayTotal     = 47;

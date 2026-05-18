@@ -327,7 +327,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
       <div style={{ background: "white", borderBottom: "1px solid #e8edf7", padding: "0 28px", display: "flex", flexShrink: 0 }}>
         {[
           { key: "overview", label: "Overview" },
-          { key: "history",  label: `Visit History (${patient.visits.length})` },
+          { key: "history",  label: `All Visits (${patient.visits.length})` },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             background: "none", border: "none", padding: "14px 18px",
@@ -415,7 +415,9 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
         {tab === "history" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 0, animation: "fadeUp 0.2s ease" }}>
             <div style={{ fontSize: 14, color: "#7a8fb0", marginBottom: 14 }}>
-              {patient.visits.length} visit record{patient.visits.length !== 1 ? "s" : ""} — click any to view details
+              {patient.visits.length} total visit record{patient.visits.length !== 1 ? "s" : ""}
+              <span style={{ marginLeft: 8, background: "#EBF0FA", color: "#0047AB", borderRadius: 6, padding: "2px 8px", fontSize: 13, fontWeight: 600 }}>All types shown</span>
+              <span style={{ marginLeft: 6, fontSize: 13, color: "#b0beca" }}>— click any to view details</span>
             </div>
 
             <div style={{ position: "relative" }}>

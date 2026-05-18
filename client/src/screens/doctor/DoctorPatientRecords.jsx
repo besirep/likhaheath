@@ -721,7 +721,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorPatientRecords() {
+export default function DoctorPatientRecords({ onNavigate }) {
   const [selected, setSelected]           = useState(patients[0]);
   const [search, setSearch]               = useState("");
   const [statusFilter, setStatusFilter]   = useState("all");

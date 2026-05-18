@@ -1,12 +1,9 @@
 const db = require('../config/db');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-async function resolveOrInsertAddress({ street, barangay, municipality, province, region, zip_code }, conn) {
-  const [existing] = await conn.query(
-    `SELECT id FROM addresses WHERE barangay = ? AND municipality = ? AND province = ? LIMIT 1`,
-    [barangay, municipality, province]
-  );
-  if (existing.length) return existing[0].id;
+// Always insert a new address row — never reuse shared rows across patients
+// (Reusing caused Issue #3: updating one patient's address mutated another's)
+async function insertAddress({ street, barangay, municipality, province, region, zip_code }, conn) {
   const [result] = await conn.query(
     `INSERT INTO addresses (street, barangay, municipality, province, region, zip_code) VALUES (?, ?, ?, ?, ?, ?)`,
     [street || null, barangay, municipality, province, region || null, zip_code || null]
@@ -22,18 +19,20 @@ async function resolveId(conn, table, column, value) {
 
 async function getNextQueueNumber(conn) {
   const today = new Date().toISOString().slice(0, 10);
+  // Use FOR UPDATE to lock the row and prevent race conditions under concurrent registrations (Issue #4)
   const [rows] = await conn.query(
     `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
      FROM queue q
      JOIN appointments a ON q.appointment_id = a.id
-     WHERE DATE(a.scheduled_date) = ?`,
+     WHERE DATE(a.scheduled_date) = ?
+     FOR UPDATE`,
     [today]
   );
   return (rows[0].max_q || 0) + 1;
 }
 
-// Shared helper: create appointment + queue entry for a patient
-async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, priority, notes, staff_id }) {
+// Shared helper: create appointment + queue entry (+ optional vitals) for a patient
+async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, priority, notes, staff_id, vitals }) {
   const now = new Date();
   const queue_number = await getNextQueueNumber(conn);
   const [apptResult] = await conn.query(
@@ -46,6 +45,23 @@ async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, pri
     `INSERT INTO queue (appointment_id, queue_number, status) VALUES (?, ?, 'Waiting')`,
     [appointment_id, queue_number]
   );
+  // Save vitals if provided during registration
+  if (vitals && (vitals.blood_pressure || vitals.temperature)) {
+    await conn.query(
+      `INSERT INTO vitals (appointment_id, blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm, recorded_by_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        appointment_id,
+        vitals.blood_pressure || null,
+        vitals.temperature   || null,
+        vitals.heart_rate    || null,
+        vitals.spo2          || null,
+        vitals.weight_kg     || null,
+        vitals.height_cm     || null,
+        staff_id || null,
+      ]
+    );
+  }
   return { appointment_id, queue_number };
 }
 
@@ -141,7 +157,7 @@ exports.create = async (req, res) => {
     const sex_id          = await resolveId(conn, 'sex_options', 'label', sex_name);
     const civil_status_id = await resolveId(conn, 'civil_statuses', 'label', civil_status_name);
     const blood_type_id   = await resolveId(conn, 'blood_types', 'code', blood_type_code);
-    const address_id      = await resolveOrInsertAddress(address, conn);
+    const address_id = await insertAddress(address, conn);
 
     if (!sex_id)          throw new Error(`Unknown sex: ${sex_name}`);
     if (!civil_status_id) throw new Error(`Unknown civil status: ${civil_status_name}`);
@@ -172,12 +188,12 @@ exports.create = async (req, res) => {
     }
 
     // Resolve doctor FK if a doctor name was sent
-    const { visit_reason, send_sms, priority, notes, doctor_id } = req.body;
+    const { visit_reason, send_sms, priority, notes, doctor_id, vitals } = req.body;
     const staff_id = req.user?.staffId || null;
 
     const { appointment_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null,
-      visit_reason, priority, notes, staff_id,
+      visit_reason, priority, notes, staff_id, vitals: vitals || null,
     });
 
     await conn.commit();
@@ -185,7 +201,8 @@ exports.create = async (req, res) => {
     res.status(201).json({ patient_id, appointment_id, queue_number, message: 'Patient registered successfully.' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ error: err.message });
+    console.error('[patientController.create]', err);
+    res.status(500).json({ error: 'An internal server error occurred.' });
   } finally {
     conn.release();
   }
@@ -207,7 +224,7 @@ exports.update = async (req, res) => {
     const sex_id          = await resolveId(conn, 'sex_options', 'label', sex_name);
     const civil_status_id = await resolveId(conn, 'civil_statuses', 'label', civil_status_name);
     const blood_type_id   = await resolveId(conn, 'blood_types', 'code', blood_type_code);
-    const address_id      = address.barangay ? await resolveOrInsertAddress(address, conn) : undefined;
+    const address_id = address.barangay ? await insertAddress(address, conn) : undefined;
 
     await conn.query(
       `UPDATE patients SET
@@ -229,7 +246,8 @@ exports.update = async (req, res) => {
     res.json({ message: 'Patient updated.' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ error: err.message });
+    console.error('[patientController.update]', err);
+    res.status(500).json({ error: 'An internal server error occurred.' });
   } finally {
     conn.release();
   }
@@ -258,10 +276,24 @@ exports.createVisit = async (req, res) => {
     );
     if (!patients.length) return res.status(404).json({ error: 'Patient not found.' });
 
-    const { visit_reason, doctor_id, notes, priority } = req.body;
+    // Issue #8 — Prevent duplicate queue entries for the same patient on the same day
+    const [existing] = await conn.query(
+      `SELECT q.id FROM queue q
+       JOIN appointments a ON q.appointment_id = a.id
+       WHERE a.patient_id = ? AND DATE(a.scheduled_date) = CURDATE()
+         AND q.status IN ('Waiting','In-Progress')
+       LIMIT 1`,
+      [patient_id]
+    );
+    if (existing.length) {
+      await conn.rollback();
+      return res.status(409).json({ error: 'This patient already has an active queue entry today.' });
+    }
+
+    const { visit_reason, doctor_id, notes, priority, vitals } = req.body;
     const staff_id = req.user?.staffId || null;
     const { appointment_id, queue_number } = await createVisitEntry(conn, {
-      patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id,
+      patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id, vitals: vitals || null,
     });
 
     await conn.commit();
@@ -273,8 +305,51 @@ exports.createVisit = async (req, res) => {
     });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ error: err.message });
+    console.error('[patientController.createVisit]', err);
+    res.status(500).json({ error: 'An internal server error occurred.' });
   } finally {
     conn.release();
   }
 };
+
+// GET /api/patients/:id/visits — all visit records for a patient
+// Returns every appointment as one visit (with vitals + medical record if present)
+exports.getVisits = async (req, res) => {
+  try {
+    const patient_id = parseInt(req.params.id, 10);
+    const [rows] = await db.query(
+      `SELECT
+         a.id               AS appointment_id,
+         a.queue_number,
+         a.scheduled_date,
+         a.status           AS appointment_status,
+         a.notes,
+         CONCAT(s.first_name, ' ', s.last_name) AS doctor_name,
+         -- vitals (may be null if not recorded)
+         v.blood_pressure,
+         v.temperature,
+         v.heart_rate,
+         v.spo2,
+         v.weight_kg,
+         v.height_cm,
+         v.recorded_at      AS vitals_recorded_at,
+         -- medical record (may be null if no consultation yet)
+         mr.id              AS record_id,
+         mr.diagnosis,
+         mr.treatment,
+         mr.record_date
+       FROM appointments a
+       LEFT JOIN staff      s  ON a.doctor_id      = s.id
+       LEFT JOIN vitals     v  ON v.appointment_id = a.id
+       LEFT JOIN medical_records mr ON mr.appointment_id = a.id
+       WHERE a.patient_id = ?
+       ORDER BY a.scheduled_date DESC`,
+      [patient_id]
+    );
+    res.json({ data: rows, total: rows.length });
+  } catch (err) {
+    console.error('[patientController.getVisits]', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+

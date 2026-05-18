@@ -1,5 +1,30 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { consultationsApi } from "../../lib/api/consultations.js";
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "40px", color: "red", background: "#fee" }}>
+          <h2>Something went wrong in the Form.</h2>
+          <pre>{this.state.error?.toString()}</pre>
+          <pre>{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const priorityConfig = {
@@ -9,18 +34,19 @@ const priorityConfig = {
   pediatric: { label: "Pedia (0–5)",    icon: "👶", color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
-const bpFlag   = bp => { if (!bp) return "normal"; const s = Number(String(bp).split("/")[0]); return s >= 140 ? "high" : s < 90 ? "low" : "normal"; };
-const tempFlag = v  => { if (!v)  return "normal"; const n = Number(v); return n >= 37.8 ? "high" : n < 36 ? "low" : "normal"; };
-const spo2Flag = v  => !v ? "normal" : Number(v) < 95 ? "low" : "normal";
+const bpFlag   = bp => { if (!bp || bp === "null") return "normal"; const s = Number(String(bp).split("/")[0]); return s >= 140 ? "high" : s < 90 ? "low" : "normal"; };
+const tempFlag = v  => { if (!v || v === "null")  return "normal"; const n = Number(v); return n >= 37.8 ? "high" : n < 36 ? "low" : "normal"; };
+const spo2Flag = v  => (!v || v === "null") ? "normal" : Number(v) < 95 ? "low" : "normal";
 const flagColor = { high: "#CC0000", low: "#c04080", normal: "#0047AB" };
 const flagBg    = { high: "#fdeee8", low: "#fce8f0", normal: "#EBF0FA" };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function Avatar({ name = "?", size = 36 }) {
-  const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-  const hue = (name.charCodeAt(0) * 41 + (name.charCodeAt(1) || 0) * 19) % 360;
+function Avatar({ name, size = 36 }) {
+  const safeName = name || "?";
+  const initials = safeName.split(" ").map(n => n[0]).filter(Boolean).join("").slice(0, 2).toUpperCase() || "?";
+  const hue = (safeName.charCodeAt(0) * 41 + (safeName.charCodeAt(1) || 0) * 19) % 360;
   return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: `hsl(${hue},40%,75%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.36, fontWeight: 700, color: `hsl(${hue},40%,28%)`, flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", background: `hsl(${hue || 0},40%,75%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.36, fontWeight: 700, color: `hsl(${hue || 0},40%,28%)`, flexShrink: 0 }}>
       {initials}
     </div>
   );
@@ -60,8 +86,8 @@ function ConsultationForm({ patient, onSave, onCancel, saving }) {
     });
   };
 
-  const v = patient.vitals;
-  const bmi = v?.weight && v?.height
+  const v = patient?.vitals;
+  const bmi = v?.weight && v?.height && v.weight !== "null" && v.height !== "null"
     ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1)
     : null;
 
@@ -199,7 +225,7 @@ function HistoryDetail({ record, onSchedule }) {
   );
 
   const v = record.vitals;
-  const bmi = v?.weight && v?.height
+  const bmi = v?.weight && v?.height && v.weight !== "null" && v.height !== "null"
     ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1)
     : null;
 
@@ -426,12 +452,14 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
           {/* Right — Detail or Active Form */}
           <div style={{ display: "flex", overflow: "hidden" }}>
             {mode === "active" && activePatient ? (
-              <ConsultationForm
-                patient={activePatient}
-                onSave={handleSave}
-                onCancel={() => setMode("history")}
-                saving={saving}
-              />
+              <ErrorBoundary>
+                <ConsultationForm
+                  patient={activePatient}
+                  onSave={handleSave}
+                  onCancel={() => setMode("history")}
+                  saving={saving}
+                />
+              </ErrorBoundary>
             ) : (
               <HistoryDetail record={selectedRecord} />
             )}

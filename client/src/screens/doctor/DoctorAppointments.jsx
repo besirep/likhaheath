@@ -592,7 +592,7 @@ function UpcomingList({ appointments, onSelect, selectedId }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorAppointments() {
+export default function DoctorAppointments({ onNavigate }) {
   const [selectedDate, setSelectedDate] = useState("2026-03-01");
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showBook, setShowBook]         = useState(false);

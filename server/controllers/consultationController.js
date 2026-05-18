@@ -7,7 +7,7 @@ const db = require('../config/db');
  */
 const getDoctorQueue = async (req, res) => {
   try {
-    const doctorId = req.user.staff_id;
+    const doctorId = req.user.staffId;
     const [rows] = await db.query(
       `SELECT
          q.id              AS queue_id,
@@ -37,7 +37,7 @@ const getDoctorQueue = async (req, res) => {
        LEFT JOIN vitals v    ON v.appointment_id = a.id
        LEFT JOIN staff st    ON st.id = v.recorded_by_id
        WHERE DATE(a.scheduled_date) = CURDATE()
-         AND (a.doctor_id = ? OR a.doctor_id IS NULL)
+         AND a.doctor_id = ?
          AND q.status != 'Done'
        ORDER BY
          CASE q.status
@@ -113,7 +113,7 @@ const updateQueueStatus = async (req, res) => {
  */
 const saveConsultation = async (req, res) => {
   const { appointmentId, patientId, diagnosis, treatment, notes, followUpDate } = req.body;
-  const doctorId = req.user.staff_id;
+  const doctorId = req.user.staffId;
 
   if (!appointmentId || !patientId || !diagnosis || !treatment) {
     return res.status(400).json({ message: 'appointmentId, patientId, diagnosis, and treatment are required.' });
@@ -122,6 +122,20 @@ const saveConsultation = async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
+
+    // Issue #7 — Verify the doctor owns this appointment before saving
+    const [appts] = await conn.query(
+      `SELECT doctor_id FROM appointments WHERE id = ? LIMIT 1`,
+      [appointmentId]
+    );
+    if (!appts.length) {
+      await conn.rollback();
+      return res.status(404).json({ message: 'Appointment not found.' });
+    }
+    if (appts[0].doctor_id !== doctorId) {
+      await conn.rollback();
+      return res.status(403).json({ message: 'You are not authorized to save this consultation.' });
+    }
 
     // 1. Save medical record
     await conn.query(
@@ -142,13 +156,14 @@ const saveConsultation = async (req, res) => {
       [appointmentId]
     );
 
-    // 4. If a follow-up date is provided, create a new appointment placeholder
+    // 4. If a follow-up date is provided, create a new appointment + queue entry
     if (followUpDate) {
-      const [queueCount] = await conn.query(
-        `SELECT COUNT(*) AS cnt FROM appointments WHERE DATE(scheduled_date) = ? `,
+      // Issue #5 — Use MAX(queue_number)+1 instead of COUNT(*) to avoid duplicate queue numbers
+      const [queueMax] = await conn.query(
+        `SELECT COALESCE(MAX(queue_number), 0) AS max_q FROM appointments WHERE DATE(scheduled_date) = ?`,
         [followUpDate]
       );
-      const nextQueue = (queueCount[0].cnt || 0) + 1;
+      const nextQueue = (queueMax[0].max_q || 0) + 1;
 
       const [apptResult] = await conn.query(
         `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, queue_number, status, notes)
@@ -179,7 +194,7 @@ const saveConsultation = async (req, res) => {
  * Returns the logged-in doctor's past completed consultations.
  */
 const getConsultationHistory = async (req, res) => {
-  const doctorId = req.user.staff_id;
+  const doctorId = req.user.staffId;
   try {
     const [rows] = await db.query(
       `SELECT

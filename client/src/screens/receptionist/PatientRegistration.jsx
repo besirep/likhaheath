@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { staffApi } from "../../lib/api/staff.js";
-import { getAge, validateStep0, validateStep1, validateStep2 } from "../../lib/validation/patientValidation.js";
+import { getAge, validateStep0, validateStep1, validateStep2, validateStep3 } from "../../lib/validation/patientValidation.js";
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const SUFFIX_OPTIONS = ["", "Jr", "Sr", "III", "IV", "V"];
+const SUFFIX_OPTIONS = ["", "II", "Jr", "Sr", "III", "IV", "V", "2nd", "3rd"];
 const SEX_OPTIONS = ["Male", "Female", "Other"];
 const CIVIL_STATUS_OPTIONS = ["Single", "Married", "Widowed", "Separated", "Annulled"];
 const BLOOD_TYPE_OPTIONS = ["", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -120,7 +120,7 @@ function SuccessModal({ data, onClose, onAnother }) {
 }
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepBar({ step }) {
-  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Priority & SMS"];
+  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Vitals", "Priority & SMS"];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28 }}>
       {steps.map((s, i) => {
@@ -154,7 +154,8 @@ const emptyForm = {
   philhealthNo: "", emergencyContact: "",
   street: "", barangay: "", municipality: "Angono", province: "Rizal",
   phone: "", email: "",
-  reason: "", doctor: "", reasonOther: "",
+  reasons: [], doctor: "", reasonOther: "",
+  vitals: { bp: "", temp: "", hr: "", spo2: "", weight: "", height: "" },
   priority: null, sendSms: true, notes: "",
 };
 
@@ -167,6 +168,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError]     = useState(null);
   const [doctors, setDoctors]       = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
   // Search pre-step state
   const [searchQuery, setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -178,9 +180,10 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   }, [step, form]); // eslint-disable-line
 
   useEffect(() => {
+    setDoctorsLoading(true);
     staffApi.getAll({ position: "Doctor" })
-      .then(data => setDoctors(Array.isArray(data) ? data : []))
-      .catch(() => setDoctors([]));
+      .then(data => { setDoctors(Array.isArray(data) ? data : []); setDoctorsLoading(false); })
+      .catch(() => { setDoctors([]); setDoctorsLoading(false); });
   }, []);
 
   const update = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: undefined })); };
@@ -222,31 +225,50 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     if (step === 0) errs = validateStep0(form);
     else if (step === 1) errs = validateStep1(form);
     else if (step === 2) errs = validateStep2(form);
+    else if (step === 3) errs = validateStep3(form);
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // Returning patients: skip address/contact step (step 1) — info already on file
+      // Returning patients: skip address/contact step (step 1) and jump to visit details, then vitals, then priority
       if (isReturning && step === 2) setStep(3);
       else setStep(s => s + 1);
     }
   };
 
+  const updateVitals = (k, v) => {
+    setForm(f => ({ ...f, vitals: { ...f.vitals, [k]: v } }));
+    setErrors(e => ({ ...e, [`vitals.${k}`]: undefined }));
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true); setApiError(null);
     try {
+      const reasonList = form.reasons.includes('Other')
+        ? [...form.reasons.filter(r => r !== 'Other'), form.reasonOther].filter(Boolean)
+        : form.reasons;
+      const visit_reason = reasonList.join(', ');
+
+      const vitalsPayload = {
+        blood_pressure: form.vitals.bp || null,
+        temperature: form.vitals.temp ? Number(form.vitals.temp) : null,
+        heart_rate: form.vitals.hr ? Number(form.vitals.hr) : null,
+        spo2: form.vitals.spo2 ? Number(form.vitals.spo2) : null,
+        weight_kg: form.vitals.weight ? Number(form.vitals.weight) : null,
+        height_cm: form.vitals.height ? Number(form.vitals.height) : null,
+      };
+
       const visitPayload = {
-        visit_reason: form.reason === "Other" ? form.reasonOther : form.reason,
-        doctor_id: null,   // doctor name→id resolution is TODO(sprint)
+        visit_reason,
+        doctor_id: form.doctor ? doctors.find(d => `Dr. ${d.last_name}` === form.doctor)?.id || null : null,
         notes: form.notes || null,
         priority: form.priority,
         send_sms: form.sendSms,
+        vitals: vitalsPayload,
       };
 
       let queue_number;
       if (isReturning) {
-        // Returning patient: just create a new visit
         ({ queue_number } = await patientsApi.createVisit(form.existingPatientId, visitPayload));
       } else {
-        // New patient: full registration
         const payload = {
           first_name: form.firstName, last_name: form.lastName, suffix: form.suffix || null,
           date_of_birth: form.dob, sex_name: form.sex, civil_status_name: form.civilStatus,
@@ -264,11 +286,12 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       }
 
       const queue = `A-${String(queue_number).padStart(3, "0")}`;
-      setSuccess({ queue, name: fullName, doctor: form.doctor, reason: visitPayload.visit_reason, contact: form.phone, sendSms: form.sendSms, priority: form.priority, isReturning });
-      if (onDraftClear) onDraftClear();   // clear saved draft on success
+      setSuccess({ queue, name: fullName, doctor: form.doctor, reason: visit_reason, contact: form.phone, sendSms: form.sendSms, priority: form.priority, isReturning });
+      if (onDraftClear) onDraftClear();
     } catch (err) { setApiError(err.message); }
     finally { setSubmitting(false); }
   };
+
 
   const handleAnother = () => {
     setForm(emptyForm); setStep(-1); setSuccess(null); setErrors({});
@@ -380,7 +403,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 14 }}>
       <Input label="First Name" placeholder="Given name" value={form.firstName} onChange={v => update("firstName", v)} required error={errors.firstName} />
       <Input label="Last Name" placeholder="Surname" value={form.lastName} onChange={v => update("lastName", v)} required error={errors.lastName} />
-      <Select label="Suffix" value={form.suffix} onChange={v => update("suffix", v)} options={["Jr", "Sr", "III", "IV", "V"]} error={errors.suffix} />
+      <Select label="Suffix" value={form.suffix} onChange={v => update("suffix", v)} options={["II", "Jr", "Sr", "III", "IV", "V", "2nd", "3rd"]} error={errors.suffix} />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
       <div>
@@ -442,29 +465,36 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     <div>
       <label style={labelStyle}>Reason for Visit <span style={{ color: "#CC0000" }}>*</span></label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {visitReasons.map(r => (
-          <button key={r} onClick={() => update("reason", r)} style={{
-            padding: "10px 14px", border: `1.5px solid ${form.reason === r ? "#2a9d8f" : "#e0e7ef"}`,
-            borderRadius: 11, background: form.reason === r ? "#e8f7f5" : "white",
-            color: form.reason === r ? "#2a9d8f" : "#4a5d75", fontSize: 14, fontWeight: form.reason === r ? 600 : 400,
-            cursor: "pointer", textAlign: "left", transition: "all 0.15s",
-          }}>{form.reason === r && <span style={{ marginRight: 6 }}>✓</span>}{r}</button>
-        ))}
+        {visitReasons.map(r => {
+          const selected = (form.reasons || []).includes(r);
+          return (
+            <button key={r} onClick={() => {
+              const cur = form.reasons || [];
+              update("reasons", selected ? cur.filter(x => x !== r) : [...cur, r]);
+            }} style={{
+              padding: "10px 14px", border: `1.5px solid ${selected ? "#2a9d8f" : "#e0e7ef"}`,
+              borderRadius: 11, background: selected ? "#e8f7f5" : "white",
+              color: selected ? "#2a9d8f" : "#4a5d75", fontSize: 14, fontWeight: selected ? 600 : 400,
+              cursor: "pointer", textAlign: "left", transition: "all 0.15s",
+            }}>{selected && <span style={{ marginRight: 6 }}>✓</span>}{r}</button>
+          );
+        })}
       </div>
-      {errors.reason && <div style={errStyle}>{errors.reason}</div>}
+      {errors.reasons && <div style={errStyle}>{errors.reasons}</div>}
     </div>
-    {form.reason === "Other" && (
-      <Input label="Specify Reason" placeholder="Describe the visit reason" value={form.reasonOther} onChange={v => update("reasonOther", v)} error={errors.reasonOther} />
+    {(form.reasons || []).includes("Other") && (
+      <Input label="Specify Other Reason" placeholder="Describe the specific visit reason" value={form.reasonOther} onChange={v => update("reasonOther", v)} error={errors.reasonOther} />
     )}
     <div>
       <label style={labelStyle}>Assign Doctor (optional)</label>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button onClick={() => update("doctor", "")} style={btnStyle(!form.doctor)}>Auto-assign</button>
+        <button onClick={() => update("doctor", "")} style={btnStyle(!form.doctor)}>Unassigned</button>
         {doctors.map(d => {
           const name = `Dr. ${d.last_name}`;
           return <button key={d.id} onClick={() => update("doctor", name)} style={btnStyle(form.doctor === name)}>{name}</button>;
         })}
-        {doctors.length === 0 && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>Loading doctors...</span>}
+        {doctorsLoading && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>Loading doctors...</span>}
+        {!doctorsLoading && doctors.length === 0 && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>No active doctors found.</span>}
       </div>
     </div>
     <div>
@@ -475,8 +505,60 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     </div>
   </div>
 )}
-{/* Step 3 — Priority & SMS */}
-{step === 3 && (
+{/* Step 3 — Vitals */}
+{step === 3 && (() => {
+  const v = form.vitals || {};
+  const bmi = v.weight && v.height ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1) : null;
+  const vField = (key, label, placeholder, unit, icon) => (
+    <div key={key}>
+      <label style={labelStyle}>{icon} {label} <span style={{ color: "#CC0000" }}>*</span></label>
+      <div style={{ position: "relative" }}>
+        <input value={v[key] || ""} onChange={e => updateVitals(key, e.target.value)}
+          placeholder={placeholder} type={key === "bp" ? "text" : "number"} step="0.1"
+          style={{ width: "100%", padding: "10px 14px", paddingRight: 52, border: `1.5px solid ${errors[`vitals.${key}`] ? "#CC0000" : "#e0e7ef"}`, borderRadius: 11, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+          onFocus={e => e.target.style.borderColor = "#2a9d8f"}
+          onBlur={e => e.target.style.borderColor = errors[`vitals.${key}`] ? "#CC0000" : "#e0e7ef"}
+        />
+        <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#8a9bb0" }}>{unit}</span>
+      </div>
+      {errors[`vitals.${key}`] && <div style={errStyle}>⚠ {errors[`vitals.${key}`]}</div>}
+    </div>
+  );
+  return (
+    <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 2 }}>Vitals <span style={{ fontSize: 13, fontWeight: 600, color: "#CC0000", background: "#fff0ee", borderRadius: 6, padding: "2px 8px", marginLeft: 6 }}>All Required</span></div>
+        <div style={{ fontSize: 14, color: "#7a8fb0" }}>Record the patient's current vitals before proceeding.</div>
+      </div>
+      {vField("bp", "Blood Pressure", "e.g. 120/80", "mmHg", "❤️")}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        {vField("temp", "Temperature", "e.g. 36.5", "°C", "🌡️")}
+        {vField("hr", "Heart Rate", "e.g. 78", "bpm", "💓")}
+        {vField("spo2", "SpO₂", "e.g. 98", "%", "🫁")}
+        {vField("weight", "Weight", "e.g. 65", "kg", "⚖️")}
+        {vField("height", "Height", "e.g. 160", "cm", "📏")}
+        <div />
+      </div>
+      {bmi && (
+        <div style={{ background: "linear-gradient(135deg,#e8f7f5,#d4f0eb)", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #b8e4de" }}>
+          <div>
+            <div style={{ fontSize: 13, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>📐 BMI (auto-calculated)</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: "#1e2d40", lineHeight: 1.1, marginTop: 2 }}>{bmi}</div>
+          </div>
+          <div style={{ fontSize: 14, color: "#4a7d70", fontWeight: 500, textAlign: "right" }}>
+            {Number(bmi) < 18.5 ? "Underweight" : Number(bmi) < 25 ? "Normal weight" : Number(bmi) < 30 ? "Overweight" : "Obese"}
+            <div style={{ fontSize: 12, color: "#8a9bb0", marginTop: 2 }}>kg/m²</div>
+          </div>
+        </div>
+      )}
+      <div style={{ background: "#fff8e8", borderRadius: 11, padding: "10px 14px", border: "1px solid #f5dfa0", fontSize: 14, color: "#7a5c00", display: "flex", gap: 8, alignItems: "center" }}>
+        <span>📋</span> All vitals must be recorded before proceeding to the next step.
+      </div>
+    </div>
+  );
+})()}
+{/* Step 4 — Priority & SMS */}
+{step === 4 && (
   <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 20 }}>
     <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Priority & Notifications</div>
     <div>
@@ -527,8 +609,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         { label: "Status",   value: form.civilStatus || "—" },
         { label: "Address",  value: [form.barangay, form.municipality, form.province].filter(Boolean).join(", ") || "—" },
         { label: "Phone",    value: form.phone || "—" },
-        { label: "Reason",   value: form.reason === "Other" ? form.reasonOther : form.reason || "—" },
-        { label: "Doctor",   value: form.doctor || "Auto-assign" },
+        { label: "Reason",   value: (form.reasons||[]).join(', ') || "—" },
+        { label: "Doctor",   value: form.doctor || "Not yet assigned" },
         { label: "Priority", value: form.priority ? priorityTypes.find(p => p.key === form.priority)?.label : "None" },
       ].map(r => (
         <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #edf1f7" }}>
@@ -546,11 +628,11 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px 22px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
     ← Back
   </button>
-  {step < 3 ? (
+  {step < 4 ? (
     <button onClick={tryAdvance} style={{
       flex: 1, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px",
       fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)", transition: "all 0.2s",
-    }}>Continue →</button>
+    }}>{step === 3 ? "Continue to Priority →" : "Continue →"}</button>
   ) : (
     <button onClick={handleSubmit} disabled={submitting} style={{
       flex: 1, background: submitting ? "#d0dbe8" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",

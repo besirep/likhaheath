@@ -114,137 +114,10 @@ function Toast({ msg, onDone }) {
   );
 }
 
-// ── Record Vitals Modal ───────────────────────────────────────────────────────
-function RecordVitalsModal({ patient, onClose, onSubmit }) {
-  const [form, setForm] = useState({ bp: "", temp: "", hr: "", spo2: "", weight: "", height: "" });
-  const [errors, setErrors] = useState({});
-  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const bmi = form.weight && form.height
-    ? (Number(form.weight) / Math.pow(Number(form.height) / 100, 2)).toFixed(1)
-    : null;
-
-  const validate = () => {
-    const e = {};
-    if (!form.bp)     e.bp     = "Required";
-    if (!form.temp)   e.temp   = "Required";
-    if (!form.hr)     e.hr     = "Required";
-    if (!form.spo2)   e.spo2   = "Required";
-    if (!form.weight) e.weight = "Required";
-    if (!form.height) e.height = "Required";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) return;
-    onSubmit(patient.id, form);
-    onClose();
-  };
-
-  const fields = [
-    { key: "bp",     label: "Blood Pressure",  placeholder: "e.g. 120/80",  unit: "mmHg", icon: "❤️",  half: false },
-    { key: "temp",   label: "Temperature",      placeholder: "e.g. 36.5",   unit: "°C",   icon: "🌡️", half: true  },
-    { key: "hr",     label: "Heart Rate",       placeholder: "e.g. 78",     unit: "bpm",  icon: "💓",  half: true  },
-    { key: "spo2",   label: "SpO₂",             placeholder: "e.g. 98",     unit: "%",    icon: "🫁",  half: true  },
-    { key: "weight", label: "Weight",           placeholder: "e.g. 65",     unit: "kg",   icon: "⚖️",  half: true  },
-    { key: "height", label: "Height",           placeholder: "e.g. 160",    unit: "cm",   icon: "📏",  half: true  },
-  ];
-
-  return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 22, width: 500, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 28px 72px rgba(20,40,70,0.24)", animation: "popIn 0.28s cubic-bezier(0.34,1.56,0.64,1)" }}>
-
-        {/* Header */}
-        <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 26px", borderRadius: "22px 22px 0 0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>Record Vitals</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "white" }}>{patient.name}</div>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
-            </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34, borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          </div>
-          {patient.priority && (
-            <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: "4px 12px" }}>
-              <span>{priorityConfig[patient.priority].icon}</span>
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{priorityConfig[patient.priority].label}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Form */}
-        <div style={{ padding: "22px 26px" }}>
-          {/* BP — full width */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-              ❤️ Blood Pressure <span style={{ color: "#CC0000" }}>*</span>
-            </label>
-            <div style={{ position: "relative" }}>
-              <input value={form.bp} onChange={e => update("bp", e.target.value)} placeholder="e.g. 120/80"
-                style={{ width: "100%", padding: "11px 14px 11px 14px", paddingRight: 56, border: `1.5px solid ${errors.bp ? "#CC0000" : "#D8E4F2"}`, borderRadius: 11, fontSize: 15, color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
-                onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-                onBlur={e => e.target.style.borderColor = errors.bp ? "#CC0000" : "#D8E4F2"}
-              />
-              <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0", fontWeight: 500 }}>mmHg</span>
-            </div>
-            {errors.bp && <div style={{ fontSize: 14, color: "#CC0000", marginTop: 4 }}>Blood pressure is required</div>}
-          </div>
-
-          {/* 2-col grid for rest */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
-            {fields.filter(f => f.half).map(f => (
-              <div key={f.key}>
-                <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  {f.icon} {f.label} <span style={{ color: "#CC0000" }}>*</span>
-                </label>
-                <div style={{ position: "relative" }}>
-                  <input value={form[f.key]} onChange={e => update(f.key, e.target.value)} placeholder={f.placeholder} type="number" step="0.1"
-                    style={{ width: "100%", padding: "10px 12px", paddingRight: 44, border: `1.5px solid ${errors[f.key] ? "#CC0000" : "#D8E4F2"}`, borderRadius: 11, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box", background: "#fafcff" }}
-                    onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-                    onBlur={e => e.target.style.borderColor = errors[f.key] ? "#CC0000" : "#D8E4F2"}
-                  />
-                  <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}>{f.unit}</span>
-                </div>
-                {errors[f.key] && <div style={{ fontSize: 14, color: "#CC0000", marginTop: 3 }}>Required</div>}
-              </div>
-            ))}
-          </div>
-
-          {/* BMI auto-calc */}
-          {bmi && (
-            <div style={{ background: "linear-gradient(135deg,#e8f7f5,#d4f0eb)", borderRadius: 12, padding: "12px 16px", marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #b8e4de" }}>
-              <div>
-                <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>📐 BMI (auto-calculated)</div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: "#1e2d40", lineHeight: 1.1, marginTop: 2 }}>{bmi}</div>
-              </div>
-              <div style={{ fontSize: 14, color: "#4a7d70", fontWeight: 500, textAlign: "right" }}>
-                {Number(bmi) < 18.5 ? "Underweight" : Number(bmi) < 25 ? "Normal weight" : Number(bmi) < 30 ? "Overweight" : "Obese"}
-                <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>kg/m²</div>
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #D8E4F2", borderRadius: 12, padding: "12px", fontSize: 14, color: "#4a5d75", cursor: "pointer", fontWeight: 500 }}>
-              Cancel
-            </button>
-            <button onClick={handleSubmit} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(42,157,143,0.32)" }}>
-              ✓ Save Vitals & Mark Ready
-            </button>
-          </div>
-          <div style={{ textAlign: "center", fontSize: 14, color: "#8a9bb0", marginTop: 10 }}>
-            Status will automatically update to <strong>Vitals Ready</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Patient Detail Drawer ─────────────────────────────────────────────────────
-function PatientDrawer({ patient, onClose, onAction, onRecordVitals, onNavigate }) {
+function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
   if (!patient) return null;
   const sc = statusConfig[patient.status];
   const pc = patient.priority ? priorityConfig[patient.priority] : null;
@@ -326,17 +199,6 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals, onNavigate 
 
           {/* Actions */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
-            {/* Record Vitals — only for waiting patients */}
-            {patient.status === "waiting" && (
-              <button onClick={() => onRecordVitals(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.32)" }}>
-                📋 Record Vitals
-              </button>
-            )}
-            {patient.status === "vitals-done" && (
-              <button onClick={() => onAction("call", patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.32)" }}>
-                📣 Call Patient (Vitals Ready)
-              </button>
-            )}
             {patient.status === "waiting" && (
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>⏭ Skip</button>
@@ -368,7 +230,7 @@ function PatientDrawer({ patient, onClose, onAction, onRecordVitals, onNavigate 
 }
 
 // ── Queue Card ────────────────────────────────────────────────────────────────
-function QueueCard({ patient, index, onSelect, isSelected, onRecordVitals }) {
+function QueueCard({ patient, index, onSelect, isSelected }) {
   const sc = statusConfig[patient.status];
   const pc = patient.priority ? priorityConfig[patient.priority] : null;
 
@@ -414,32 +276,6 @@ function QueueCard({ patient, index, onSelect, isSelected, onRecordVitals }) {
             </div>
           </div>
 
-          {/* Bottom row: vitals chips or Record Vitals button */}
-          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            {patient.vitals ? (
-              <>
-                {[
-                  { v: patient.vitals.bp, label: "BP", flag: bpFlag(patient.vitals.bp) },
-                  { v: `${patient.vitals.temp}°C`, label: "T", flag: tempFlag(patient.vitals.temp) },
-                  { v: `${patient.vitals.spo2}%`, label: "SpO₂", flag: spo2Flag(patient.vitals.spo2) },
-                ].map(c => (
-                  <span key={c.label} style={{ background: flagBg[c.flag], color: flagColor[c.flag], borderRadius: 6, padding: "2px 8px", fontSize: 14, fontWeight: 500 }}>
-                    {c.label}: {c.v}
-                  </span>
-                ))}
-              </>
-            ) : patient.status === "waiting" ? (
-              <button onClick={e => { e.stopPropagation(); onRecordVitals(patient); }} style={{
-                background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",
-                borderRadius: 8, padding: "4px 12px", fontSize: 14, fontWeight: 700, cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(42,157,143,0.3)",
-              }}>
-                📋 Record Vitals
-              </button>
-            ) : (
-              <span style={{ fontSize: 14, color: "#b0beca", background: "#f4f7fb", borderRadius: 6, padding: "2px 8px" }}>⏳ Awaiting vitals</span>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -453,7 +289,6 @@ export default function ReceptionistQueue({ onNavigate }) {
   const [selected, setSelected]         = useState(null);
   const [toast, setToast]               = useState(null);
   const [notifOpen, setNotifOpen]       = useState(false);
-  const [vitalsPatient, setVitalsPatient] = useState(null); // patient to record vitals for
 
   const showToast = msg => setToast(msg);
 
@@ -465,19 +300,8 @@ export default function ReceptionistQueue({ onNavigate }) {
     if (action === "sms")     { showToast(`SMS sent to ${patient.name}`); }
   };
 
-  const handleRecordVitals = (patient) => {
-    setSelected(null); // close drawer
-    setVitalsPatient(patient);
-  };
-
-  const handleVitalsSubmit = (patientId, vitals) => {
-    setQueue(q => q.map(p => p.id === patientId ? { ...p, vitals, status: "vitals-done" } : p));
-    const patient = queue.find(p => p.id === patientId);
-    showToast(`Vitals recorded for ${patient?.name}`);
-  };
-
   const callNext = () => {
-    const next = queue.find(p => p.status === "vitals-done");
+    const next = queue.find(p => p.status === "waiting");
     if (next) setSelected(next);
   };
 
@@ -504,8 +328,7 @@ export default function ReceptionistQueue({ onNavigate }) {
       
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
-      {vitalsPatient && <RecordVitalsModal patient={vitalsPatient} onClose={() => setVitalsPatient(null)} onSubmit={handleVitalsSubmit} />}
-      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onRecordVitals={handleRecordVitals} onNavigate={onNavigate} />
+      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onNavigate={onNavigate} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}
@@ -610,7 +433,7 @@ export default function ReceptionistQueue({ onNavigate }) {
                   <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>
               ) : filtered.map((p, i) => (
-                <QueueCard key={p.id} patient={p} index={i} onSelect={setSelected} isSelected={selected?.id === p.id} onRecordVitals={handleRecordVitals} />
+                <QueueCard key={p.id} patient={p} index={i} onSelect={setSelected} isSelected={selected?.id === p.id} />
               ))}
             </div>
           </div>
@@ -649,9 +472,6 @@ export default function ReceptionistQueue({ onNavigate }) {
                         <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
                         <div style={{ fontSize: 14, color: pc.color, fontWeight: 500 }}>{pc.label} · {p.queue}</div>
                       </div>
-                      {p.status === "waiting" && !p.vitals && (
-                        <button onClick={e => { e.stopPropagation(); handleRecordVitals(p); }} style={{ background: pc.color, color: "white", border: "none", borderRadius: 7, padding: "4px 8px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Vitals</button>
-                      )}
                     </div>
                   );
                 })}

@@ -40,7 +40,7 @@ export function validateStep0(f) {
   else if (!isValidName(f.firstName)) errs.firstName    = 'Letters only';
   if (!f.lastName.trim())             errs.lastName     = 'Required';
   else if (!isValidName(f.lastName))  errs.lastName     = 'Letters only';
-  if (f.suffix && !['Jr', 'Sr', 'III', 'IV', 'V'].includes(f.suffix))
+  if (f.suffix && !['II', 'Jr', 'Sr', 'III', 'IV', 'V', '2nd', '3rd'].includes(f.suffix))
                                       errs.suffix       = 'Invalid suffix';
   if (!f.dob)                         errs.dob          = 'Required';
   else if (!isValidDOB(f.dob))        errs.dob          = 'Invalid date';
@@ -67,11 +67,25 @@ export function validateStep1(f) {
 }
 
 // Step 2 — Visit Details
-// Fields: reason, reasonOther
+// Fields: reasons (array), reasonOther
 export function validateStep2(f) {
   const errs = {};
-  if (!f.reason)                       errs.reason      = 'Select a reason';
-  if (f.reason === 'Other' && !f.reasonOther.trim())
+  const reasons = f.reasons || [];
+  if (reasons.length === 0)            errs.reasons     = 'Select at least one reason';
+  if (reasons.includes('Other') && !f.reasonOther.trim())
                                        errs.reasonOther = 'Please specify';
+  return errs;
+}
+
+// Step 3 — Vitals (all fields required)
+export function validateStep3(f) {
+  const errs = {};
+  const v = f.vitals || {};
+  if (!v.bp?.trim())     errs['vitals.bp']     = 'Blood Pressure is required';
+  if (!v.temp)           errs['vitals.temp']   = 'Temperature is required';
+  if (!v.hr)             errs['vitals.hr']     = 'Heart Rate is required';
+  if (!v.spo2)           errs['vitals.spo2']   = 'SpO₂ is required';
+  if (!v.weight)         errs['vitals.weight'] = 'Weight is required';
+  if (!v.height)         errs['vitals.height'] = 'Height is required';
   return errs;
 }

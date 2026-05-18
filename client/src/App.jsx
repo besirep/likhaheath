@@ -168,8 +168,19 @@ export default function App() {
   const clearDraft = useCallback(() => setRegistrationDraft(null), []);
 
   // ── Doctor consultation session: carries active patient from Queue → Consult
-  const [activePatient, setActivePatient] = useState(null);
-  const clearActivePatient = useCallback(() => setActivePatient(null), []);
+  // Persisted in sessionStorage so a page refresh mid-consultation doesn't lose context (Issue #10)
+  const [activePatient, setActivePatientState] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem('lh_active_patient');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+  const setActivePatient = useCallback((patient) => {
+    setActivePatientState(patient);
+    if (patient) sessionStorage.setItem('lh_active_patient', JSON.stringify(patient));
+    else sessionStorage.removeItem('lh_active_patient');
+  }, []);
+  const clearActivePatient = useCallback(() => setActivePatient(null), [setActivePatient]);
 
   // Called by Login after a successful API login
   const handleLogin = (role) => async (username, password) => {

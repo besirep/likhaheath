@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { consultationsApi } from "../../lib/api/consultations.js";
+import { printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
 
 // ── Utility: map API status → UI status key ───────────────────────────────────
 const mapStatus = s => {
@@ -425,6 +426,12 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
                   <div style={{ fontSize: 14, color: s.color, opacity: 0.8, letterSpacing: 0.3 }}>{s.label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Export buttons */}
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => printQueueReport({ queue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: 'Dr. Reyes' })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>🖨 Print</button>
+              <button onClick={() => downloadQueueCSV({ queue })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>📥 CSV</button>
             </div>
 
             {/* Bell */}
