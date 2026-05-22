@@ -15,7 +15,7 @@ LikhaHealth is a locally-deployed (LAN-only) web application designed to digitiz
 - Live Queue Management
 - Role-based Access Control (Admin, Doctor, Nurse, Midwife, BHW)
 - Medical Records & Consultation Tracking
-- Built-in SMS Notification Triggers (Phase 4)
+- Built-in SMS Notification Triggers
 
 ---
 
@@ -25,9 +25,10 @@ The project operates as a monorepo utilizing npm workspaces (`client` and `serve
 
 **Frontend:**
 - **Framework:** React 19 + Vite (JSX, no TypeScript)
-- **Styling:** Vanilla CSS-in-JS / Custom CSS
+- **Styling:** Vanilla CSS-in-JS / Custom CSS (LikhaHealth Design System)
 - **State Management:** React Context (`useAuth`), local component state
 - **Routing:** React Router DOM (with protected route guards)
+- **Icons:** `lucide-react`
 
 **Backend:**
 - **Runtime:** Node.js (v20 LTS)
@@ -57,7 +58,6 @@ likhahealth-root/
 ├── database/               # Database definitions
 │   ├── schema.sql          # DB schema (14 normalized tables)
 │   └── seed.sql            # Initial test data
-├── implementation_plan.md  # Detailed system requirements and ERD
 ├── package.json            # Monorepo root package (concurrently scripts)
 └── start.bat               # Windows batch script for easy startup
 ```
@@ -66,22 +66,20 @@ likhahealth-root/
 
 ## 4. Recent Development Updates
 
-The project has recently completed **Phase 1 (Foundation)** and is currently progressing through **Phase 2 (Patient & Queue Core)** and final QA stabilizing. 
+The project has made significant strides in completing **Phase 2 (Patient & Queue Core)**, **Phase 3 (Doctor Module)** and **Phase 4 (SMS Notifications)**.
 
-### Key Accomplishments:
-1. **Database Normalization & Initialization:**
-   - Finalized a fully normalized 14-table MySQL schema.
-   - Initialized database with seed data including staff, patients, addresses, and sample appointments.
-2. **Authentication Integration:**
-   - Implemented JWT-based authentication on the backend with bcrypt hashing.
-   - Built a robust frontend `useAuth` hook and protected route middleware to enforce strict Role-Based Access Control (RBAC). 
-   - Added portal mismatch guards (e.g., Doctors cannot log into Receptionist portals).
-3. **Frontend UI & Layout Stabilization:**
-   - Completed standardizing the brand identity (Angono municipality colors: Blue `#0047AB` and Red `#CC0000`).
-   - Finalized responsive UI dashboards for Medical Staff (Receptionist) and Doctors.
-4. **Patient Registration Workflow Updates:**
-   - Conducted functional QA audits.
-   - Remedied broken workflows and stubbed buttons in the Doctor and Receptionist interfaces to prepare for real-world LAN testing.
+### Key Accomplishments (Latest Handoff Updates):
+1. **Receptionist UI Stabilization & Bug Fixes:**
+   - **Reports Screen:** Removed redundant nested sidebars that caused rendering collisions with the global App layout. Fixed syntax and JSX structuring errors. Replaced emoji-string icons with proper `lucide-react` components across all statistical cards.
+   - **SMS Logs Screen:** Standardized icon rendering by replacing raw strings and emoji tags with proper `lucide-react` components (`Bell`, `Clock`, `Smartphone`). Resolved outer wrapper viewport issues.
+   - **Patient Records Screen:** Fixed major React crashes caused by passing component functions instead of JSX elements in timelines and quick-info arrays. Corrected priority badge accessors and finalized the timeline UI.
+2. **API Integrations:**
+   - Added `queueController.js` and `smsController.js` logic on the backend.
+   - Connected the frontend API services (`dashboard.js`, `queue.js`, `sms.js`) to live endpoints, allowing real data to flow into the Receptionist and Doctor views.
+3. **Doctor Module Workflow:**
+   - The Doctor Dashboard, Queue, Consultations, and Patient Records screens have been aligned to the unified UI layouts. 
+4. **Layout Architecture Check:**
+   - Standardized all `minHeight: "100vh"` outer wrappers inside individual screen components to `height: "100%"` to properly integrate with `App.jsx`'s routing shell without causing overflow scrolling issues.
 
 ---
 
@@ -98,6 +96,7 @@ Because this is a LAN-based clinical system, it relies on a local XAMPP installa
    - Start XAMPP and start the **MySQL** module.
    - Create a database named `likhahealth` (or check your `.env` configuration).
    - Import `database/schema.sql` followed by `database/seed.sql` to populate the tables.
+   - Import any new migration scripts (e.g. `database/migration_sms_notifications.sql`).
 2. **Environment Variables:**
    - Ensure the `server/.env` file is properly configured with your MySQL credentials, `JWT_SECRET`, and port information (refer to `server/.env.example` if available).
 3. **Install Dependencies:**
@@ -111,40 +110,27 @@ Because this is a LAN-based clinical system, it relies on a local XAMPP installa
      npm start
      ```
      *(This uses `concurrently` to run the React Vite server and Express backend simultaneously).*
-   - Alternatively, you can use the `start.bat` file if on Windows.
 
 ---
 
 ## 6. Pending Items / Next Steps
 
-According to the `implementation_plan.md`, the following phases require completion:
+### Phase 5: Final Reports & Analytics Wiring
+- Wire up the `ReceptionistReports.jsx` to fetch real analytics from a dedicated `GET /api/reports` endpoint (currently utilizing mock calculations for totals/averages).
+- Implement the "Export as CSV" and "Print Daily Report" utilities to process live server data.
 
-### Phase 2: Patient & Queue Core (In Progress)
-- **Patient Registration:** Fully wire `PatientRegistration.jsx` to `POST /api/patients` with contact and address insertion logic.
-- **Queue Management:** Wire real-time polling for `ReceptionistQueue.jsx` and status update actions (`PATCH /api/queue/:id/status`).
-- **Appointments:** Connect the scheduling UI to backend CRUD endpoints.
-
-### Phase 3: Doctor Module
-- Connect `DoctorDashboard.jsx` to live stats.
-- Wire `DoctorQueue.jsx` to show only assigned patients.
-- Implement Medical Records creation (`POST /api/medical-records`) and consultation workflows.
-
-### Phase 4: SMS Notifications
-- Register Semaphore PH API key in `.env`.
-- Implement automated SMS triggers upon registration, queue calls, and appointments.
-
-### Phase 5 & 6: Reports, QA, & Deployment
-- Implement dashboard reporting and CSV exports.
-- Configure automatic daily MySQL backups via `mysqldump`.
-- Conduct final end-to-end load testing.
+### Phase 6: QA, Load Testing & Deployment
+- Connect the Semaphore API properly within the `smsController.js` if it's not fully wired yet (or switch to actual SMS providers).
+- Conduct full End-to-End (E2E) testing to simulate an entire clinic day (Registration -> Queue -> Consultation -> SMS Reminder -> Pharmacy).
+- Finalize the TV display interface (`PublicQueue.jsx`) for the waiting area.
 
 ---
 
 ## 7. Known Issues & Important Notes
 
+- **Component Icon Constraints:** When adding new status or priority tags, **always** ensure that `icon` configurations map to mounted React elements (e.g., `<Stethoscope size={16} />`) and **NOT** bare component references or strings, which can cause React runtime crashes.
 - **Network Constraints:** The project relies on local hardware and local network connections. Ensure the host machine running XAMPP has a static LAN IP so other computers in the clinic can reliably reach the Vite frontend and Express API.
-- **Port Conflicts:** Ensure port `5000` (Backend API) and `5173` (Vite Frontend) are free. Previous development encountered issues with port `3000` being occupied; this is now handled via the specific package.json scripts.
-- **Queue Display System:** The public-facing waiting line TV display module is currently **ON HOLD** pending final hardware logistics at the Angono Municipal Health Center.
+- **Port Conflicts:** Ensure port `5000` (Backend API) and `5173` (Vite Frontend) are free.
 
 ---
 *Generated by Antigravity AI Assistant*
