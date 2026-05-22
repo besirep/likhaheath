@@ -113,27 +113,20 @@ Because this is a LAN-based clinical system, it relies on a local XAMPP installa
 
 ---
 
-## 6. Pending Items & Unwired Connections
+## 6. Actionable Next Steps (API Data Binding)
 
-We are currently bridging **Phase 2 & Phase 3**, focusing strictly on **API Data Binding**. While the UI for all screens is finished and the backend controllers exist, the following pages still contain static placeholder arrays or lack `fetch()` calls to the backend:
+We are currently bridging **Phase 2 & Phase 3**. The UI for all screens is finished and backend controllers exist, but the primary focus is now replacing hardcoded frontend state with live `fetch()` calls. Here is the list of actionable next steps:
 
-### 1. Patient Registration (Unwired)
-- **`PatientRegistration.jsx`**: The multi-step form manages state perfectly, but the final "Register Patient" button does not yet execute a `POST /api/patients` request. It needs to be connected to insert data into the MySQL `patients` and `addresses` tables.
-
-### 2. Appointments System (Mock Data)
-- **`ReceptionistAppointments.jsx` & `DoctorAppointments.jsx`**: Both screens currently render from a hardcoded `const appointments = [...]` array at the top of the file. 
-- Needs to be wired to `GET /api/appointments` to fetch live schedules from the database.
-- The "Book Appointment" modal needs to trigger `POST /api/appointments`.
-
-### 3. Medical Consultations (Unwired)
-- **`DoctorConsultations.jsx`**: The doctor's consultation form (Diagnosis, Prescription, Notes) does not yet submit data to the backend. It needs to be hooked to `POST /api/medical-records`.
-
-### 4. Reports & Analytics (Mock Data)
-- **`ReceptionistReports.jsx`**: The charts and statistical cards render successfully but do not pull data from the backend. They need to be wired to `GET /api/dashboard/stats` and `GET /api/reports`.
-- "Export as CSV" and "Print Report" buttons are currently stubbed.
-
-### 5. SMS Notifications (Configuration Pending)
-- While `smsController.js` and `ReceptionistSMSLogs.jsx` are implemented and communicating, the actual `SMS_API_KEY` for the Semaphore PH gateway is missing from the `.env` file, meaning messages won't actually reach physical mobile phones until configured.
+*   **Wire Patient Registration API**
+    *   *Description:* Connect the `PatientRegistration.jsx` form to the `POST /api/patients` endpoint so that newly inputted demographic and address data is successfully written to the MySQL database.
+*   **Connect Live Appointments Data**
+    *   *Description:* Remove the hardcoded dummy arrays in both `ReceptionistAppointments.jsx` and `DoctorAppointments.jsx`. Hook them up to `GET /api/appointments` to display real schedules, and wire the "Book Appointment" button to `POST /api/appointments`.
+*   **Implement Medical Consultations Save Flow**
+    *   *Description:* In `DoctorConsultations.jsx`, capture the doctor's diagnosis, notes, and prescription inputs, then wire the "Save" or "Finish" button to submit this data via `POST /api/medical-records`.
+*   **Bind Live Analytics to Reports**
+    *   *Description:* Remove the static/mock statistical variables in `ReceptionistReports.jsx`. Wire the component to `GET /api/reports` and `GET /api/dashboard/stats` so that the charts and counts accurately reflect live database metrics.
+*   **Configure the SMS Gateway**
+    *   *Description:* Add the actual Semaphore API Key to the `SMS_API_KEY` variable inside the backend `server/.env` file so the system can begin transmitting actual SMS texts to patients' phones.
 
 ---
 
