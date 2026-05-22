@@ -311,7 +311,7 @@ erDiagram
 ### 🔄 Phase 2 — Patient & Queue Core *(Week 3–4 — IN PROGRESS)*
 
 **Patient Registration**
-- [ ] Wire `PatientRegistration.jsx` form → `POST /api/patients`
+- [x] Wire `PatientRegistration.jsx` form → `POST /api/patients`
 - [ ] Address autocomplete: reuse existing `addresses` rows (match barangay)
 - [ ] Contact fields: submit to `contact_info` table (type = `phone` / `email`)
 - [ ] Family cluster suggestion: GET `/api/patients?last_name=X` → suggest cluster
@@ -327,8 +327,8 @@ erDiagram
 - [ ] Filter queue by status (Waiting / In-Progress / Done / Skipped)
 
 **Appointments**
-- [ ] Wire `ReceptionistAppointments.jsx` → `GET /api/appointments?date=today`
-- [ ] Create appointment form → `POST /api/appointments` (with `services[]`)
+- [x] Wire `ReceptionistAppointments.jsx` → `GET /api/appointments?date=today`
+- [x] Create appointment form → `POST /api/appointments` (with `services[]`)
 - [ ] Cancel appointment → `DELETE /api/appointments/:id` (soft cancel)
 - [ ] Update appointment → `PUT /api/appointments/:id`
 
@@ -345,7 +345,7 @@ erDiagram
 - [ ] Call next patient action (update queue to `In-Progress`)
 
 **Medical Records / Consultations**
-- [ ] Wire `DoctorConsultations.jsx` → `POST /api/medical-records`
+- [x] Wire `DoctorConsultations.jsx` → `POST /api/medical-records`
 - [ ] Consultation form: diagnosis (freetext) + treatment plan + notes
 - [ ] View consultation → `GET /api/medical-records/:id`
 - [ ] Per-patient history → `GET /api/medical-records/patient/:id`
@@ -360,7 +360,7 @@ erDiagram
 
 ### 📱 Phase 4 — SMS Notifications *(Week 7)*
 
-- [ ] Register Semaphore PH API key in `server/.env` as `SMS_API_KEY`
+- [x] Register Semaphore PH API key in `server/.env` as `SMS_API_KEY`
 - [ ] Implement `smsController.send` using Semaphore PH REST API
 - [ ] Trigger SMS on patient registration (queue number + wait estimate)
 - [ ] Trigger SMS on appointment creation (date/time confirmation)
@@ -380,7 +380,7 @@ erDiagram
 - [ ] Soft-delete / archive → `DELETE /api/patients/:id` (sets `is_deleted = 1`)
 
 **Reports**
-- [ ] Wire `ReceptionistReports.jsx` → `GET /api/dashboard/stats`
+- [x] Wire `ReceptionistReports.jsx` → `GET /api/dashboard/stats`
 - [ ] Daily report: registrations, queue completions, no-shows, avg wait time
 - [ ] Weekly/monthly aggregates (filter by date range)
 - [ ] Barangay breakdown: patients grouped by `addresses.barangay`

@@ -1,23 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Stethoscope, AlertCircle, SkipForward, ClipboardList, BarChart3, CalendarDays, FolderOpen, LayoutDashboard, Download, FileText, Clock, Users, CheckCircle, MessageSquare } from "lucide-react";
 import { printDailyReport } from "../../lib/utils/printUtils.js";
+import { dashboardApi } from "../../lib/api/dashboard.js";
+import { reportsApi }   from "../../lib/api/reports.js";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const weeklyQueue = [
-  { day: "Mon Feb 23", total: 42, completed: 38, skipped: 4 },
-  { day: "Tue Feb 24", total: 37, completed: 35, skipped: 2 },
-  { day: "Wed Feb 25", total: 51, completed: 46, skipped: 5 },
-  { day: "Thu Feb 26", total: 44, completed: 41, skipped: 3 },
-  { day: "Fri Feb 27", total: 39, completed: 36, skipped: 3 },
-  { day: "Sat Feb 28", total: 28, completed: 27, skipped: 1 },
-  { day: "Sun Mar 1", total: 14, completed: 11, skipped: 2 },
+// ── Static fallback data (shown when DB has no records yet) ──────────────────
+const _weeklyQueue = [
+  { day: "Mon", total: 42, completed: 38, skipped: 4 },
+  { day: "Tue", total: 37, completed: 35, skipped: 2 },
+  { day: "Wed", total: 51, completed: 46, skipped: 5 },
+  { day: "Thu", total: 44, completed: 41, skipped: 3 },
+  { day: "Fri", total: 39, completed: 36, skipped: 3 },
+  { day: "Sat", total: 28, completed: 27, skipped: 1 },
+  { day: "Sun", total: 14, completed: 11, skipped: 2 },
 ];
 
-const hourlyFlow = [
+const _hourlyFlow = [
   { hour: "8AM", patients: 6 },
   { hour: "9AM", patients: 14 },
   { hour: "10AM", patients: 11 },
@@ -29,7 +31,7 @@ const hourlyFlow = [
   { hour: "4PM", patients: 3 },
 ];
 
-const priorityBreakdown = [
+const _priorityBreakdown = [
   { name: "Regular", value: 28, color: "#0047AB" },
   { name: "Senior Citizen", value: 8, color: "#8B5FBF" },
   { name: "PWD", value: 4, color: "#0047AB" },
@@ -37,7 +39,7 @@ const priorityBreakdown = [
   { name: "Pediatric", value: 7, color: "#e09040" },
 ];
 
-const smsWeekly = [
+const _smsWeekly = [
   { day: "Mon", sent: 38, failed: 2 },
   { day: "Tue", sent: 33, failed: 4 },
   { day: "Wed", sent: 45, failed: 6 },
@@ -47,7 +49,7 @@ const smsWeekly = [
   { day: "Sun", sent: 12, failed: 2 },
 ];
 
-const topReasons = [
+const _topReasons = [
   { reason: "Hypertension / BP", count: 18, pct: 38 },
   { reason: "Diabetes check-up", count: 12, pct: 26 },
   { reason: "Fever & cough", count: 9, pct: 19 },
@@ -55,7 +57,7 @@ const topReasons = [
   { reason: "Annual physical", count: 3, pct: 6 },
 ];
 
-const waitTimeWeek = [
+const _waitTimeWeek = [
   { day: "Mon", avg: 24 },
   { day: "Tue", avg: 19 },
   { day: "Wed", avg: 31 },
@@ -65,7 +67,7 @@ const waitTimeWeek = [
   { day: "Sun", avg: 27 },
 ];
 
-const doctorLoad = [
+const _doctorLoad = [
   { doctor: "Dr. Reyes", patients: 19, color: "#2a9d8f" },
   { doctor: "Dr. Santos", patients: 15, color: "#0047AB" },
   { doctor: "Dr. Cruz", patients: 13, color: "#8B5FBF" },
@@ -173,10 +175,46 @@ function SectionHeader({ title, subtitle, action }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Reports() {
-  const [period, setPeriod] = useState("week");
-  const [toast, setToast] = useState(null);
+  const [period, setPeriod]       = useState("week");
+  const [toast, setToast]         = useState(null);
+
+  // ── Live KPI state ───────────────────────────────────────────────────────────
+  const [kpi, setKpi]             = useState(null);  // from GET /api/dashboard/stats
+  const [charts, setCharts]       = useState(null);  // from GET /api/reports
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(null), 2800); };
+
+  // Fetch dashboard KPIs
+  const loadStats = useCallback(async () => {
+    try { setKpi(await dashboardApi.getStats()); } catch { /* keep null → use fallback */ }
+  }, []);
+
+  // Fetch weekly chart data (re-fetches when period changes)
+  const loadCharts = useCallback(async () => {
+    const days = period === "today" ? 1 : period === "month" ? 30 : 7;
+    try { setCharts(await reportsApi.getWeekly(days)); } catch { /* keep null → use fallback */ }
+  }, [period]);
+
+  useEffect(() => { loadStats(); }, [loadStats]);
+  useEffect(() => { loadCharts(); }, [loadCharts]);
+
+  // ── Merge live + fallback ────────────────────────────────────────────────────
+  const weeklyQueue       = (charts?.dailyQueue?.length     ? charts.dailyQueue.map(r => ({ day: new Date(r.day).toLocaleDateString("en-PH", { weekday: "short" }), total: Number(r.total) || 0, completed: Number(r.completed) || 0, skipped: Number(r.skipped) || 0 })) : _weeklyQueue);
+  const hourlyFlow        = (charts?.hourlyFlow?.length     ? charts.hourlyFlow.map(r   => ({ hour: `${r.hour > 12 ? r.hour - 12 : r.hour}${r.hour >= 12 ? "PM" : "AM"}`, patients: Number(r.patients) || 0 })) : _hourlyFlow);
+  const smsWeekly         = (charts?.smsWeekly?.length      ? charts.smsWeekly.map(r    => ({ day: new Date(r.day).toLocaleDateString("en-PH", { weekday: "short" }), sent: Number(r.sent) || 0, failed: Number(r.failed) || 0 })) : _smsWeekly);
+  const waitTimeWeek      = (charts?.waitTimeWeek?.length   ? charts.waitTimeWeek.map(r => ({ day: new Date(r.day).toLocaleDateString("en-PH", { weekday: "short" }), avg: Number(r.avg_wait) || 0 })) : _waitTimeWeek);
+  const topReasons        = (charts?.topReasons?.length     ? charts.topReasons.map((r, i) => ({ reason: r.reason || "Other", count: Number(r.cnt) || 0, pct: 0 })).map((r, _i, arr) => ({ ...r, pct: Math.round(r.count / Math.max(arr.reduce((s, x) => s + x.count, 0), 1) * 100) })) : _topReasons);
+  const doctorLoad        = (charts?.doctorLoad?.length     ? charts.doctorLoad.map((r, i) => ({ doctor: r.doctor, patients: Number(r.patients) || 0, color: ["#2a9d8f","#0047AB","#8B5FBF","#e09040"][i % 4] })) : _doctorLoad);
+  const priorityBreakdown = (charts?.priorityBreakdown?.length ? charts.priorityBreakdown.map((r, i) => ({ name: r.priority || "Regular", value: Number(r.value) || 0, color: ["#0047AB","#8B5FBF","#d4709a","#e09040","#2a9d8f"][i % 5] })) : _priorityBreakdown);
+
+  // ── KPIs ─────────────────────────────────────────────────────────────────────
+  const todayTotal     = kpi?.today_appointments ?? weeklyQueue.reduce((s, r) => s + r.total, 0);
+  const todayCompleted = weeklyQueue.reduce((s, r) => s + r.completed, 0);
+  const todaySkipped   = weeklyQueue.reduce((s, r) => s + r.skipped, 0);
+  const avgWait        = waitTimeWeek.length ? Math.round(waitTimeWeek.reduce((s, r) => s + r.avg, 0) / waitTimeWeek.length) : 22;
+  const smsSent        = smsWeekly.reduce((s, r) => s + r.sent, 0);
+  const smsFailed      = smsWeekly.reduce((s, r) => s + r.failed, 0);
+  const totalPriority  = priorityBreakdown.filter(p => p.name !== "Regular").reduce((s, p) => s + p.value, 0);
 
   const exportCSV = () => {
     const rows = [
@@ -189,10 +227,10 @@ export default function Reports() {
       ['Hour', 'Patients'],
       ...hourlyFlow.map(r => [r.hour, r.patients]),
     ];
-    const csv = rows.map(r => r.join(',')).join('\n');
+    const csv  = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
     a.href = url; a.download = `likhahealth-report-${period}.csv`;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
@@ -203,17 +241,17 @@ export default function Reports() {
     showToast('Generating branded PDF...');
     printDailyReport({
       stats: {
-        total: todayTotal,
+        total:     todayTotal,
         completed: todayCompleted,
-        skipped: todaySkipped,
-        waiting: todayTotal - todayCompleted - todaySkipped,
-        priority: totalPriority,
-        avgWait: `${avgWait}m`,
+        skipped:   todaySkipped,
+        waiting:   todayTotal - todayCompleted - todaySkipped,
+        priority:  totalPriority,
+        avgWait:   `${avgWait}m`,
       },
       queue: weeklyQueue.map(r => ({
-        queue: r.day,
-        name: `${r.total} patients`,
-        age: '—',
+        queue:  r.day,
+        name:   `${r.total} patients`,
+        age:    '—',
         reason: `${r.completed} completed`,
         status: `${r.skipped} skipped`,
         doctor: '—',
@@ -221,14 +259,6 @@ export default function Reports() {
       staffName: 'Ana R. · Front Desk',
     });
   };
-
-  const todayTotal = 47;
-  const todayCompleted = 42;
-  const todaySkipped = 3;
-  const avgWait = 22;
-  const smsSent = 44;
-  const smsFailed = 3;
-  const totalPriority = 24;
 
   return (
     <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>

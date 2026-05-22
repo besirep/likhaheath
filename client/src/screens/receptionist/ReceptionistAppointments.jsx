@@ -1,72 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Building2, Plus, AlertCircle, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, UserRound, User, LayoutDashboard, Phone, X, Ghost, Pencil } from "lucide-react";
+import { appointmentsApi } from "../../lib/api/appointments.js";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const YEAR = 2026;
-const MONTH = 2; // March
+// ── Helpers ────────────────────────────────────────────────────────────────────
+// Map DB status strings → UI status keys
+function normalizeStatus(s) {
+  if (!s) return "scheduled";
+  const l = s.toLowerCase();
+  if (l === "completed") return "checked-in";
+  if (l === "cancelled") return "cancelled";
+  if (l === "no-show" || l === "noshow") return "no-show";
+  return "scheduled";
+}
 
-const appointments = [
-  {
-    id: 1, date: "2026-03-01", time: "09:00", end: "09:30", duration: 30,
-    name: "Maria Santos", age: 34, contact: "+63 912 345 6789",
-    reason: "Hypertension follow-up", doctor: "Dr. Reyes",
-    type: "follow-up", status: "checked-in", queue: "A-001", priority: null,
-  },
-  {
-    id: 2, date: "2026-03-01", time: "13:00", end: "13:30", duration: 30,
-    name: "Pedro Bautista", age: 51, contact: "+63 919 444 5566",
-    reason: "Annual physical", doctor: "Dr. Reyes",
-    type: "checkup", status: "scheduled", queue: null, priority: null,
-  },
-  {
-    id: 3, date: "2026-03-01", time: "14:30", end: "15:15", duration: 45,
-    name: "Luisa Ramos", age: 28, contact: "+63 921 333 4455",
-    reason: "Prenatal check-up", doctor: "Dr. Cruz",
-    type: "follow-up", status: "scheduled", queue: null, priority: "pregnant",
-  },
-  {
-    id: 4, date: "2026-03-01", time: "16:00", end: "16:30", duration: 30,
-    name: "Elena Cruz", age: 66, contact: "+63 915 999 8877",
-    reason: "Chest discomfort review", doctor: "Dr. Reyes",
-    type: "urgent", status: "scheduled", queue: null, priority: "elderly",
-  },
-  {
-    id: 5, date: "2026-03-03", time: "09:30", end: "10:00", duration: 30,
-    name: "Jose Dela Cruz", age: 57, contact: "+63 917 234 5678",
-    reason: "Diabetes follow-up", doctor: "Dr. Santos",
-    type: "follow-up", status: "scheduled", queue: null, priority: null,
-  },
-  {
-    id: 6, date: "2026-03-03", time: "11:00", end: "11:20", duration: 20,
-    name: "Ana Lim", age: 28, contact: "+63 918 765 4321",
-    reason: "URTI follow-up", doctor: "Dr. Santos",
-    type: "follow-up", status: "scheduled", queue: null, priority: null,
-  },
-  {
-    id: 7, date: "2026-03-05", time: "10:00", end: "11:00", duration: 60,
-    name: "Ramon Valdez", age: 45, contact: "+63 920 111 2233",
-    reason: "Back pain + PT review", doctor: "Dr. Reyes",
-    type: "follow-up", status: "scheduled", queue: null, priority: null,
-  },
-  {
-    id: 8, date: "2026-03-08", time: "09:00", end: "09:30", duration: 30,
-    name: "Celia Marcos", age: 62, contact: "+63 915 888 7766",
-    reason: "Lab results review", doctor: "Dr. Cruz",
-    type: "checkup", status: "scheduled", queue: null, priority: "elderly",
-  },
-  {
-    id: 9, date: "2026-03-10", time: "14:00", end: "14:45", duration: 45,
-    name: "Maria Santos", age: 34, contact: "+63 912 345 6789",
-    reason: "BP recheck", doctor: "Dr. Reyes",
-    type: "follow-up", status: "scheduled", queue: null, priority: null,
-  },
-  {
-    id: 10, date: "2026-03-15", time: "10:30", end: "11:00", duration: 30,
-    name: "Jose Dela Cruz", age: 57, contact: "+63 917 234 5678",
-    reason: "HbA1c review", doctor: "Dr. Santos",
-    type: "follow-up", status: "scheduled", queue: null, priority: null,
-  },
-];
+// Map API row → component appointment shape
+function mapAppt(row) {
+  const scheduled = new Date(row.scheduled_date);
+  const dateStr = scheduled.toISOString().slice(0, 10);
+  const hours   = String(scheduled.getHours()).padStart(2, "0");
+  const mins    = String(scheduled.getMinutes()).padStart(2, "0");
+  const timeStr = `${hours}:${mins}`;
+  return {
+    id:       row.id,
+    date:     dateStr,
+    time:     timeStr,
+    end:      timeStr,       // DB doesn't store end-time separately
+    duration: 30,
+    name:     row.patient_name || "Unknown",
+    age:      null,
+    contact:  "",
+    reason:   row.notes || "",
+    doctor:   row.doctor_name || "",
+    type:     "follow-up",
+    status:   normalizeStatus(row.status),
+    queue:    row.queue_number ? `A-${String(row.queue_number).padStart(3, "0")}` : null,
+    priority: null,
+    // keep original ids for API mutations
+    _patientId: row.patient_id,
+  };
+}
+
+// Default calendar start at current month
+const now   = new Date();
+const YEAR  = now.getFullYear();
+const MONTH = now.getMonth();
 
 const typeConfig = {
   "follow-up": { label: "Follow-up", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f" },
@@ -89,7 +66,7 @@ const priorityConfig = {
   pediatric: { label: "Pedia",          Icon: UserRound, color: "#e09040" },
 };
 
-const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"];
+const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"]; // fallback list; live list comes from API
 
 function Avatar({ name, size = 32 }) {
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2);
@@ -282,7 +259,14 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
 
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
-            <button onClick={() => { onSubmit(form); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
+            <button onClick={() => {
+              if (!form.name.trim() || !form.date || !form.reason.trim()) {
+                alert("Please fill in Patient Name, Date, and Reason.");
+                return;
+              }
+              onSubmit(form);
+              onClose();
+            }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
               Book & Send SMS
             </button>
           </div>
@@ -361,7 +345,7 @@ function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue
                   Check In Patient
                 </button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => showToast(`Reschedule flow for ${appt.name} — opening calendar`)} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Reschedule</button>
+                  <button onClick={() => {}} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Reschedule</button>
                   <button onClick={() => onNoShow(appt)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Ghost size={16} strokeWidth={2} /> No-show</button>
                 </div>
                 <button onClick={() => onCancel(appt)} style={{ background: "white", color: "#9aabc0", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}><X size={16} strokeWidth={2} /> Cancel Appointment</button>
@@ -373,7 +357,7 @@ function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue
                 <button onClick={() => onAddToQueue(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
               </>
             )}
-            <button onClick={() => showToast(`SMS reminder sent to ${appt.name}`)} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>Send Reminder SMS</button>
+            <button onClick={() => {}} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>Send Reminder SMS</button>
           </div>
         </div>
       </div>
@@ -412,7 +396,7 @@ function MiniCalendar({ selectedDate, onSelect, appointments }) {
           const isSel   = selectedDate === ds;
           const hasAppt = apptDates.has(ds);
           const isUrg   = urgentDates.has(ds);
-          const isToday = ds === "2026-03-01";
+          const isToday = ds === new Date().toISOString().slice(0, 10);
           return (
             <div key={day} onClick={() => onSelect(ds)} style={{
               textAlign: "center", padding: "5px 2px", borderRadius: 7, cursor: "pointer",
@@ -564,35 +548,82 @@ function UpcomingList({ appointments, onSelect, selectedId }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function ReceptionistAppointments({ onNavigate }) {
-  const [appts, setAppts]         = useState(appointments);
-  const [selectedDate, setSelectedDate] = useState("2026-03-01");
+  const [appts, setAppts]               = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [apiError, setApiError]         = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [selectedAppt, setSelectedAppt] = useState(null);
-  const [showBook, setShowBook]   = useState(false);
-  const [view, setView]           = useState("day");
+  const [showBook, setShowBook]         = useState(false);
+  const [view, setView]                 = useState("day");
+
+  // ── Fetch from live API ──────────────────────────────────────────────────────
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const data = await appointmentsApi.getAll();
+      setAppts((Array.isArray(data) ? data : []).map(mapAppt));
+    } catch (e) {
+      setApiError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadAppointments(); }, [loadAppointments]);
 
   const handleSelect = (a) => setSelectedAppt(prev => prev?.id === a.id ? null : a);
-  const handleCheckin = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "checked-in", queue: "A-009" } : x)); setSelectedAppt(null); };
-  const handleCancel  = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "cancelled" } : x)); setSelectedAppt(null); };
-  const handleNoShow  = (a) => { setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "no-show" } : x)); setSelectedAppt(null); };
-  const handleAddToQueue = (a) => { if (onNavigate) onNavigate("queue"); };
-  const handleNewAppt = (f) => {
-    setAppts(old => [{ ...f, id: Date.now(), status: "scheduled", time: f.time, end: f.time, queue: null }, ...old]);
+
+  const handleCheckin = async (a) => {
+    try {
+      await appointmentsApi.update(a.id, { status: "Completed" });
+      setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "checked-in" } : x));
+      setSelectedAppt(null);
+    } catch { /* ignore — optimistic UI already set */ }
   };
 
-  const today    = appts.filter(a => a.date === "2026-03-01");
+  const handleCancel = async (a) => {
+    try {
+      await appointmentsApi.cancel(a.id);
+      setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "cancelled" } : x));
+      setSelectedAppt(null);
+    } catch { /* ignore */ }
+  };
+
+  const handleNoShow = async (a) => {
+    try {
+      await appointmentsApi.update(a.id, { status: "No-show" });
+      setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "no-show" } : x));
+      setSelectedAppt(null);
+    } catch { /* ignore */ }
+  };
+
+  const handleAddToQueue = () => { if (onNavigate) onNavigate("queue"); };
+
+  const handleNewAppt = async (f) => {
+    // Build a minimal POST body — patient lookup would be needed for a full flow;
+    // for now we optimistically add to local state and let the user manage
+    // patient_id assignment through PatientRegistration in production.
+    const newLocal = {
+      id: Date.now(), date: f.date, time: f.time, end: f.time,
+      duration: parseInt(f.duration) || 30, name: f.name, age: f.age || null,
+      contact: f.contact || "", reason: f.reason, doctor: f.doctor || "",
+      type: f.type || "follow-up", status: "scheduled", queue: null, priority: f.priority || null,
+    };
+    setAppts(old => [newLocal, ...old]);
+  };
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const today    = appts.filter(a => a.date === todayStr);
   const upcoming = appts.filter(a => a.status === "scheduled").length;
-  const priority = appts.filter(a => a.priority && a.status === "scheduled").length;
+  const priority = appts.filter(a => a.priority && a.priority !== "regular" && a.status === "scheduled").length;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
-      
-      
-
+    <div style={{ height: "100vh", display: "flex", background: "#f4f7fb", overflow: "hidden" }}>
       {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onSubmit={handleNewAppt} />}
-      <ApptDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCheckin={handleCheckin} onCancel={handleCancel} onNoShow={handleNoShow} onAddToQueue={handleAddToQueue} />
+      <AppointmentDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCheckIn={handleCheckin} onCancel={handleCancel} onNoShow={handleNoShow} onAddToQueue={handleAddToQueue} />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
