@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Search, Building2, Plus, AlertCircle, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, UserRound, User, LayoutDashboard, Phone, X, Ghost, Pencil } from "lucide-react";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const YEAR = 2026;
@@ -82,10 +83,10 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF" },
-  pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB" },
-  pediatric: { label: "Pedia",          icon: "👶", color: "#e09040" },
+  elderly:   { label: "Senior Citizen", Icon: UserRound, color: "#8B5FBF" },
+  pregnant:  { label: "Pregnant",       Icon: UserRound, color: "#d4709a" },
+  pwd:       { label: "PWD",            Icon: UserRound, color: "#0047AB" },
+  pediatric: { label: "Pedia",          Icon: UserRound, color: "#e09040" },
 };
 
 const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"];
@@ -110,7 +111,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
@@ -125,13 +126,13 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                        },
-          { icon: "📋", label: "Queue"                             },
-          { icon: "➕", label: "Register Patient"                  },
-          { icon: "🗂️", label: "Patient Records"                   },
-          { icon: "📅", label: "Appointments",   badge: "3"       },
-          { icon: "📱", label: "SMS Logs"                          },
-          { icon: "📊", label: "Reports"                           },
+          { Icon: LayoutDashboard,  label: "Dashboard"                        },
+          { Icon: ClipboardList, label: "Queue"                             },
+          { icon: Plus, label: "Register Patient"                  },
+          { Icon: FolderOpen, label: "Patient Records"                   },
+          { Icon: CalendarDays, label: "Appointments",   badge: "3"       },
+          { icon: "", label: "SMS Logs"                          },
+          { Icon: BarChart3, label: "Reports"                           },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -179,7 +180,7 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: 0.8, textTransform: "uppercase" }}>New Appointment</div>
               <div style={{ fontSize: 19, fontWeight: 700, color: "white", marginTop: 3 }}>Book a Visit</div>
             </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34, borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34, borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white" }}><X size={16} strokeWidth={2} /></button>
           </div>
         </div>
 
@@ -282,7 +283,7 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
             <button onClick={() => { onSubmit(form); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
-              ✓ Book & Send SMS
+              Book & Send SMS
             </button>
           </div>
         </div>
@@ -319,7 +320,7 @@ function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue
                 <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{appt.age} yrs · {appt.reason}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ display: "flex", gap: 7, marginTop: 12, flexWrap: "wrap" }}>
             <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>{tc.label}</span>
@@ -357,22 +358,22 @@ function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue
             {appt.status === "scheduled" && (
               <>
                 <button onClick={() => onCheckin(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
-                  ✓ Check In Patient
+                  Check In Patient
                 </button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => showToast(`📅 Reschedule flow for ${appt.name} — opening calendar`)} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>✏️ Reschedule</button>
-                  <button onClick={() => onNoShow(appt)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>👻 No-show</button>
+                  <button onClick={() => showToast(`Reschedule flow for ${appt.name} — opening calendar`)} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Reschedule</button>
+                  <button onClick={() => onNoShow(appt)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Ghost size={16} strokeWidth={2} /> No-show</button>
                 </div>
-                <button onClick={() => onCancel(appt)} style={{ background: "white", color: "#9aabc0", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>✕ Cancel Appointment</button>
+                <button onClick={() => onCancel(appt)} style={{ background: "white", color: "#9aabc0", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}><X size={16} strokeWidth={2} /> Cancel Appointment</button>
               </>
             )}
             {appt.status === "checked-in" && (
               <>
-                <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "12px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>✓ Patient checked in · {appt.queue}</div>
-                <button onClick={() => onAddToQueue(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>➕ Add to Queue</button>
+                <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "12px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>Patient checked in · {appt.queue}</div>
+                <button onClick={() => onAddToQueue(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
               </>
             )}
-            <button onClick={() => showToast(`📱 SMS reminder sent to ${appt.name}`)} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>📱 Send Reminder SMS</button>
+            <button onClick={() => showToast(`SMS reminder sent to ${appt.name}`)} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>Send Reminder SMS</button>
           </div>
         </div>
       </div>
@@ -449,7 +450,7 @@ function DayList({ date, appointments, onSelect, selectedId }) {
         </div>
         {dayAppts.filter(a => a.priority).length > 0 && (
           <div style={{ background: "#f0eafb", color: "#8B5FBF", borderRadius: 9, padding: "5px 12px", fontSize: 14, fontWeight: 700 }}>
-            ⭐ {dayAppts.filter(a => a.priority).length} priority
+            <AlertCircle size={14} strokeWidth={2} /> {dayAppts.filter(a => a.priority).length} priority
           </div>
         )}
       </div>
@@ -497,7 +498,7 @@ function DayList({ date, appointments, onSelect, selectedId }) {
                     </div>
                     {/* Status indicator */}
                     {appt.status === "checked-in" && (
-                      <div style={{ background: "#e8f7f5", borderRadius: 8, padding: "6px 10px", fontSize: 14, color: "#2a9d8f", fontWeight: 700, flexShrink: 0 }}>✓ In</div>
+                      <div style={{ background: "#e8f7f5", borderRadius: 8, padding: "6px 10px", fontSize: 14, color: "#2a9d8f", fontWeight: 700, flexShrink: 0 }}>In</div>
                     )}
                   </div>
                 );
@@ -505,14 +506,14 @@ function DayList({ date, appointments, onSelect, selectedId }) {
             </div>
           ) : (
             <div style={{ textAlign: "center", padding: "60px 0", color: "#8a9bb0" }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>📅</div>
+              <div style={{ fontSize: 36, marginBottom: 10 }}><CalendarDays size={16} strokeWidth={2} /></div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>No appointments</div>
               <div style={{ fontSize: 14, marginTop: 4 }}>Nothing scheduled for this day</div>
             </div>
           )
         ) : (
           <div style={{ textAlign: "center", padding: "60px 0", color: "#8a9bb0" }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>📅</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}><CalendarDays size={16} strokeWidth={2} /></div>
             <div style={{ fontSize: 14 }}>Pick a date from the calendar</div>
           </div>
         )}
@@ -600,7 +601,7 @@ export default function ReceptionistAppointments({ onNavigate }) {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{ display: "flex", background: "white", border: "1px solid #e0e7ef", borderRadius: 10, overflow: "hidden" }}>
-              {[{ key: "day", label: "📅 Day" }, { key: "upcoming", label: "📋 Upcoming" }].map(v => (
+              {[{ key: "day", label: "Day" }, { key: "upcoming", label: <><ClipboardList size={16} strokeWidth={2} /> Upcoming</> }].map(v => (
                 <button key={v.key} onClick={() => setView(v.key)} style={{
                   padding: "8px 16px", border: "none", cursor: "pointer",
                   background: view === v.key ? "#1e2d40" : "transparent",
@@ -611,7 +612,7 @@ export default function ReceptionistAppointments({ onNavigate }) {
               ))}
             </div>
             <button onClick={() => setShowBook(true)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
-              ➕ Book Appointment
+              <Plus size={16} strokeWidth={2} /> Book Appointment
             </button>
           </div>
         </div>

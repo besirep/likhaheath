@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Search, Building2, Plus, Stethoscope, ClipboardList, CalendarDays, FolderOpen, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, LayoutDashboard, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -258,7 +259,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
@@ -273,11 +274,11 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                              },
-          { icon: "📋", label: "Queue",          badge: "4"             },
-          { icon: "🩺", label: "Consultations",  badge: "1"             },
-          { icon: "🗂️", label: "Patient Records", active: true          },
-          { icon: "📅", label: "Appointments",   badge: "3"             },
+          { Icon: LayoutDashboard,  label: "Dashboard"                              },
+          { Icon: ClipboardList, label: "Queue",          badge: "4"             },
+          { Icon: Stethoscope, label: "Consultations",  badge: "1"             },
+          { Icon: FolderOpen, label: "Patient Records", active: true          },
+          { Icon: CalendarDays, label: "Appointments",   badge: "3"             },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -360,7 +361,7 @@ function VisitDrawer({ visit, patient, onClose }) {
               background: "rgba(255,255,255,0.12)", border: "none", width: 34, height: 34,
               borderRadius: 9, cursor: "pointer", fontSize: 15, color: "white",
               display: "flex", alignItems: "center", justifyContent: "center",
-            }}>✕</button>
+            }}><X size={16} strokeWidth={2} /></button>
           </div>
           {/* Meta row */}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -385,12 +386,12 @@ function VisitDrawer({ visit, patient, onClose }) {
             <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Vitals at This Visit</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
               {v && [
-                { label: "Blood Pressure", value: v.bp,   unit: "mmHg", flag: bpFlag(v.bp),    icon: "❤️" },
-                { label: "Temperature",    value: v.temp, unit: "°C",   flag: tempFlag(v.temp), icon: "🌡️" },
-                { label: "Heart Rate",     value: v.hr,   unit: "bpm",  flag: "normal",         icon: "💓" },
-                { label: "SpO₂",          value: v.spo2, unit: "%",    flag: spo2Flag(v.spo2), icon: "🫁" },
-                { label: "Weight",         value: v.weight, unit: "kg", flag: "normal",         icon: "⚖️" },
-                { label: "BMI",            value: bmi,    unit: "kg/m²",flag: Number(bmi) > 25 ? "high" : "normal", icon: "📐" },
+                { label: "Blood Pressure", value: v.bp,   unit: "mmHg", flag: bpFlag(v.bp),    icon: Heart },
+                { label: "Temperature",    value: v.temp, unit: "°C",   flag: tempFlag(v.temp), icon: Thermometer },
+                { label: "Heart Rate",     value: v.hr,   unit: "bpm",  flag: "normal",         icon: Activity },
+                { label: "SpO₂",          value: v.spo2, unit: "%",    flag: spo2Flag(v.spo2), icon: Wind },
+                { label: "Weight",         value: v.weight, unit: "kg", flag: "normal",         icon: Scale },
+                { label: "BMI",            value: bmi,    unit: "kg/m²",flag: Number(bmi) > 25 ? "high" : "normal", Icon: Ruler },
               ].map(f => (
                 <div key={f.label} style={{
                   background: flagBg[f.flag], borderRadius: 11, padding: "11px 13px",
@@ -400,7 +401,7 @@ function VisitDrawer({ visit, patient, onClose }) {
                   <div style={{ fontSize: 17, fontWeight: 700, color: flagColor[f.flag], lineHeight: 1 }}>{f.value}</div>
                   <div style={{ fontSize: 11, color: "#9aabc0", marginTop: 1 }}>{f.unit}</div>
                   <div style={{ fontSize: 11, color: "#b0bdd6", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.3 }}>{f.label}</div>
-                  {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}>⚠ {f.flag}</div>}
+                  {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}><AlertTriangle size={14} strokeWidth={2} /> {f.flag}</div>}
                 </div>
               ))}
             </div>
@@ -408,20 +409,20 @@ function VisitDrawer({ visit, patient, onClose }) {
 
           {/* Notes */}
           <div style={{ background: "#f7f9fd", borderRadius: 13, padding: "16px 18px", border: "1px solid #e8edf7" }}>
-            <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}>📝 Doctor's Notes</div>
+            <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}><FileText size={16} strokeWidth={2} /> Doctor's Notes</div>
             <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75 }}>{visit?.notes}</div>
           </div>
 
           {/* Treatment plan */}
           <div style={{ background: "#EBF0FA", borderRadius: 13, padding: "16px 18px", border: "1px solid #C0D4F0" }}>
-            <div style={{ fontSize: 14, color: "#0047AB", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}>📋 Treatment Plan</div>
+            <div style={{ fontSize: 14, color: "#0047AB", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}><ClipboardList size={16} strokeWidth={2} /> Treatment Plan</div>
             <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75 }}>{visit?.plan}</div>
           </div>
 
           {/* Labs + follow-up */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div style={{ background: "white", borderRadius: 13, padding: "14px 16px", border: "1px solid #D8E4F2" }}>
-              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>🧪 Labs Ordered</div>
+              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}><TestTubes size={16} strokeWidth={2} /> Labs Ordered</div>
               {visit?.labs?.length > 0 ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {visit.labs.map(l => (
@@ -433,7 +434,7 @@ function VisitDrawer({ visit, patient, onClose }) {
               )}
             </div>
             <div style={{ background: "white", borderRadius: 13, padding: "14px 16px", border: "1px solid #D8E4F2" }}>
-              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>📅 Follow-up</div>
+              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Follow-up</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2540" }}>{visit?.followUp || "—"}</div>
             </div>
           </div>
@@ -453,8 +454,8 @@ function VisitDrawer({ visit, patient, onClose }) {
                 <p style="margin-top:32px;color:#888">Printed ${new Date().toLocaleString()}</p>
               </body></html>`);
               win.print(); win.close();
-            }} style={{ flex: 1, background: "#EBF0FA", border: "1px solid #CCDAF0", borderRadius: 10, padding: "10px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>🖨 Print Record</button>
-            <button onClick={() => { setEditMode(e => !e); setEditedNotes(visit.notes); setEditedPlan(visit.plan); }} style={{ flex: 1, background: editMode ? "#e8f7f5" : "#1a2540", border: "none", borderRadius: 10, padding: "10px", fontSize: 14, color: editMode ? "#2a9d8f" : "white", cursor: "pointer", fontWeight: 600 }}>{editMode ? '✕ Cancel Edit' : '✏️ Edit Notes'}</button>
+            }} style={{ flex: 1, background: "#EBF0FA", border: "1px solid #CCDAF0", borderRadius: 10, padding: "10px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}><Printer size={16} strokeWidth={2} /> Print Record</button>
+            <button onClick={() => { setEditMode(e => !e); setEditedNotes(visit.notes); setEditedPlan(visit.plan); }} style={{ flex: 1, background: editMode ? "#e8f7f5" : "#1a2540", border: "none", borderRadius: 10, padding: "10px", fontSize: 14, color: editMode ? "#2a9d8f" : "white", cursor: "pointer", fontWeight: 600 }}>{editMode ? '<X size={16} strokeWidth={2} /> Cancel Edit' : 'Edit Notes'}</button>
           </div>
           {editMode && (
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -466,7 +467,7 @@ function VisitDrawer({ visit, patient, onClose }) {
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#9aabc0", textTransform: "uppercase", marginBottom: 6 }}>Edit Treatment Plan</div>
                 <textarea value={editedPlan} onChange={e => setEditedPlan(e.target.value)} rows={3} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #CCDAF0", borderRadius: 10, fontSize: 14, resize: "vertical", boxSizing: "border-box" }} />
               </div>
-              <button onClick={() => { setSaved(true); setEditMode(false); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.28)" }}>✓ Save Changes</button>
+              <button onClick={() => { setSaved(true); setEditMode(false); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.28)" }}>Save Changes</button>
             </div>
           )}
         </div>
@@ -481,7 +482,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
 
   if (!patient) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "#9aabc0" }}>
-      <div style={{ fontSize: 52 }}>🗂️</div>
+      <div style={{ fontSize: 52 }}><FolderOpen size={16} strokeWidth={2} /></div>
       <div style={{ fontSize: 15, fontWeight: 600, color: "#1a2540" }}>Select a patient</div>
       <div style={{ fontSize: 14 }}>Click any record to view their profile</div>
     </div>
@@ -501,18 +502,18 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient.age} yrs · {patient.gender} · DOB: {patient.dob}</div>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <span style={{ background: ss.bg, color: ss.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700 }}>{ss.label}</span>
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>🩸 {patient.bloodType}</span>
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>📋 {patient.totalVisits} visits</span>
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}><Droplets size={16} strokeWidth={2} /> {patient.bloodType}</span>
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}><ClipboardList size={16} strokeWidth={2} /> {patient.totalVisits} visits</span>
               </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => onSchedule && onSchedule(patient)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>📅 Schedule</button>
-            <button onClick={() => onEdit && onEdit(patient)} style={{ background: "white", color: "#1a2540", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✏️ Edit</button>
+            <button onClick={() => onSchedule && onSchedule(patient)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Schedule</button>
+            <button onClick={() => onEdit && onEdit(patient)} style={{ background: "white", color: "#1a2540", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Edit</button>
           </div>
         </div>
         <div style={{ display: "flex", gap: 20, marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-          {[{ icon: "📞", label: patient.contact }, { icon: "📍", label: patient.address }, { icon: "📅", label: `Last visit: ${patient.lastVisit}` }].map(item => (
+          {[{ icon: Phone, label: patient.contact }, { Icon: MapPin, label: patient.address }, { Icon: CalendarDays, label: `Last visit: ${patient.lastVisit}` }].map(item => (
             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
               <span>{item.icon}</span>{item.label}
             </div>
@@ -542,7 +543,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <div style={{ background: "white", borderRadius: 14, padding: "18px 20px", border: "1px solid #D8E4F2" }}>
-                <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>🏥 Active Conditions</div>
+                <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}><Building2 size={18} strokeWidth={2} /> Active Conditions</div>
                 {patient.conditions.length > 0 ? patient.conditions.map(c => (
                   <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0047AB", flexShrink: 0 }} />
@@ -551,18 +552,18 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
                 )) : <div style={{ fontSize: 14, color: "#9aabc0" }}>No active conditions</div>}
               </div>
               <div style={{ background: "white", borderRadius: 14, padding: "18px 20px", border: "1px solid #D8E4F2" }}>
-                <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>⚠️ Allergies</div>
+                <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12 }}>Allergies</div>
                 {patient.allergies.length > 0 ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                     {patient.allergies.map(a => (
-                      <span key={a} style={{ background: "#fde8e0", color: "#CC0000", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, border: "1px solid #f5c8b0" }}>⚠ {a}</span>
+                      <span key={a} style={{ background: "#fde8e0", color: "#CC0000", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, border: "1px solid #f5c8b0" }}><AlertTriangle size={14} strokeWidth={2} /> {a}</span>
                     ))}
                   </div>
                 ) : <div style={{ fontSize: 14, color: "#9aabc0" }}>No known allergies</div>}
               </div>
             </div>
             <div style={{ background: "white", borderRadius: 14, padding: "18px 20px", border: "1px solid #D8E4F2" }}>
-              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 14 }}>👤 Personal Information</div>
+              <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 14 }}><User size={16} strokeWidth={2} /> Personal Information</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
                 {[
                   { label: "Date of Birth", value: patient.dob },
@@ -582,7 +583,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
             {patient.visits[0] && (
               <div style={{ background: "linear-gradient(135deg,#EBF0FA,#e4ecfb)", borderRadius: 14, padding: "18px 20px", border: "1px solid #B0C8E8", cursor: "pointer" }}
                 onClick={() => { onVisitSelect(patient.visits[0]); setActiveTab("history"); }}>
-                <div style={{ fontSize: 14, color: "#0047AB", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}>🩺 Last Consultation — click to view</div>
+                <div style={{ fontSize: 14, color: "#0047AB", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 8 }}><Stethoscope size={16} strokeWidth={2} /> Last Consultation — click to view</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2540" }}>{patient.visits[0].diagnosis}</div>
                 <div style={{ fontSize: 14, color: "#5a6f90", marginTop: 3 }}>{patient.visits[0].date} · {patient.visits[0].reason}</div>
               </div>
@@ -661,7 +662,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
                       fontSize: 14, boxShadow: i === 0 ? "0 0 0 4px #ddeafc" : "none",
                       zIndex: 2,
                     }}>
-                      {i === 0 ? <span style={{ fontSize: 14 }}>🩺</span> : <span style={{ fontSize: 14, fontWeight: 700, color: "#9aabc0" }}>{patient.visits.length - i}</span>}
+                      {i === 0 ? <span style={{ fontSize: 14 }}><Stethoscope size={16} strokeWidth={2} /></span> : <span style={{ fontSize: 14, fontWeight: 700, color: "#9aabc0" }}>{patient.visits.length - i}</span>}
                     </div>
 
                     {/* Card */}
@@ -773,7 +774,7 @@ export default function DoctorPatientRecords({ onNavigate }) {
                 </div>
               ))}
             </div>
-            <button onClick={() => showToast('➕ Add Patient feature coming soon — connect to backend')} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)", display: "flex", alignItems: "center", gap: 6 }}>➕ Add Patient</button>
+            <button onClick={() => showToast('Add Patient feature coming soon — connect to backend')} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)", display: "flex", alignItems: "center", gap: 6 }}><Plus size={16} strokeWidth={2} /> Add Patient</button>
           </div>
         </div>
 
@@ -784,7 +785,7 @@ export default function DoctorPatientRecords({ onNavigate }) {
           <div style={{ background: "white", borderRight: "1px solid #CCDAF0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid #f0f3fa" }}>
               <div style={{ position: "relative", marginBottom: 10 }}>
-                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#9aabc0" }}>🔍</span>
+                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#9aabc0" }}><Search size={14} strokeWidth={2} color="#8a9bb0" /></span>
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or condition..."
                   style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e8edf7", borderRadius: 10, fontSize: 14, color: "#1a2540", outline: "none", background: "#f7f9fd" }}
                   onFocus={e => e.target.style.borderColor = "#0047AB"}
@@ -841,7 +842,7 @@ export default function DoctorPatientRecords({ onNavigate }) {
               })}
               {filtered.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 16px", color: "#9aabc0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}><Search size={14} strokeWidth={2} color="#8a9bb0" /></div>
                   <div style={{ fontSize: 14 }}>No patients found</div>
                 </div>
               )}
@@ -854,8 +855,8 @@ export default function DoctorPatientRecords({ onNavigate }) {
               patient={selected}
               onVisitSelect={setActiveVisit}
               selectedVisitId={activeVisit?.id}
-              onSchedule={(p) => showToast(`📅 Scheduling follow-up for ${p.name}`)}
-              onEdit={(p) => showToast(`✏️ Edit patient record for ${p.name} — coming soon`)}
+              onSchedule={(p) => showToast(`Scheduling follow-up for ${p.name}`)}
+              onEdit={(p) => showToast(`<Pencil size={14} strokeWidth={2.5} /> Edit patient record for ${p.name} — coming soon`)}
             />
           </div>
         </div>

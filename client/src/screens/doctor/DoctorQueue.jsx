@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Building2, Stethoscope, Clock, Bell, ClipboardList, CalendarDays, FolderOpen, UserRound, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Download, LayoutDashboard, Activity, CheckCircle2, AlertCircle, SkipForward, Megaphone, RefreshCw, CheckCheck, Smartphone, Plus, X, Ruler, Printer, ArrowLeft } from "lucide-react";
 import { consultationsApi } from "../../lib/api/consultations.js";
 import { printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
 
@@ -19,10 +20,10 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
-  pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f4", stripe: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
-  pediatric: { label: "Pedia (0–5)",    icon: "👶", color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
+  elderly:   { label: "Senior Citizen", Icon: UserRound, color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
+  pregnant:  { label: "Pregnant",       Icon: UserRound, color: "#d4709a", bg: "#fce8f4", stripe: "#d4709a" },
+  pwd:       { label: "PWD",            Icon: UserRound, color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
+  pediatric: { label: "Pedia (0–5)",    Icon: UserRound, color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
 // Vitals flags
@@ -72,29 +73,29 @@ function VitalsModal({ patient, onClose }) {
               <div style={{ fontSize: 14, color: "#7a8fb0" }}>{patient.age} yrs · {patient.queue} · {patient.reason}</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: "#EBF0FA", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "#7a8fb0" }}>✕</button>
+          <button onClick={onClose} style={{ background: "#EBF0FA", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "#7a8fb0" }}><X size={16} strokeWidth={2} /></button>
         </div>
         {v ? (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
               {[
-                { label: "Blood Pressure", value: `${v.bp} mmHg`, flag: bpFlag(v.bp),   icon: "❤️" },
-                { label: "Temperature",    value: `${v.temp} °C`,  flag: tempFlag(v.temp), icon: "🌡️" },
-                { label: "Heart Rate",     value: `${v.hr} bpm`,   flag: "normal",         icon: "💓" },
-                { label: "SpO₂",           value: `${v.spo2}%`,    flag: spo2Flag(v.spo2), icon: "🫁" },
-                { label: "Weight",         value: `${v.weight} kg`, flag: "normal",        icon: "⚖️" },
-                { label: "Height",         value: `${v.height} cm`, flag: "normal",        icon: "📏" },
+                { label: "Blood Pressure", value: `${v.bp} mmHg`, flag: bpFlag(v.bp),   icon: Heart },
+                { label: "Temperature",    value: `${v.temp} °C`,  flag: tempFlag(v.temp), icon: Thermometer },
+                { label: "Heart Rate",     value: `${v.hr} bpm`,   flag: "normal",         icon: Activity },
+                { label: "SpO₂",           value: `${v.spo2}%`,    flag: spo2Flag(v.spo2), icon: Wind },
+                { label: "Weight",         value: `${v.weight} kg`, flag: "normal",        icon: Scale },
+                { label: "Height",         value: `${v.height} cm`, flag: "normal",        Icon: Ruler },
               ].map(f => (
                 <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 12, padding: "14px 16px", border: `1.5px solid ${f.flag !== "normal" ? flagColor[f.flag] + "40" : "#e8edf7"}` }}>
                   <div style={{ fontSize: 14, color: "#9aabc0", marginBottom: 4 }}>{f.icon} {f.label}</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: flagColor[f.flag] }}>{f.value}</div>
-                  {f.flag !== "normal" && <div style={{ fontSize: 14, color: flagColor[f.flag], marginTop: 3, fontWeight: 600, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
+                  {f.flag !== "normal" && <div style={{ fontSize: 14, color: flagColor[f.flag], marginTop: 3, fontWeight: 600, textTransform: "uppercase" }}><AlertTriangle size={14} strokeWidth={2} /> {f.flag}</div>}
                 </div>
               ))}
             </div>
             <div style={{ background: "#EBF0FA", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 14, color: "#9aabc0" }}>📐 BMI (auto-calculated)</div>
+                <div style={{ fontSize: 14, color: "#9aabc0" }}> BMI (auto-calculated)</div>
                 <div style={{ fontSize: 22, fontWeight: 700, color: "#1a2540" }}>{bmi}</div>
               </div>
               <div style={{ fontSize: 14, color: "#7a8fb0" }}>
@@ -105,7 +106,7 @@ function VitalsModal({ patient, onClose }) {
           </>
         ) : (
           <div style={{ textAlign: "center", padding: "32px 0", color: "#9aabc0" }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>📋</div>
+            <div style={{ fontSize: 36, marginBottom: 10 }}><ClipboardList size={16} strokeWidth={2} /></div>
             <div style={{ fontSize: 14 }}>Vitals not yet recorded.</div>
           </div>
         )}
@@ -120,7 +121,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
@@ -135,11 +136,11 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                    },
-          { icon: "📋", label: "Queue",        active: true   },
-          { icon: "🩺", label: "Consultations", badge: "1"   },
-          { icon: "🗂️", label: "Patient Records"              },
-          { icon: "📅", label: "Appointments"                 },
+          { Icon: LayoutDashboard,  label: "Dashboard"                    },
+          { Icon: ClipboardList, label: "Queue",        active: true   },
+          { Icon: Stethoscope, label: "Consultations", badge: "1"   },
+          { Icon: FolderOpen, label: "Patient Records"              },
+          { Icon: CalendarDays, label: "Appointments"                 },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -173,7 +174,7 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
   if (!selected) return (
     <div style={{ background: "white", borderLeft: "1px solid #CCDAF0", display: "flex", alignItems: "center", justifyContent: "center", color: "#9aabc0" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>👈</div>
+        <ArrowLeft size={32} strokeWidth={1.5} color="#8a9bb0" style={{ marginBottom: 8 }} />
         <div style={{ fontSize: 14 }}>Select a patient to view details</div>
       </div>
     </div>
@@ -228,15 +229,15 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { label: "Blood Pressure", value: `${selected.vitals.bp} mmHg`, flag: bpFlag(selected.vitals.bp),    icon: "❤️" },
-                { label: "Temperature",    value: `${selected.vitals.temp} °C`,  flag: tempFlag(selected.vitals.temp), icon: "🌡️" },
-                { label: "Heart Rate",     value: `${selected.vitals.hr} bpm`,   flag: "normal",                       icon: "💓" },
-                { label: "SpO₂",           value: `${selected.vitals.spo2}%`,    flag: spo2Flag(selected.vitals.spo2), icon: "🫁" },
+                { label: "Blood Pressure", value: `${selected.vitals.bp} mmHg`, flag: bpFlag(selected.vitals.bp),    icon: Heart },
+                { label: "Temperature",    value: `${selected.vitals.temp} °C`,  flag: tempFlag(selected.vitals.temp), icon: Thermometer },
+                { label: "Heart Rate",     value: `${selected.vitals.hr} bpm`,   flag: "normal",                       icon: Activity },
+                { label: "SpO₂",           value: `${selected.vitals.spo2}%`,    flag: spo2Flag(selected.vitals.spo2), icon: Wind },
               ].map(f => (
                 <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 10, padding: "10px 12px", border: `1px solid ${f.flag !== "normal" ? flagColor[f.flag] + "40" : "#e8edf7"}` }}>
                   <div style={{ fontSize: 14, color: "#9aabc0" }}>{f.icon} {f.label}</div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag], marginTop: 3 }}>{f.value}</div>
-                  {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}>⚠ {f.flag}</div>}
+                  {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], marginTop: 2, fontWeight: 700, textTransform: "uppercase" }}><AlertTriangle size={14} strokeWidth={2} /> {f.flag}</div>}
                 </div>
               ))}
             </div>
@@ -246,7 +247,7 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
           </>
         ) : (
           <div style={{ background: "#f7f9fd", borderRadius: 10, padding: "16px", textAlign: "center", color: "#9aabc0", fontSize: 14 }}>
-            ⏳ Awaiting nurse to record vitals
+            <Clock size={16} strokeWidth={2} /> Awaiting nurse to record vitals
           </div>
         )}
       </div>
@@ -255,17 +256,17 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
         {selected.status === "in-consultation" && (
           <button onClick={() => startConsult(selected)} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
-            🩺 Resume Consultation →
+            <Stethoscope size={16} strokeWidth={2} /> Resume Consultation →
           </button>
         )}
         {(selected.status === "vitals-done" || selected.status === "waiting") && selected.status !== "done" && (
           <button onClick={() => startConsult(selected)} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
-            🩺 Start Consultation →
+            <Stethoscope size={16} strokeWidth={2} /> Start Consultation →
           </button>
         )}
         {selected.status === "waiting" && (
           <button onClick={() => onNavigate && onNavigate("dr-records")} style={{ background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #B0C8E8", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            📋 View Patient Record
+            <ClipboardList size={16} strokeWidth={2} /> View Patient Record
           </button>
         )}
         {selected.status === "skipped" && (
@@ -275,12 +276,12 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate }) 
         )}
         {(selected.status === "waiting" || selected.status === "vitals-done") && (
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => onNavigate && onNavigate("dr-appts")} style={{ flex: 1, background: "white", color: "#7a8fb0", border: "1px solid #CCDAF0", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer" }}>📅 Reschedule</button>
-            <button onClick={() => onMarkDone(selected.id)} style={{ flex: 1, background: "white", color: "#2a9d8f", border: "1px solid #c0e0dc", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>✓ Mark Done</button>
+            <button onClick={() => onNavigate && onNavigate("dr-appts")} style={{ flex: 1, background: "white", color: "#7a8fb0", border: "1px solid #CCDAF0", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer" }}>Reschedule</button>
+            <button onClick={() => onMarkDone(selected.id)} style={{ flex: 1, background: "white", color: "#2a9d8f", border: "1px solid #c0e0dc", borderRadius: 9, padding: "9px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>Mark Done</button>
           </div>
         )}
         {selected.status === "done" && (
-          <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>✓ Consultation complete</div>
+          <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>Consultation complete</div>
         )}
       </div>
     </div>
@@ -430,23 +431,23 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
 
             {/* Export buttons */}
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => printQueueReport({ queue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: 'Dr. Reyes' })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>🖨 Print</button>
-              <button onClick={() => downloadQueueCSV({ queue })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>📥 CSV</button>
+              <button onClick={() => printQueueReport({ queue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: 'Dr. Reyes' })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}><Printer size={16} strokeWidth={2} /> Print</button>
+              <button onClick={() => downloadQueueCSV({ queue })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}><Download size={16} strokeWidth={2} /> CSV</button>
             </div>
 
             {/* Bell */}
             <div style={{ position: "relative" }}>
               <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 10, width: 40, height: 40, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                🔔
+                <Bell size={18} strokeWidth={2} />
                 <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#CC0000", border: "1.5px solid #EBF0FA" }} />
               </button>
               {notifOpen && (
                 <div style={{ position: "absolute", right: 0, top: 48, width: 280, background: "white", borderRadius: 14, border: "1px solid #CCDAF0", boxShadow: "0 12px 40px rgba(20,40,90,0.14)", zIndex: 100, animation: "popIn 0.2s ease" }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3fa", fontSize: 14, fontWeight: 700, color: "#1a2540" }}>Alerts</div>
                   {[
-                    { icon: "👴", text: "Elena Cruz — Senior Citizen priority", time: "5m ago"  },
-                    { icon: "🧪", text: "Lab results ready: Jose Dela Cruz",    time: "22m ago" },
-                    { icon: "✅", text: "A-004 vitals recorded by nurse",        time: "30m ago" },
+                    { Icon: UserRound, text: "Elena Cruz — Senior Citizen priority", time: "5m ago"  },
+                    { Icon: TestTubes, text: "Lab results ready: Jose Dela Cruz",    time: "22m ago" },
+                    { icon: "", text: "A-004 vitals recorded by nurse",        time: "30m ago" },
                   ].map((n, i) => (
                     <div key={i} style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}>
                       <span>{n.icon}</span>
@@ -472,9 +473,9 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
             <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
               {[
                 { key: "all",              label: "Active Queue"    },
-                { key: "vitals-done",      label: "✅ Vitals Ready" },
-                { key: "in-consultation",  label: "🩺 In Consult"  },
-                { key: "skipped",          label: "⏭ Skipped"      },
+                { key: "vitals-done",      label: "Vitals Ready" },
+                { key: "in-consultation",  label: "<Stethoscope size={16} strokeWidth={2} /> In Consult"  },
+                { key: "skipped",          label: "Skipped"      },
                 { key: "done",             label: "Done Today"      },
               ].map(t => (
                 <button key={t.key} onClick={() => setFilter(t.key)} style={{
@@ -561,7 +562,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
                               <button onClick={e => { e.stopPropagation(); setVitalsModal(p); }} style={{ marginLeft: "auto", background: "none", border: "1px solid #CCDAF0", borderRadius: 7, padding: "3px 10px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>Full Vitals</button>
                             </>
                           ) : (
-                            <span style={{ fontSize: 14, color: "#b0bdd6", background: "#f7f9fd", borderRadius: 7, padding: "3px 10px" }}>⏳ Awaiting vitals from nurse</span>
+                            <span style={{ fontSize: 14, color: "#b0bdd6", background: "#f7f9fd", borderRadius: 7, padding: "3px 10px" }}><Clock size={16} strokeWidth={2} /> Awaiting vitals from nurse</span>
                           )}
                         </div>
                       </div>
@@ -572,7 +573,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
 
               {filtered.length === 0 && (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#9aabc0" }}>
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}></div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1a2540" }}>All clear!</div>
                   <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>

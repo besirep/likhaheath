@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Building2, Plus, Stethoscope, AlertCircle, SkipForward, ClipboardList, BarChart3, CalendarDays, FolderOpen, LayoutDashboard, Download, FileText, Clock, Users, CheckCircle, MessageSquare } from "lucide-react";
 import { printDailyReport } from "../../lib/utils/printUtils.js";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -7,33 +8,33 @@ import {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const weeklyQueue = [
-  { day: "Mon Feb 23", total: 42, completed: 38, skipped: 4  },
-  { day: "Tue Feb 24", total: 37, completed: 35, skipped: 2  },
-  { day: "Wed Feb 25", total: 51, completed: 46, skipped: 5  },
-  { day: "Thu Feb 26", total: 44, completed: 41, skipped: 3  },
-  { day: "Fri Feb 27", total: 39, completed: 36, skipped: 3  },
-  { day: "Sat Feb 28", total: 28, completed: 27, skipped: 1  },
-  { day: "Sun Mar 1",  total: 14, completed: 11, skipped: 2  },
+  { day: "Mon Feb 23", total: 42, completed: 38, skipped: 4 },
+  { day: "Tue Feb 24", total: 37, completed: 35, skipped: 2 },
+  { day: "Wed Feb 25", total: 51, completed: 46, skipped: 5 },
+  { day: "Thu Feb 26", total: 44, completed: 41, skipped: 3 },
+  { day: "Fri Feb 27", total: 39, completed: 36, skipped: 3 },
+  { day: "Sat Feb 28", total: 28, completed: 27, skipped: 1 },
+  { day: "Sun Mar 1", total: 14, completed: 11, skipped: 2 },
 ];
 
 const hourlyFlow = [
-  { hour: "8AM",  patients: 6  },
-  { hour: "9AM",  patients: 14 },
+  { hour: "8AM", patients: 6 },
+  { hour: "9AM", patients: 14 },
   { hour: "10AM", patients: 11 },
-  { hour: "11AM", patients: 8  },
-  { hour: "12PM", patients: 3  },
-  { hour: "1PM",  patients: 7  },
-  { hour: "2PM",  patients: 9  },
-  { hour: "3PM",  patients: 5  },
-  { hour: "4PM",  patients: 3  },
+  { hour: "11AM", patients: 8 },
+  { hour: "12PM", patients: 3 },
+  { hour: "1PM", patients: 7 },
+  { hour: "2PM", patients: 9 },
+  { hour: "3PM", patients: 5 },
+  { hour: "4PM", patients: 3 },
 ];
 
 const priorityBreakdown = [
-  { name: "Regular",       value: 28, color: "#0047AB" },
-  { name: "Senior Citizen",value: 8,  color: "#8B5FBF" },
-  { name: "PWD",           value: 4,  color: "#0047AB" },
-  { name: "Pregnant",      value: 5,  color: "#d4709a" },
-  { name: "Pediatric",     value: 7,  color: "#e09040" },
+  { name: "Regular", value: 28, color: "#0047AB" },
+  { name: "Senior Citizen", value: 8, color: "#8B5FBF" },
+  { name: "PWD", value: 4, color: "#0047AB" },
+  { name: "Pregnant", value: 5, color: "#d4709a" },
+  { name: "Pediatric", value: 7, color: "#e09040" },
 ];
 
 const smsWeekly = [
@@ -47,11 +48,11 @@ const smsWeekly = [
 ];
 
 const topReasons = [
-  { reason: "Hypertension / BP",      count: 18, pct: 38 },
-  { reason: "Diabetes check-up",       count: 12, pct: 26 },
-  { reason: "Fever & cough",           count: 9,  pct: 19 },
-  { reason: "Prenatal check-up",       count: 5,  pct: 11 },
-  { reason: "Annual physical",         count: 3,  pct: 6  },
+  { reason: "Hypertension / BP", count: 18, pct: 38 },
+  { reason: "Diabetes check-up", count: 12, pct: 26 },
+  { reason: "Fever & cough", count: 9, pct: 19 },
+  { reason: "Prenatal check-up", count: 5, pct: 11 },
+  { reason: "Annual physical", count: 3, pct: 6 },
 ];
 
 const waitTimeWeek = [
@@ -65,9 +66,9 @@ const waitTimeWeek = [
 ];
 
 const doctorLoad = [
-  { doctor: "Dr. Reyes",  patients: 19, color: "#2a9d8f" },
+  { doctor: "Dr. Reyes", patients: 19, color: "#2a9d8f" },
   { doctor: "Dr. Santos", patients: 15, color: "#0047AB" },
-  { doctor: "Dr. Cruz",   patients: 13, color: "#8B5FBF" },
+  { doctor: "Dr. Cruz", patients: 13, color: "#8B5FBF" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -90,7 +91,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
@@ -105,13 +106,13 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                        },
-          { icon: "📋", label: "Queue"                             },
-          { icon: "➕", label: "Register Patient"                  },
-          { icon: "🗂️", label: "Patient Records"                   },
-          { icon: "📅", label: "Appointments",   badge: "3"       },
-          { icon: "📱", label: "SMS Logs"                          },
-          { icon: "📊", label: "Reports"                           },
+          { Icon: LayoutDashboard, label: "Dashboard" },
+          { Icon: ClipboardList, label: "Queue" },
+          { Icon: Plus, label: "Register Patient" },
+          { Icon: FolderOpen, label: "Patient Records" },
+          { Icon: CalendarDays, label: "Appointments", badge: "3" },
+          { Icon: FileText, label: "SMS Logs" },
+          { Icon: BarChart3, label: "Reports" },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -120,10 +121,10 @@ function Sidebar() {
             color: item.label === "Reports" ? "#2a9d8f" : "#4a5d75",
             fontWeight: item.label === "Reports" ? 600 : 400, fontSize: 14, transition: "all 0.18s",
           }}
-            onMouseEnter={e => { if (item.label !== "Reports") { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; }}}
-            onMouseLeave={e => { if (item.label !== "Reports") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; }}}
+            onMouseEnter={e => { if (item.label !== "Reports") { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; } }}
+            onMouseLeave={e => { if (item.label !== "Reports") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; } }}
           >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
+            <span style={{ fontSize: 16 }}>{item.Icon && <item.Icon size={16} strokeWidth={2} />}</span>
             {item.label}
             {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
@@ -173,7 +174,7 @@ function SectionHeader({ title, subtitle, action }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function Reports() {
   const [period, setPeriod] = useState("week");
-  const [toast, setToast]   = useState(null);
+  const [toast, setToast] = useState(null);
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(null), 2800); };
 
@@ -195,11 +196,11 @@ export default function Reports() {
     a.href = url; a.download = `likhahealth-report-${period}.csv`;
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
-    showToast('📊 Report downloaded as CSV');
+    showToast('Report downloaded as CSV');
   };
 
   const exportPDF = () => {
-    showToast('📄 Generating branded PDF...');
+    showToast('Generating branded PDF...');
     printDailyReport({
       stats: {
         total: todayTotal,
@@ -221,26 +222,23 @@ export default function Reports() {
     });
   };
 
-  const todayTotal     = 47;
+  const todayTotal = 47;
   const todayCompleted = 42;
-  const todaySkipped   = 3;
-  const avgWait        = 22;
-  const smsSent        = 44;
-  const smsFailed      = 3;
-  const totalPriority  = 24;
+  const todaySkipped = 3;
+  const avgWait = 22;
+  const smsSent = 44;
+  const smsFailed = 3;
+  const totalPriority = 24;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
-      
-      
-
+    <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {toast && (
         <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "fadeUp 0.3s ease" }}>
           {toast}
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -263,10 +261,10 @@ export default function Reports() {
               ))}
             </div>
             <button onClick={exportPDF} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px 16px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
-              📄 Export PDF
+              <FileText size={16} strokeWidth={2} /> Export PDF
             </button>
             <button onClick={exportCSV} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
-              📊 Export CSV
+              <BarChart3 size={16} strokeWidth={2} /> Export CSV
             </button>
           </div>
         </div>
@@ -278,15 +276,15 @@ export default function Reports() {
           <div style={{ animation: "fadeUp 0.25s ease" }}>
             <SectionHeader title="Today at a Glance" subtitle="March 1, 2026 · Live data" />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-              <StatCard icon="👥" label="Total Patients"  value={todayTotal}     sub="Registered today"        color="#1e2d40"  trend={12} />
-              <StatCard icon="✅" label="Completed"        value={todayCompleted} sub={`${Math.round(todayCompleted/todayTotal*100)}% completion rate`} color="#2a9d8f" bg="#e8f7f5" trend={5} />
-              <StatCard icon="⏱️" label="Avg. Wait Time"   value={`${avgWait}m`}  sub="Target: under 30 min"   color="#e09040" bg="#fdf3e8" trend={-8} />
-              <StatCard icon="⏭"  label="Skipped"          value={todaySkipped}   sub="Called, no response"    color="#c05080" bg="#fce8f0" trend={0} />
+              <StatCard icon={<Users size={22} strokeWidth={2} />} label="Total Patients" value={todayTotal} sub="Registered today" color="#1e2d40" trend={12} />
+              <StatCard icon={<CheckCircle size={22} strokeWidth={2} />} label="Completed" value={todayCompleted} sub={`${Math.round(todayCompleted / todayTotal * 100)}% completion rate`} color="#2a9d8f" bg="#e8f7f5" trend={5} />
+              <StatCard icon={<Clock size={22} strokeWidth={2} />} label="Avg. Wait Time" value={`${avgWait}m`} sub="Target: under 30 min" color="#e09040" bg="#fdf3e8" trend={-8} />
+              <StatCard icon={<SkipForward size={22} strokeWidth={2} />} label="Skipped" value={todaySkipped} sub="Called, no response" color="#c05080" bg="#fce8f0" trend={0} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 12 }}>
-              <StatCard icon="📱" label="SMS Sent"         value={smsSent}        sub={`${smsFailed} failed · ${Math.round(smsSent/(smsSent+smsFailed)*100)}% delivery`} color="#0047AB" bg="#E5EDF8" />
-              <StatCard icon="⭐" label="Priority Patients" value={totalPriority}  sub="Elderly, PWD, Pregnant, Pedia" color="#8B5FBF" bg="#f0eafb" />
-              <StatCard icon="🩺" label="Active Consultations" value={2}           sub="2 doctors seeing patients"      color="#2a9d8f" bg="#e8f7f5" />
+              <StatCard icon={<MessageSquare size={22} strokeWidth={2} />} label="SMS Sent" value={smsSent} sub={`${smsFailed} failed · ${Math.round(smsSent / (smsSent + smsFailed) * 100)}% delivery`} color="#0047AB" bg="#E5EDF8" />
+              <StatCard icon={<AlertCircle size={22} strokeWidth={2} />} label="Priority Patients" value={totalPriority} sub="Elderly, PWD, Pregnant, Pedia" color="#8B5FBF" bg="#f0eafb" />
+              <StatCard icon={<Stethoscope size={22} strokeWidth={2} />} label="Active Consultations" value={2} sub="2 doctors seeing patients" color="#2a9d8f" bg="#e8f7f5" />
             </div>
           </div>
 
@@ -309,8 +307,8 @@ export default function Reports() {
                   tickFormatter={v => v.split(" ")[0]} />
                 <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total"     name="Total"     fill="#e8f2f0" radius={[6,6,0,0]} />
-                <Bar dataKey="completed" name="Completed" fill="#2a9d8f" radius={[6,6,0,0]} />
+                <Bar dataKey="total" name="Total" fill="#e8f2f0" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="completed" name="Completed" fill="#2a9d8f" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -327,7 +325,7 @@ export default function Reports() {
                   <XAxis dataKey="hour" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="patients" name="Patients" radius={[6,6,0,0]}>
+                  <Bar dataKey="patients" name="Patients" radius={[6, 6, 0, 0]}>
                     {hourlyFlow.map((entry, i) => (
                       <Cell key={i} fill={entry.patients === Math.max(...hourlyFlow.map(h => h.patients)) ? "#2a9d8f" : "#d4ede9"} />
                     ))}
@@ -357,7 +355,7 @@ export default function Reports() {
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                       <span style={{ fontSize: 14, color: "#4a5d75", flex: 1 }}>{p.name}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>{p.value}</span>
-                      <span style={{ fontSize: 14, color: "#8a9bb0", minWidth: 30 }}>{Math.round(p.value/todayTotal*100)}%</span>
+                      <span style={{ fontSize: 14, color: "#8a9bb0", minWidth: 30 }}>{Math.round(p.value / todayTotal * 100)}%</span>
                     </div>
                   ))}
                 </div>
@@ -397,8 +395,8 @@ export default function Reports() {
                   <XAxis dataKey="day" tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 14, fill: "#8a9bb0" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="sent"   name="Sent"   fill="#2a9d8f" radius={[5,5,0,0]} stackId="a" />
-                  <Bar dataKey="failed" name="Failed" fill="#f5c8b0" radius={[5,5,0,0]} stackId="a" />
+                  <Bar dataKey="sent" name="Sent" fill="#2a9d8f" radius={[5, 5, 0, 0]} stackId="a" />
+                  <Bar dataKey="failed" name="Failed" fill="#f5c8b0" radius={[5, 5, 0, 0]} stackId="a" />
                 </BarChart>
               </ResponsiveContainer>
               <div style={{ display: "flex", gap: 14, marginTop: 8, justifyContent: "center" }}>
@@ -427,7 +425,7 @@ export default function Reports() {
                         width: `${r.pct}%`,
                         background: i === 0 ? "linear-gradient(90deg,#2a9d8f,#52c4b8)"
                           : i === 1 ? "linear-gradient(90deg,#0047AB,#7ab8f5)"
-                          : "#d0e8e4",
+                            : "#d0e8e4",
                       }} />
                     </div>
                   </div>

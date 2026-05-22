@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Check, ClipboardList, Smartphone, Heart, Thermometer, Activity, Wind, Scale, Ruler, UserRound, Baby } from "lucide-react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { staffApi } from "../../lib/api/staff.js";
 import { getAge, validateStep0, validateStep1, validateStep2, validateStep3 } from "../../lib/validation/patientValidation.js";
@@ -10,11 +11,11 @@ const CIVIL_STATUS_OPTIONS = ["Single", "Married", "Widowed", "Separated", "Annu
 const BLOOD_TYPE_OPTIONS = ["", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const priorityTypes = [
-  { key: "elderly",   label: "Senior Citizen (60+)", icon: "👴", color: "#8B5FBF", bg: "#f0eafb", desc: "RA 9994 — Expanded Senior Citizens Act" },
-  { key: "pwd",       label: "PWD",                  icon: "♿", color: "#0047AB", bg: "#EBF0FA", desc: "RA 7277 — Magna Carta for Disabled Persons" },
-  { key: "pregnant",  label: "Pregnant Woman",        icon: "🤰", color: "#d4709a", bg: "#fce8f3", desc: "Priority lane for maternal health" },
-  { key: "pediatric", label: "Infant / Child (0–5)", icon: "👶", color: "#e09040", bg: "#fdf3e8", desc: "Pediatric priority" },
-  { key: "solo",      label: "Solo Parent",           icon: "👨‍👧", color: "#2a9d8f", bg: "#e8f7f5", desc: "RA 8972 — Solo Parents' Welfare Act" },
+  { key: "elderly",   label: "Senior Citizen (60+)", icon: <UserRound size={18} strokeWidth={2} />, color: "#8B5FBF", bg: "#f0eafb", desc: "RA 9994 — Expanded Senior Citizens Act" },
+  { key: "pwd",       label: "PWD",                  icon: <UserRound size={18} strokeWidth={2} />, color: "#0047AB", bg: "#EBF0FA", desc: "RA 7277 — Magna Carta for Disabled Persons" },
+  { key: "pregnant",  label: "Pregnant Woman",        icon: <UserRound size={18} strokeWidth={2} />, color: "#d4709a", bg: "#fce8f3", desc: "Priority lane for maternal health" },
+  { key: "pediatric", label: "Infant / Child (0–5)", icon: <Baby size={18} strokeWidth={2} />, color: "#e09040", bg: "#fdf3e8", desc: "Pediatric priority" },
+  { key: "solo",      label: "Solo Parent",           icon: <UserRound size={18} strokeWidth={2} />, color: "#2a9d8f", bg: "#e8f7f5", desc: "RA 8972 — Solo Parents' Welfare Act" },
 ];
 
 const visitReasons = [
@@ -134,7 +135,7 @@ function StepBar({ step }) {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 700, color: isComplete || isActive ? "white" : "#8a9bb0",
                 boxShadow: isActive ? "0 3px 12px rgba(42,157,143,0.35)" : "none", transition: "all 0.3s",
-              }}>{isComplete ? "✓" : i + 1}</div>
+              }}>{isComplete ? <Check size={16} strokeWidth={3} /> : i + 1}</div>
               <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? "#1e2d40" : "#8a9bb0", whiteSpace: "nowrap" }}>{s}</span>
             </div>
             {i < steps.length - 1 && (
@@ -476,7 +477,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
               borderRadius: 11, background: selected ? "#e8f7f5" : "white",
               color: selected ? "#2a9d8f" : "#4a5d75", fontSize: 14, fontWeight: selected ? 600 : 400,
               cursor: "pointer", textAlign: "left", transition: "all 0.15s",
-            }}>{selected && <span style={{ marginRight: 6 }}>✓</span>}{r}</button>
+            }}>{selected && <span style={{ marginRight: 6 }}><Check size={14} strokeWidth={3} /></span>}{r}</button>
           );
         })}
       </div>
@@ -530,13 +531,13 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 2 }}>Vitals <span style={{ fontSize: 13, fontWeight: 600, color: "#CC0000", background: "#fff0ee", borderRadius: 6, padding: "2px 8px", marginLeft: 6 }}>All Required</span></div>
         <div style={{ fontSize: 14, color: "#7a8fb0" }}>Record the patient's current vitals before proceeding.</div>
       </div>
-      {vField("bp", "Blood Pressure", "e.g. 120/80", "mmHg", "❤️")}
+      {vField("bp", "Blood Pressure", "e.g. 120/80", "mmHg", <Heart size={16} strokeWidth={2} />)}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {vField("temp", "Temperature", "e.g. 36.5", "°C", "🌡️")}
-        {vField("hr", "Heart Rate", "e.g. 78", "bpm", "💓")}
-        {vField("spo2", "SpO₂", "e.g. 98", "%", "🫁")}
-        {vField("weight", "Weight", "e.g. 65", "kg", "⚖️")}
-        {vField("height", "Height", "e.g. 160", "cm", "📏")}
+        {vField("temp", "Temperature", "e.g. 36.5", "°C", <Thermometer size={16} strokeWidth={2} />)}
+        {vField("hr", "Heart Rate", "e.g. 78", "bpm", <Activity size={16} strokeWidth={2} />)}
+        {vField("spo2", "SpO₂", "e.g. 98", "%", <Wind size={16} strokeWidth={2} />)}
+        {vField("weight", "Weight", "e.g. 65", "kg", <Scale size={16} strokeWidth={2} />)}
+        {vField("height", "Height", "e.g. 160", "cm", <Ruler size={16} strokeWidth={2} />)}
         <div />
       </div>
       {bmi && (
@@ -552,7 +553,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         </div>
       )}
       <div style={{ background: "#fff8e8", borderRadius: 11, padding: "10px 14px", border: "1px solid #f5dfa0", fontSize: 14, color: "#7a5c00", display: "flex", gap: 8, alignItems: "center" }}>
-        <span>📋</span> All vitals must be recorded before proceeding to the next step.
+        <span><ClipboardList size={16} strokeWidth={2} /></span> All vitals must be recorded before proceeding to the next step.
       </div>
     </div>
   );
@@ -565,13 +566,13 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       <label style={labelStyle}>Priority Classification</label>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <button onClick={() => update("priority", null)} style={{ padding: "12px 16px", border: `1.5px solid ${!form.priority ? "#2a9d8f" : "#e0e7ef"}`, borderRadius: 12, background: !form.priority ? "#e8f7f5" : "white", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: !form.priority ? "#2a9d8f" : "#f0f3f7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: !form.priority ? "white" : "#8a9bb0" }}>{!form.priority ? "✓" : "—"}</div>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: !form.priority ? "#2a9d8f" : "#f0f3f7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: !form.priority ? "white" : "#8a9bb0" }}>{!form.priority ? <Check size={16} strokeWidth={3} /> : "—"}</div>
           <div><div style={{ fontSize: 14, fontWeight: 600, color: !form.priority ? "#2a9d8f" : "#1e2d40" }}>Regular Queue</div><div style={{ fontSize: 14, color: "#8a9bb0" }}>No priority classification</div></div>
         </button>
         {priorityTypes.map(pt => (
           <button key={pt.key} onClick={() => update("priority", pt.key)} style={{ padding: "12px 16px", border: `1.5px solid ${form.priority === pt.key ? pt.color : "#e0e7ef"}`, borderRadius: 12, background: form.priority === pt.key ? pt.bg : "white", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", background: form.priority === pt.key ? pt.color : "#f0f3f7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
-              {form.priority === pt.key ? <span style={{ fontSize: 14, color: "white", fontWeight: 700 }}>✓</span> : pt.icon}
+              {form.priority === pt.key ? <span style={{ color: "white" }}><Check size={16} strokeWidth={3} /></span> : pt.icon}
             </div>
             <div><div style={{ fontSize: 14, fontWeight: 600, color: form.priority === pt.key ? pt.color : "#1e2d40" }}>{pt.label}</div><div style={{ fontSize: 14, color: "#8a9bb0" }}>{pt.desc}</div></div>
           </button>
@@ -582,7 +583,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     <div style={{ background: form.sendSms ? "#e8f7f5" : "#f7f9fd", borderRadius: 14, padding: "16px 18px", border: `1.5px solid ${form.sendSms ? "#b8e4de" : "#e0e7ef"}`, transition: "all 0.2s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: form.sendSms ? 12 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 22 }}>📱</span>
+          <span style={{ fontSize: 22 }}><Smartphone size={22} strokeWidth={2} /></span>
           <div><div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Send SMS Confirmation</div><div style={{ fontSize: 14, color: "#8a9bb0" }}>Queue number + estimated wait time</div></div>
         </div>
         <button onClick={() => update("sendSms", !form.sendSms)} style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: form.sendSms ? "#2a9d8f" : "#d0dbe8", position: "relative", transition: "background 0.2s" }}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Search, Stethoscope, Clock, ClipboardList, UserRound, Heart, Thermometer, Wind, User, AlertTriangle, FileText, Activity, Printer, Scale } from "lucide-react";
 import { consultationsApi } from "../../lib/api/consultations.js";
 
 class ErrorBoundary extends React.Component {
@@ -122,11 +123,11 @@ function ConsultationForm({ patient, onSave, onCancel, saving }) {
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Vitals from Nurse</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
-            <VitalCard icon="❤️" label="Blood Pressure" value={v.bp} unit="mmHg" flag={bpFlag(v.bp)} />
-            <VitalCard icon="🌡️" label="Temperature"    value={v.temp} unit="°C" flag={tempFlag(v.temp)} />
-            <VitalCard icon="💓" label="Heart Rate"     value={v.hr}   unit="bpm" />
-            <VitalCard icon="🫁" label="SpO₂"           value={v.spo2} unit="%"   flag={spo2Flag(v.spo2)} />
-            {bmi && <VitalCard icon="📐" label="BMI" value={bmi} unit="kg/m²" flag={Number(bmi) > 25 ? "high" : "normal"} />}
+            <VitalCard icon={<Heart size={16} strokeWidth={2} />} label="Blood Pressure" value={v.bp} unit="mmHg" flag={bpFlag(v.bp)} />
+            <VitalCard icon={<Thermometer size={16} strokeWidth={2} />} label="Temperature"    value={v.temp} unit="°C" flag={tempFlag(v.temp)} />
+            <VitalCard icon={<Activity size={16} strokeWidth={2} />} label="Heart Rate"     value={v.hr}   unit="bpm" />
+            <VitalCard icon={<Wind size={16} strokeWidth={2} />} label="SpO₂"           value={v.spo2} unit="%"   flag={spo2Flag(v.spo2)} />
+            {bmi && <VitalCard icon={<Scale size={16} strokeWidth={2} />} label="BMI" value={bmi} unit="kg/m²" flag={Number(bmi) > 25 ? "high" : "normal"} />}
           </div>
         </div>
       ) : (
@@ -267,11 +268,11 @@ function HistoryDetail({ record, onSchedule }) {
         <div>
           <div style={{ fontSize: 12, color: "#9aabc0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Vitals at Consultation</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
-            <VitalCard icon="❤️" label="Blood Pressure" value={v.bp}   unit="mmHg" flag={bpFlag(v.bp)} />
-            <VitalCard icon="🌡️" label="Temperature"    value={v.temp} unit="°C"   flag={tempFlag(v.temp)} />
-            <VitalCard icon="💓" label="Heart Rate"     value={v.hr}   unit="bpm" />
-            <VitalCard icon="🫁" label="SpO₂"           value={v.spo2} unit="%"   flag={spo2Flag(v.spo2)} />
-            {bmi && <VitalCard icon="📐" label="BMI" value={bmi} unit="kg/m²" flag={Number(bmi) > 25 ? "high" : "normal"} />}
+            <VitalCard icon={<Heart size={16} strokeWidth={2} />} label="Blood Pressure" value={v.bp}   unit="mmHg" flag={bpFlag(v.bp)} />
+            <VitalCard icon={<Thermometer size={16} strokeWidth={2} />} label="Temperature"    value={v.temp} unit="°C"   flag={tempFlag(v.temp)} />
+            <VitalCard icon={<Activity size={16} strokeWidth={2} />} label="Heart Rate"     value={v.hr}   unit="bpm" />
+            <VitalCard icon={<Wind size={16} strokeWidth={2} />} label="SpO₂"           value={v.spo2} unit="%"   flag={spo2Flag(v.spo2)} />
+            {bmi && <VitalCard icon={<Scale size={16} strokeWidth={2} />} label="BMI" value={bmi} unit="kg/m²" flag={Number(bmi) > 25 ? "high" : "normal"} />}
           </div>
         </div>
       )}

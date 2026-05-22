@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { UserCog, Stethoscope, User, Lock, Eye, EyeOff, AlertTriangle, KeyRound } from "lucide-react";
 
 const ROLES = [
   {
     key: "receptionist",
     label: "Medical Staff",
     subtitle: "Receptionist / Front Desk",
-    icon: "👩‍💼",
+    icon: UserCog,
     color: "#2a9d8f",
     bg: "#e8f7f5",
     border: "#b8e4de",
@@ -17,7 +18,7 @@ const ROLES = [
     key: "doctor",
     label: "Doctor",
     subtitle: "Licensed Physician",
-    icon: "👨‍⚕️",
+    icon: Stethoscope,
     color: "#0047AB",
     bg: "#EBF0FA",
     border: "#b8d0f5",
@@ -36,7 +37,7 @@ function Field({ label, type = "text", value, onChange, placeholder, icon }) {
         {label}
       </label>
       <div style={{ position: "relative" }}>
-        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 15, userSelect: "none" }}>{icon}</span>
+        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center" }}>{icon}</span>
         <input
           type={type}
           value={value}
@@ -158,7 +159,7 @@ export default function Login({ onLogin }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {ROLES.map(r => (
               <div key={r.key} style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 16px" }}>
-                <span style={{ fontSize: 20 }}>{r.icon}</span>
+                <span style={{ display: "flex", alignItems: "center" }}><r.icon size={20} strokeWidth={1.8} color={r.color} /></span>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>{r.label}</div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
@@ -211,7 +212,7 @@ export default function Login({ onLogin }) {
                       outline: "none",
                     }}
                   >
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>{r.icon}</div>
+                    <div style={{ marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><r.icon size={28} strokeWidth={1.6} color={isSelected ? r.color : "#8a9bb0"} /></div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: isSelected ? r.color : "#1e2d40" }}>{r.label}</div>
                     <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>{r.subtitle}</div>
                   </button>
@@ -226,7 +227,7 @@ export default function Login({ onLogin }) {
               {/* Role badge */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: roleConfig.bg, border: `1px solid ${roleConfig.border}`, borderRadius: 10, padding: "9px 14px", marginBottom: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 15 }}>{roleConfig.icon}</span>
+                  <span style={{ display: "flex", alignItems: "center" }}><roleConfig.icon size={16} strokeWidth={2} color={roleConfig.color} /></span>
                   <span style={{ fontSize: 14, fontWeight: 600, color: roleConfig.color }}>Signing in as {roleConfig.label}</span>
                 </div>
                 <button
@@ -238,21 +239,21 @@ export default function Login({ onLogin }) {
               </div>
 
               <form onSubmit={handleSubmit}>
-                <Field label="Username" icon="👤" type="text" value={username} onChange={setUsername} placeholder={`e.g. ${roleConfig.demo}`} />
+                <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={username} onChange={setUsername} placeholder={`e.g. ${roleConfig.demo}`} />
                 <div style={{ position: "relative" }}>
-                  <Field label="Password" icon="🔒" type={showPass ? "text" : "password"} value={password} onChange={setPassword} placeholder="Enter your password" />
+                  <Field label="Password" icon={<Lock size={16} strokeWidth={2} color="#8a9bb0" />} type={showPass ? "text" : "password"} value={password} onChange={setPassword} placeholder="Enter your password" />
                   <button
                     type="button"
                     onClick={() => setShowPass(s => !s)}
                     style={{ position: "absolute", right: 14, top: 36, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#8a9bb0" }}
                   >
-                    {showPass ? "🙈" : "👁️"}
+                    {showPass ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
                   </button>
                 </div>
 
                 {error && (
                   <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8, animation: "fadeUp 0.2s ease" }}>
-                    <span style={{ fontSize: 15 }}>⚠️</span>
+                    <AlertTriangle size={16} strokeWidth={2} color="#c0392b" style={{ flexShrink: 0 }} />
                     <span style={{ fontSize: 14, color: "#c0392b", fontWeight: 500 }}>{error}</span>
                   </div>
                 )}
@@ -296,7 +297,7 @@ export default function Login({ onLogin }) {
 
               {/* Demo hint */}
               <div style={{ background: "white", border: "1px solid #edf1f7", borderRadius: 12, padding: "12px 16px" }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>🔑 Demo Credentials</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}><KeyRound size={14} strokeWidth={2} /> Demo Credentials</div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#4a5d75" }}>
                   <span style={{ color: "#8a9bb0" }}>Username</span>
                   <span style={{ fontWeight: 600, fontFamily: "monospace" }}>{roleConfig.demo}</span>

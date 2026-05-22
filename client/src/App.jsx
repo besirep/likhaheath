@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, CalendarDays, MessageSquare, BarChart3, Stethoscope, LogOut } from "lucide-react";
 import { useAuth } from "./lib/api/useAuth.js";
 
 // Auth
@@ -23,21 +24,21 @@ import DoctorQueue         from "./screens/doctor/DoctorQueue.jsx";
 // ── Role-based screen config ──────────────────────────────────────────────────
 const SCREEN_MAP = {
   receptionist: [
-    { id: "dashboard", label: "Dashboard",        icon: "⊞",  Component: ClinicDashboard },
-    { id: "register",  label: "Register Patient", icon: "➕",  Component: PatientRegistration },
-    { id: "queue",     label: "Queue",            icon: "📋",  Component: ReceptionistQueue },
-    { id: "records",   label: "Patient Records",  icon: "🗂️", Component: ReceptionistPatientRecords },
-    { id: "appts",     label: "Appointments",     icon: "📅",  Component: ReceptionistAppointments },
-    { id: "sms",       label: "SMS Logs",         icon: "📱",  Component: ReceptionistSMSLogs },
-    { id: "reports",   label: "Reports",          icon: "📊",  Component: ReceptionistReports },
+    { id: "dashboard", label: "Dashboard",        Icon: LayoutDashboard, Component: ClinicDashboard },
+    { id: "register",  label: "Register Patient", Icon: UserPlus,        Component: PatientRegistration },
+    { id: "queue",     label: "Queue",            Icon: ClipboardList,   Component: ReceptionistQueue },
+    { id: "records",   label: "Patient Records",  Icon: FolderOpen,      Component: ReceptionistPatientRecords },
+    { id: "appts",     label: "Appointments",     Icon: CalendarDays,    Component: ReceptionistAppointments },
+    { id: "sms",       label: "SMS Logs",         Icon: MessageSquare,   Component: ReceptionistSMSLogs },
+    { id: "reports",   label: "Reports",          Icon: BarChart3,       Component: ReceptionistReports },
   ],
   doctor: [
-    { id: "dr-dashboard", label: "Dashboard",       icon: "⊞",  Component: DoctorDashboard },
-    { id: "dr-queue",     label: "My Queue",        icon: "📋",  Component: DoctorQueue },
-    { id: "dr-consult",   label: "Consultations",   icon: "🩺",  Component: DoctorConsultations },
-    { id: "dr-records",   label: "Patient Records", icon: "🗂️", Component: DoctorPatientRecords },
-    { id: "dr-appts",     label: "Appointments",    icon: "📅",  Component: DoctorAppointments },
-    { id: "dr-reports",   label: "Reports",         icon: "📊",  Component: ReceptionistReports },
+    { id: "dr-dashboard", label: "Dashboard",       Icon: LayoutDashboard, Component: DoctorDashboard },
+    { id: "dr-queue",     label: "My Queue",        Icon: ClipboardList,   Component: DoctorQueue },
+    { id: "dr-consult",   label: "Consultations",   Icon: Stethoscope,     Component: DoctorConsultations },
+    { id: "dr-records",   label: "Patient Records", Icon: FolderOpen,      Component: DoctorPatientRecords },
+    { id: "dr-appts",     label: "Appointments",    Icon: CalendarDays,    Component: DoctorAppointments },
+    { id: "dr-reports",   label: "Reports",         Icon: BarChart3,       Component: ReceptionistReports },
   ],
 };
 
@@ -119,7 +120,7 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
               onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.75)"; } }}
               onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; } }}
             >
-              <span style={{ fontSize: 14, width: 18, textAlign: "center", opacity: isActive ? 1 : 0.7 }}>{item.icon}</span>
+              <item.Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} style={{ opacity: isActive ? 1 : 0.7, flexShrink: 0 }} />
               <span style={{ letterSpacing: 0.1 }}>{item.label}</span>
             </button>
           );
@@ -150,7 +151,7 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(220,80,60,0.15)"; e.currentTarget.style.borderColor = "rgba(220,80,60,0.3)"; e.currentTarget.style.color = "#f08080"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
         >
-          🚪 Sign Out
+          <LogOut size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> Sign Out
         </button>
       </div>
     </div>

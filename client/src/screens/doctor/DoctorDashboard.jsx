@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Building2, Stethoscope, Clock, AlertCircle, SkipForward, Bell, ClipboardList, CalendarDays, FolderOpen, UserRound, User, Download, LayoutDashboard, CheckCircle2, CircleCheckBig, X, TestTubes, Printer, AlertTriangle, Info } from "lucide-react";
 import { consultationsApi } from "../../lib/api/consultations.js";
 import { printConsultationSummary, printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
 
@@ -22,10 +23,10 @@ const notifications = [
 ];
 
 const priorityConfig = {
-  elderly:   { icon: "👴", label: "Senior Citizen", color: "#8B5FBF" },
-  pregnant:  { icon: "🤰", label: "Pregnant",       color: "#d4709a" },
-  pwd:       { icon: "♿", label: "PWD",             color: "#0047AB" },
-  pediatric: { icon: "👶", label: "Pedia",           color: "#e09040" },
+  elderly:   { Icon: UserRound, label: "Senior Citizen", color: "#8B5FBF" },
+  pregnant:  { Icon: UserRound, label: "Pregnant",       color: "#d4709a" },
+  pwd:       { Icon: UserRound, label: "PWD",             color: "#0047AB" },
+  pediatric: { Icon: UserRound, label: "Pedia",           color: "#e09040" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ function MiniModal({ title, icon, children, onClose }) {
       <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: 440, boxShadow: "0 24px 64px rgba(20,40,70,0.22)", overflow: "hidden", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
         <div style={{ background: "linear-gradient(135deg,#1a2540,#243560)", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{icon} {title}</div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
         </div>
         <div style={{ padding: "22px 24px" }}>{children}</div>
       </div>
@@ -104,19 +105,19 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
 
       {/* Sub-modal: Add to Record */}
       {modal === 'record' && (
-        <MiniModal title="Add to Medical Record" icon="📋" onClose={() => setModal(null)}>
+        <MiniModal title="Add to Medical Record" icon={<ClipboardList size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontSize: 14, color: "#4a5d75" }}>Recording consultation for <b>{patient.name}</b></div>
             <input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} placeholder="Diagnosis / ICD-10..." style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Doctor's notes..." rows={4} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, resize: "vertical", boxSizing: "border-box" }} />
-            <button onClick={() => { setModal(null); showToast("✅ Added to medical records"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save to Record</button>
+            <button onClick={() => { setModal(null); showToast("Added to medical records"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save to Record</button>
           </div>
         </MiniModal>
       )}
 
       {/* Sub-modal: Lab Request */}
       {modal === 'lab' && (
-        <MiniModal title="Request Laboratory" icon="🧪" onClose={() => setModal(null)}>
+        <MiniModal title="Request Laboratory" icon={<TestTubes size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ fontSize: 14, color: "#4a5d75" }}>Patient: <b>{patient.name}</b></div>
             {["CBC (Complete Blood Count)","Blood Chemistry","Urinalysis","Lipid Profile","FBS (Fasting Blood Sugar)","ECG","Chest X-ray"].map(test => (
@@ -125,14 +126,14 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
                 {test}
               </label>
             ))}
-            <button onClick={() => { setModal(null); showToast("🧪 Lab request submitted"); }} style={{ marginTop: 8, background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Submit Lab Request</button>
+            <button onClick={() => { setModal(null); showToast(<><TestTubes size={16} strokeWidth={2} /> Lab request submitted</>); }} style={{ marginTop: 8, background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Submit Lab Request</button>
           </div>
         </MiniModal>
       )}
 
       {/* Sub-modal: Schedule Follow-up */}
       {modal === 'followup' && (
-        <MiniModal title="Schedule Follow-up" icon="📅" onClose={() => setModal(null)}>
+        <MiniModal title="Schedule Follow-up" icon={<CalendarDays size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontSize: 14, color: "#4a5d75" }}>Schedule follow-up for <b>{patient.name}</b></div>
             <div>
@@ -147,7 +148,7 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
               <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Notes</label>
               <input placeholder="Reason for follow-up..." style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
             </div>
-            <button onClick={() => { setModal(null); showToast("📅 Follow-up scheduled"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Confirm Schedule</button>
+            <button onClick={() => { setModal(null); showToast("Follow-up scheduled"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Confirm Schedule</button>
           </div>
         </MiniModal>
       )}
@@ -171,9 +172,9 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={handlePrint} style={{ background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>🖨 Print Summary</button>
-          <button onClick={() => { showToast("✓ Consultation ended"); setTimeout(onClose, 400); }} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)" }}>✓ End Consultation</button>
-          <button onClick={onClose} style={{ background: "#f0f3fa", border: "none", borderRadius: 10, padding: "9px 14px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>✕</button>
+          <button onClick={handlePrint} style={{ background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Printer size={16} strokeWidth={2} /> Print Summary</button>
+          <button onClick={() => { showToast("Consultation ended"); setTimeout(onClose, 400); }} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)" }}>End Consultation</button>
+          <button onClick={onClose} style={{ background: "#f0f3fa", border: "none", borderRadius: 10, padding: "9px 14px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}><X size={16} strokeWidth={2} /></button>
         </div>
       </div>
 
@@ -227,9 +228,9 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             {[
-              { label: "📋 Add to Records", key: "record" },
-              { label: "🧪 Request Lab",    key: "lab"    },
-              { label: "📅 Schedule Follow-up", key: "followup" },
+              { label: <><ClipboardList size={16} strokeWidth={2} /> Add to Records</>, key: "record" },
+              { label: <><TestTubes size={16} strokeWidth={2} /> Request Lab</>,    key: "lab"    },
+              { label: "Schedule Follow-up", key: "followup" },
             ].map(({ label, key }) => (
               <button key={key} onClick={() => setModal(key)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #C0D4F0", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{label}</button>
             ))}
@@ -261,7 +262,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
@@ -276,11 +277,11 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard",      active: true },
-          { icon: "📋", label: "Queue"                        },
-          { icon: "🩺", label: "Consultations",  badge: "1"  },
-          { icon: "🗂️", label: "Patient Records"             },
-          { icon: "📅", label: "Appointments"                },
+          { Icon: LayoutDashboard,  label: "Dashboard",      active: true },
+          { Icon: ClipboardList, label: "Queue"                        },
+          { Icon: Stethoscope, label: "Consultations",  badge: "1"  },
+          { Icon: FolderOpen, label: "Patient Records"             },
+          { Icon: CalendarDays, label: "Appointments"                },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -292,7 +293,7 @@ function Sidebar() {
             onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; } }}
             onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; } }}
           >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
+            <span style={{ fontSize: 16 }}>{item.Icon && <item.Icon size={16} strokeWidth={2} />}</span>
             {item.label}
             {item.badge && <span style={{ marginLeft: "auto", background: "#0047AB", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
@@ -560,7 +561,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
         }}>
           <div style={headerFade}>
             <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: "#1a2540" }}>
-              {greeting}, {displayName} 👋
+              {greeting}, {displayName} 
             </h1>
             <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{dateStr}</div>
           </div>
@@ -573,7 +574,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
 
             <div style={{ position: "relative" }}>
               <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #D8E4F2", borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(60,90,140,0.07)", position: "relative" }}>
-                🔔
+                <Bell size={18} strokeWidth={2} />
                 <div style={{ position: "absolute", top: 9, right: 9, width: 7, height: 7, borderRadius: "50%", background: "#CC0000", border: "2px solid white" }} />
               </button>
               {notifOpen && (
@@ -583,7 +584,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
                   </div>
                   {notifications.map(n => (
                     <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3fa", display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <span style={{ fontSize: 16 }}>{n.type === "urgent" ? "🚨" : n.type === "lab" ? "🧪" : "ℹ️"}</span>
+                      <span style={{ fontSize: 16 }}>{n.type === "urgent" ? <AlertTriangle size={16} strokeWidth={2} /> : n.type === "lab" ? <TestTubes size={16} strokeWidth={2} /> : <Info size={16} strokeWidth={2} />}</span>
                       <div>
                         <div style={{ fontSize: 14, color: "#1a2540" }}>{n.text}</div>
                         <div style={{ fontSize: 14, color: "#b0bdd6", marginTop: 2 }}>{n.time}</div>
@@ -602,31 +603,31 @@ export default function DoctorDashboard({ user, onNavigate }) {
         {/* ── Stat Cards ── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 14, marginBottom: 22 }}>
           <StatCard index={0}
-            icon="🩺" label="Now Serving"   value={nowServing}
+            icon={<Stethoscope size={22} strokeWidth={2} />} label="Now Serving"   value={nowServing}
             sub={`${nowServing} doctor${nowServing !== 1 ? "s" : ""} in session`}
             color="#0047AB" bg="#EBF0FA" border="#C0D4F0"
             trend={null}
           />
           <StatCard index={1}
-            icon="⏳" label="Waiting"        value={waiting}
+            icon={<ClipboardList size={22} strokeWidth={2} />} label="Waiting"        value={waiting}
             sub={`In queue for ${displayName}`}
             color="#1a2540"
             trend="2 priority" trendUp={null}
           />
           <StatCard index={2}
-            icon="✅" label="Completed"      value={completed}
+            icon="" label="Completed"      value={completed}
             sub="consultations today"
             color="#2a7d5f" bg="#e8f7f1" border="#c0e4d6"
             trend="+2 vs yesterday" trendUp={true}
           />
           <StatCard index={3}
-            icon="⏭"  label="Skipped"        value={skipped}
+            icon="<SkipForward size={14} strokeWidth={2} />"  label="Skipped"        value={skipped}
             sub="called, no response"
             color="#CC0000" bg="#fce8ec" border="#f0c8d0"
             trend="down from 4" trendUp={true}
           />
           <StatCard index={4}
-            icon="⭐" label="Priority Queue"  value={priority}
+            icon="<AlertCircle size={14} strokeWidth={2} />" label="Priority Queue"  value={priority}
             sub="Elderly, PWD, Pregnant"
             color="#8B5FBF" bg="#f0eafb" border="#d8c8f0"
             trend={null}
@@ -668,8 +669,8 @@ export default function DoctorDashboard({ user, onNavigate }) {
             <div style={{ padding: "11px 20px", borderTop: "1px solid #f0f3fa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 14, color: "#b0bdd6" }}>{myQueue.filter(p => p.status === "waiting").length} patients waiting</span>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button onClick={() => printQueueReport({ queue: myQueue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: displayName })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>🖨 PDF</button>
-                <button onClick={() => downloadQueueCSV({ queue: myQueue })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>📥 CSV</button>
+                <button onClick={() => printQueueReport({ queue: myQueue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: displayName })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}><Printer size={16} strokeWidth={2} /> PDF</button>
+                <button onClick={() => downloadQueueCSV({ queue: myQueue })} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 7, padding: "4px 10px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}><Download size={16} strokeWidth={2} /> CSV</button>
                 <button onClick={() => onNavigate && onNavigate('dr-queue')} style={{ background: "none", border: "none", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>Full Queue View →</button>
               </div>
             </div>

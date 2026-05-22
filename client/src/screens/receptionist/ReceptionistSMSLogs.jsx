@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Search, Building2, Plus, Clock, Bell, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, AlertTriangle, LayoutDashboard, X, Check, Inbox } from "lucide-react";
 
 const smsLogs = [
   { id: 1,  patient: "Maria Santos",   contact: "+63 912 345 6789", time: "9:05 AM",  date: "Mar 1, 2026",  type: "queue",      status: "sent",    message: "Hi Maria! Your queue number is A-001. Estimated wait: ~5 minutes. Please proceed to Room 1. — CareQueue Health Center" },
@@ -16,17 +17,23 @@ const smsLogs = [
 ];
 
 const typeConfig = {
-  "queue":      { label: "Queue #",    color: "#2a9d8f", bg: "#e8f7f5", icon: "📋" },
-  "call-alert": { label: "Call Alert", color: "#e09040", bg: "#fdf3e8", icon: "📣" },
-  "reminder":   { label: "Reminder",   color: "#8B5FBF", bg: "#f0eafb", icon: "🔔" },
-  "follow-up":  { label: "Follow-up",  color: "#0047AB", bg: "#E5EDF8", icon: "📅" },
+  "queue":      { label: "Queue #",    color: "#2a9d8f", bg: "#e8f7f5", Icon: ClipboardList },
+  "call-alert": { label: "Call Alert", color: "#e09040", bg: "#fdf3e8", Icon: Bell },
+  "reminder":   { label: "Reminder",   color: "#8B5FBF", bg: "#f0eafb", Icon: Bell },
+  "follow-up":  { label: "Follow-up",  color: "#0047AB", bg: "#E5EDF8", Icon: CalendarDays },
 };
 
 const statusConfig = {
-  sent:    { label: "Sent",    color: "#2a9d8f", bg: "#e8f7f5", icon: "✓"  },
-  failed:  { label: "Failed",  color: "#CC0000", bg: "#fde8e0", icon: "✕"  },
-  pending: { label: "Pending", color: "#e09040", bg: "#fdf3e8", icon: "⏳" },
+  sent:    { label: "Sent",    color: "#2a9d8f", bg: "#e8f7f5", Icon: Check  },
+  failed:  { label: "Failed",  color: "#CC0000", bg: "#fde8e0", Icon: X     },
+  pending: { label: "Pending", color: "#e09040", bg: "#fdf3e8", Icon: Clock },
 };
+// Helper: render an Icon from a config entry (handles both Icon= component and icon= string)
+function CfgIcon({ cfg, size = 14 }) {
+  if (cfg.Icon) return <cfg.Icon size={size} strokeWidth={2} />;
+  return cfg.icon ? <span>{cfg.icon}</span> : null;
+}
+
 
 function Avatar({ name, size = 32 }) {
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2);
@@ -41,7 +48,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
@@ -56,13 +63,13 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                        },
-          { icon: "📋", label: "Queue"                             },
-          { icon: "➕", label: "Register Patient"                  },
-          { icon: "🗂️", label: "Patient Records"                   },
-          { icon: "📅", label: "Appointments",   badge: "3"       },
-          { icon: "📱", label: "SMS Logs"                          },
-          { icon: "📊", label: "Reports"                           },
+          { Icon: LayoutDashboard,  label: "Dashboard"                        },
+          { Icon: ClipboardList, label: "Queue"                             },
+          { icon: Plus, label: "Register Patient"                  },
+          { Icon: FolderOpen, label: "Patient Records"                   },
+          { Icon: CalendarDays, label: "Appointments",   badge: "3"       },
+          { icon: "", label: "SMS Logs"                          },
+          { Icon: BarChart3, label: "Reports"                           },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -119,11 +126,11 @@ function MessageModal({ log, onClose, onResend }) {
                 <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{log.contact} · {log.date} {log.time}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
-            <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>{tc.icon} {tc.label}</span>
-            <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>{sc.icon} {sc.label}</span>
+            <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}><CfgIcon cfg={tc} /> {tc.label}</span>
+            <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}><CfgIcon cfg={sc} /> {sc.label}</span>
           </div>
         </div>
         <div style={{ padding: "20px 24px" }}>
@@ -133,7 +140,7 @@ function MessageModal({ log, onClose, onResend }) {
           </div>
           {log.status === "failed" && (
             <div style={{ marginTop: 10, background: "#fde8e0", borderRadius: 10, padding: "10px 14px", display: "flex", gap: 8, alignItems: "center" }}>
-              <span>⚠️</span>
+              <span></span>
               <div style={{ fontSize: 14, color: "#c05040" }}>Delivery failed. Tap Resend to try again.</div>
             </div>
           )}
@@ -144,8 +151,8 @@ function MessageModal({ log, onClose, onResend }) {
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 10, padding: "10px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Close</button>
             {log.status === "failed"
-              ? <button onClick={() => onResend(log)} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>📱 Resend Message</button>
-              : <button onClick={() => onResend(log)} style={{ flex: 2, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 10, padding: "10px", fontSize: 14, color: "#4a5d75", cursor: "pointer" }}>📱 Send Again</button>
+              ? <button onClick={() => onResend(log)} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>Resend Message</button>
+              : <button onClick={() => onResend(log)} style={{ flex: 2, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 10, padding: "10px", fontSize: 14, color: "#4a5d75", cursor: "pointer" }}>Send Again</button>
             }
           </div>
         </div>
@@ -170,8 +177,8 @@ function BulkSMSModal({ patients, onClose, onSend }) {
         <style>{`@keyframes popIn { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
         <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "22px 24px", borderRadius: "20px 20px 0 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>📱 Send Bulk SMS</div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white" }}>✕</button>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>Send Bulk SMS</div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>Select recipients and compose your message</div>
         </div>
@@ -243,7 +250,7 @@ export default function ReceptionistSMSLogs() {
   const handleResend = (log) => {
     setLogs(l => l.map(x => x.id === log.id ? { ...x, status: "sent" } : x));
     setPreview(null);
-    setToast(`📱 Message resent to ${log.patient}`);
+    setToast(`Message resent to ${log.patient}`);
   };
 
   const filtered = logs.filter(l => {
@@ -262,15 +269,15 @@ export default function ReceptionistSMSLogs() {
   const deliveryRate = Math.round((sent / (sent + failed)) * 100);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
+    <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       
       
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
       {preview && <MessageModal log={preview} onClose={() => setPreview(null)} onResend={handleResend} />}
-      {bulkOpen && <BulkSMSModal patients={uniquePatients} onClose={() => setBulkOpen(false)} onSend={(sel, msg) => { setBulkOpen(false); setToast(`📱 Bulk SMS sent to ${sel.length} recipient${sel.length !== 1 ? 's' : ''}`); }} />}
+      {bulkOpen && <BulkSMSModal patients={uniquePatients} onClose={() => setBulkOpen(false)} onSend={(sel, msg) => { setBulkOpen(false); setToast(`Bulk SMS sent to ${sel.length} recipient${sel.length !== 1 ? 's' : ''}`); }} />}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -279,7 +286,7 @@ export default function ReceptionistSMSLogs() {
             <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{logs.length} messages · {deliveryRate}% delivery rate</div>
           </div>
           <button onClick={() => setBulkOpen(true)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
-            📱 Send Bulk SMS
+            Send Bulk SMS
           </button>
         </div>
 
@@ -288,10 +295,10 @@ export default function ReceptionistSMSLogs() {
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
             {[
-              { key: "all",     label: "Total",    value: logs.length, icon: "📱", color: "#1e2d40", bg: "#EBF0FA" },
-              { key: "sent",    label: "Sent",      value: sent,        icon: "✓",  color: "#2a9d8f", bg: "#e8f7f5" },
-              { key: "failed",  label: "Failed",    value: failed,      icon: "✕",  color: "#CC0000", bg: "#fde8e0" },
-              { key: "pending", label: "Pending",   value: pending,     icon: "⏳", color: "#e09040", bg: "#fdf3e8" },
+              { key: "all",     label: "Total",    value: logs.length, Icon: Smartphone, color: "#1e2d40", bg: "#EBF0FA" },
+              { key: "sent",    label: "Sent",      value: sent,        Icon: Check,  color: "#2a9d8f", bg: "#e8f7f5" },
+              { key: "failed",  label: "Failed",    value: failed,      Icon: X,          color: "#CC0000", bg: "#fde8e0" },
+              { key: "pending", label: "Pending",   value: pending,     Icon: Clock, color: "#e09040", bg: "#fdf3e8" },
             ].map(s => (
               <div key={s.key} onClick={() => setStatusFilter(statusFilter === s.key ? "all" : s.key)} style={{
                 background: s.bg, borderRadius: 14, padding: "16px 20px", cursor: "pointer",
@@ -303,7 +310,7 @@ export default function ReceptionistSMSLogs() {
                   <div style={{ fontSize: 28, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ fontSize: 14, color: s.color, opacity: 0.8, marginTop: 4, fontWeight: 500 }}>{s.label}</div>
                 </div>
-                <div style={{ fontSize: 28, opacity: 0.35 }}>{s.icon}</div>
+                <div style={{ fontSize: 28, opacity: 0.35, display: "flex", alignItems: "center" }}>{s.Icon && <s.Icon size={28} strokeWidth={1.5} />}</div>
               </div>
             ))}
           </div>
@@ -317,7 +324,7 @@ export default function ReceptionistSMSLogs() {
             <div style={{ fontSize: 15, fontWeight: 700, color: "#2a9d8f", flexShrink: 0 }}>{deliveryRate}%</div>
             {failed > 0 && (
               <button onClick={() => setStatusFilter("failed")} style={{ background: "#fde8e0", color: "#CC0000", border: "1px solid #f5c8b0", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
-                ⚠ {failed} failed — Retry all
+                <AlertTriangle size={14} strokeWidth={2} /> {failed} failed — Retry all
               </button>
             )}
           </div>
@@ -325,7 +332,7 @@ export default function ReceptionistSMSLogs() {
           {/* Filters */}
           <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
             <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-              <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}>🔍</span>
+              <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}><Search size={14} strokeWidth={2} color="#8a9bb0" /></span>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search patient or number..."
                 style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", background: "white", boxSizing: "border-box" }}
                 onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
@@ -355,7 +362,7 @@ export default function ReceptionistSMSLogs() {
             Showing {filtered.length} of {logs.length} messages
             {failed > 0 && statusFilter !== "failed" && (
               <span onClick={() => setStatusFilter("failed")} style={{ marginLeft: 10, color: "#CC0000", fontWeight: 600, cursor: "pointer" }}>
-                ⚠ {failed} failed — show only
+                <AlertTriangle size={14} strokeWidth={2} /> {failed} failed — show only
               </span>
             )}
           </div>
@@ -391,10 +398,10 @@ export default function ReceptionistSMSLogs() {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", fontSize: 14, color: "#4a5d75" }}>{log.contact}</div>
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 9px", fontSize: 14, fontWeight: 600 }}>{tc.icon} {tc.label}</span>
+                    <span style={{ background: tc.bg, color: tc.color, borderRadius: 7, padding: "3px 9px", fontSize: 14, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>{tc.Icon && <tc.Icon size={13} strokeWidth={2} />} {tc.label}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 9px", fontSize: 14, fontWeight: 600 }}>{sc.icon} {sc.label}</span>
+                    <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 9px", fontSize: 14, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>{sc.Icon && <sc.Icon size={13} strokeWidth={2} />} {sc.label}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", fontSize: 14, color: "#7a8fb0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 12 }}>
                     {log.message.substring(0, 55)}…
@@ -409,7 +416,7 @@ export default function ReceptionistSMSLogs() {
               );
             }) : (
               <div style={{ textAlign: "center", padding: "48px 20px", color: "#8a9bb0" }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>📭</div>
+                <Inbox size={32} strokeWidth={1.5} color="#8a9bb0" style={{ marginBottom: 8 }} />
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>No messages found</div>
                 <div style={{ fontSize: 14, marginTop: 4 }}>Try adjusting your filters</div>
               </div>

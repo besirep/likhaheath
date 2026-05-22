@@ -1,20 +1,8 @@
-import { useState } from "react";
-
-// ── Data ──────────────────────────────────────────────────────────────────────
-const initialQueue = [
-  { id: 1,  queue: "A-001", name: "Maria Santos",   age: 66, gender: "F", reason: "Hypertension follow-up",  status: "in-consultation", doctor: "Dr. Reyes",  arrived: "8:45 AM", wait: "0m",  priority: "elderly",  contact: "+63 912 345 6789", vitals: { bp: "138/88", temp: "36.7", hr: "82", spo2: "98", weight: "58", height: "155" } },
-  { id: 2,  queue: "A-002", name: "Jose Dela Cruz", age: 57, gender: "M", reason: "Diabetes check-up",       status: "in-consultation", doctor: "Dr. Santos", arrived: "9:02 AM", wait: "0m",  priority: null,       contact: "+63 917 234 5678", vitals: { bp: "142/90", temp: "36.5", hr: "78", spo2: "97", weight: "78", height: "165" } },
-  { id: 3,  queue: "A-003", name: "Elena Cruz",     age: 66, gender: "F", reason: "Chest discomfort",        status: "vitals-done",     doctor: null,         arrived: "9:10 AM", wait: "18m", priority: "elderly",  contact: "+63 915 999 8877", vitals: { bp: "148/92", temp: "36.9", hr: "88", spo2: "96", weight: "52", height: "152" } },
-  { id: 4,  queue: "A-004", name: "Luisa Ramos",    age: 28, gender: "F", reason: "Prenatal check-up",       status: "waiting",         doctor: null,         arrived: "9:20 AM", wait: "28m", priority: "pregnant", contact: "+63 921 333 4455", vitals: null },
-  { id: 5,  queue: "A-005", name: "Ramon Valdez",   age: 45, gender: "M", reason: "Back pain",               status: "waiting",         doctor: null,         arrived: "9:30 AM", wait: "38m", priority: null,       contact: "+63 920 111 2233", vitals: null },
-  { id: 6,  queue: "A-006", name: "Carlos Mendoza", age: 4,  gender: "M", reason: "Fever & cough",           status: "waiting",         doctor: null,         arrived: "9:35 AM", wait: "43m", priority: "pediatric",contact: "+63 918 444 3322", vitals: null },
-  { id: 7,  queue: "A-007", name: "Ana Lim",        age: 28, gender: "F", reason: "URTI follow-up",          status: "waiting",         doctor: null,         arrived: "9:40 AM", wait: "48m", priority: null,       contact: "+63 918 765 4321", vitals: null },
-  { id: 8,  queue: "A-008", name: "Pedro Bautista", age: 51, gender: "M", reason: "Annual physical",         status: "skipped",         doctor: null,         arrived: "8:30 AM", wait: "—",   priority: null,       contact: "+63 919 444 5566", vitals: null },
-  { id: 9,  queue: "B-001", name: "Celia Marcos",   age: 62, gender: "F", reason: "Lab results review",      status: "done",            doctor: "Dr. Cruz",   arrived: "8:10 AM", wait: "—",   priority: "elderly",  contact: "+63 915 888 7766", vitals: { bp: "120/80", temp: "36.6", hr: "74", spo2: "99", weight: "55", height: "155" } },
-  { id: 10, queue: "B-002", name: "Mark Reyes",     age: 33, gender: "M", reason: "Skin rash",               status: "done",            doctor: "Dr. Reyes",  arrived: "8:30 AM", wait: "—",   priority: null,       contact: "+63 923 555 6677", vitals: { bp: "118/76", temp: "36.4", hr: "70", spo2: "99", weight: "70", height: "172" } },
-];
-
-const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"];
+import { useState, useEffect, useCallback } from "react";
+import { queueApi } from "../../lib/api/queue.js";
+import { patientsApi } from "../../lib/api/patients.js";
+import { smsApi } from "../../lib/api/sms.js";
+import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X } from "lucide-react";
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: true  },
@@ -25,10 +13,10 @@ const statusConfig = {
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
-  pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f3", stripe: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
-  pediatric: { label: "Pedia (0–5)",    icon: "👶", color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
+  elderly:   { label: "Senior Citizen", Icon: UserRound, color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
+  pregnant:  { label: "Pregnant",       Icon: UserRound, color: "#d4709a", bg: "#fce8f3", stripe: "#d4709a" },
+  pwd:       { label: "PWD",            Icon: UserRound, color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
+  pediatric: { label: "Pedia (0–5)",    Icon: UserRound, color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
 // Vitals flags (for display in drawer)
@@ -54,7 +42,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center" }}><Building2 size={18} strokeWidth={2} color="white" /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
@@ -69,13 +57,13 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                        },
-          { icon: "📋", label: "Queue",          active: true     },
-          { icon: "➕", label: "Register Patient"                  },
-          { icon: "🗂️", label: "Patient Records"                   },
-          { icon: "📅", label: "Appointments",   badge: "3"       },
-          { icon: "📱", label: "SMS Logs"                          },
-          { icon: "📊", label: "Reports"                           },
+          { Icon: LayoutDashboard, label: "Dashboard"                        },
+          { Icon: ClipboardList,   label: "Queue",          active: true     },
+          { Icon: UserPlus,        label: "Register Patient"                  },
+          { Icon: FolderOpen,      label: "Patient Records"                   },
+          { Icon: CalendarDays,    label: "Appointments",   badge: "3"       },
+          { Icon: MessageSquare,   label: "SMS Logs"                          },
+          { Icon: BarChart3,       label: "Reports"                           },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -87,7 +75,7 @@ function Sidebar() {
             onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; }}}
             onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; }}}
           >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
+            <item.Icon size={16} strokeWidth={item.active ? 2.2 : 1.8} />
             {item.label}
             {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
           </div>
@@ -109,7 +97,7 @@ function Toast({ msg, onDone }) {
   useState(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); });
   return (
     <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "toastIn 0.3s ease" }}>
-      📱 {msg}
+      {msg}
     </div>
   );
 }
@@ -133,21 +121,21 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ position: "relative" }}>
                 <Avatar name={patient.name} size={46} />
-                {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{pc.icon}</span>}
+                {pc && <span style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}><pc.Icon size={14} color="white" /></span>}
               </div>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{patient.name}</div>
                 <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · {patient.queue}</div>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ display: "flex", gap: 7, marginTop: 14, flexWrap: "wrap" }}>
             <span style={{ background: sc.bg, color: sc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, display: "inline-block", marginRight: 5, animation: sc.pulse ? "pulse 1.4s infinite" : "none" }} />
               {sc.label}
             </span>
-            {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}>{pc.icon} {pc.label}</span>}
+            {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 600 }}><pc.Icon size={14} /> {pc.label}</span>}
           </div>
         </div>
 
@@ -175,23 +163,23 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
               <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Vitals Recorded</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {[
-                  { label: "Blood Pressure", value: `${patient.vitals.bp} mmHg`, flag: bpFlag(patient.vitals.bp),   icon: "❤️" },
-                  { label: "Temperature",    value: `${patient.vitals.temp} °C`,  flag: tempFlag(patient.vitals.temp), icon: "🌡️" },
-                  { label: "Heart Rate",     value: `${patient.vitals.hr} bpm`,   flag: "normal",                     icon: "💓" },
-                  { label: "SpO₂",           value: `${patient.vitals.spo2}%`,    flag: spo2Flag(patient.vitals.spo2), icon: "🫁" },
+                  { label: "Blood Pressure", value: `${patient.vitals.bp} mmHg`, flag: bpFlag(patient.vitals.bp),   Icon: Heart },
+                  { label: "Temperature",    value: `${patient.vitals.temp} °C`,  flag: tempFlag(patient.vitals.temp), Icon: Thermometer },
+                  { label: "Heart Rate",     value: `${patient.vitals.hr} bpm`,   flag: "normal",                     Icon: Activity },
+                  { label: "SpO₂",           value: `${patient.vitals.spo2}%`,    flag: spo2Flag(patient.vitals.spo2), Icon: Wind },
                 ].map(f => (
                   <div key={f.label} style={{ background: flagBg[f.flag], borderRadius: 10, padding: "10px 12px", border: `1px solid ${f.flag !== "normal" ? flagColor[f.flag] + "30" : "#D8E4F2"}` }}>
-                    <div style={{ fontSize: 14, marginBottom: 3 }}>{f.icon}</div>
+                    <div style={{ fontSize: 14, marginBottom: 3 }}><f.Icon size={16} color={flagColor[f.flag]} /></div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: flagColor[f.flag] }}>{f.value}</div>
                     <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 1, textTransform: "uppercase" }}>{f.label}</div>
-                    {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}>⚠ {f.flag}</div>}
+                    {f.flag !== "normal" && <div style={{ fontSize: 11, color: flagColor[f.flag], fontWeight: 700, marginTop: 2 }}><AlertTriangle size={16} strokeWidth={2} /> {f.flag}</div>}
                   </div>
                 ))}
               </div>
             </div>
           ) : (
             <div style={{ background: "#fdf3e8", borderRadius: 13, padding: "14px 16px", border: "1px solid #f0d8b8", textAlign: "center" }}>
-              <div style={{ fontSize: 20, marginBottom: 4 }}>⏳</div>
+              <div style={{ fontSize: 20, marginBottom: 4 }}><Clock size={16} strokeWidth={2} /></div>
               <div style={{ fontSize: 14, color: "#c07030", fontWeight: 600 }}>Vitals not yet recorded</div>
               <div style={{ fontSize: 14, color: "#b0893a", marginTop: 3 }}>Nurse should record before consultation</div>
             </div>
@@ -201,8 +189,8 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
             {patient.status === "waiting" && (
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>⏭ Skip</button>
-                <button onClick={() => onAction("call", patient)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>📣 Call Directly</button>
+                <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><SkipForward size={14} /> Skip</button>
+                <button onClick={() => onAction("call", patient)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Megaphone size={14} strokeWidth={2.5} /> Call Directly</button>
               </div>
             )}
             {patient.status === "skipped" && (
@@ -212,15 +200,15 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
             )}
             {patient.status === "in-consultation" && (
               <button onClick={() => onAction("done", patient)} style={{ background: "#e8f7f5", color: "#2a9d8f", border: "1.5px solid #b8e4de", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                ✓ Mark as Done
+                <Check size={14} strokeWidth={2} /> Mark as Done
               </button>
             )}
             {patient.status === "done" && (
-              <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}>✓ Consultation complete</div>
+              <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600 }}><Check size={14} strokeWidth={2.5} /> Consultation complete</div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => onAction("sms", patient)} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>📱 Send SMS</button>
-              <button onClick={() => { onClose(); onNavigate && onNavigate('records'); }} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>🗂️ View Record</button>
+              <button onClick={() => onAction("sms", patient)} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}><Smartphone size={16} strokeWidth={2} /> Send SMS</button>
+              <button onClick={() => { onClose(); onNavigate && onNavigate('records'); }} style={{ flex: 1, background: "white", color: "#4a5d75", border: "1px solid #D8E4F2", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}><FolderOpen size={16} strokeWidth={2} /> View Record</button>
             </div>
           </div>
         </div>
@@ -252,7 +240,7 @@ function QueueCard({ patient, index, onSelect, isSelected }) {
       <div style={{ paddingLeft: pc ? 8 : 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
           <Avatar name={patient.name} size={38} />
-          {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}>{pc.icon}</div>}
+          {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 14 }}><pc.Icon size={14} color={pc.color} /></div>}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -260,7 +248,7 @@ function QueueCard({ patient, index, onSelect, isSelected }) {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <span style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 700, fontSize: 15, color: isSelected ? "#2a9d8f" : "#1e2d40" }}>{patient.queue}</span>
-                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
+                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}><pc.Icon size={12} /> {pc.label}</span>}
                 {patient.status === "skipped" && <span style={{ background: "#fce8f0", color: "#c05080", borderRadius: 5, padding: "1px 7px", fontSize: 14, fontWeight: 700 }}>SKIPPED</span>}
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", marginTop: 1 }}>{patient.name}</div>
@@ -284,20 +272,85 @@ function QueueCard({ patient, index, onSelect, isSelected }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function ReceptionistQueue({ onNavigate }) {
-  const [queue, setQueue]               = useState(initialQueue);
-  const [filter, setFilter]             = useState("active");
-  const [selected, setSelected]         = useState(null);
-  const [toast, setToast]               = useState(null);
-  const [notifOpen, setNotifOpen]       = useState(false);
+  const [queue, setQueue]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [filter, setFilter]       = useState("active");
+  const [selected, setSelected]   = useState(null);
+  const [toast, setToast]         = useState(null);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const showToast = msg => setToast(msg);
 
-  const handleAction = (action, patient) => {
-    if (action === "call")    { setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: "in-consultation" } : p)); showToast(`${patient.name} called — ${patient.queue}`); setSelected(null); }
-    if (action === "skip")    { setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: "skipped"         } : p)); showToast(`${patient.name} marked as skipped`); setSelected(null); }
-    if (action === "requeue") { setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: "waiting"         } : p)); showToast(`${patient.name} re-queued`); setSelected(null); }
-    if (action === "done")    { setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: "done"            } : p)); showToast(`${patient.name} marked as done`); setSelected(null); }
-    if (action === "sms")     { showToast(`SMS sent to ${patient.name}`); }
+  // ── Fetch queue from API ───────────────────────────────────────────────────
+  const fetchQueue = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    setError(null);
+    try {
+      const data = await queueApi.getToday();
+      setQueue(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial load + 30-second polling
+  useEffect(() => {
+    fetchQueue();
+    const interval = setInterval(() => fetchQueue(true), 30_000);
+    return () => clearInterval(interval);
+  }, [fetchQueue]);
+
+  // ── Action handlers (optimistic update + API sync) ─────────────────────────
+  const handleAction = async (action, patient) => {
+    const statusMap = {
+      call:    "in-consultation",
+      skip:    "skipped",
+      requeue: "waiting",
+      done:    "done",
+    };
+
+    if (action === "sms") {
+      try {
+        await smsApi.send({
+          patient_id: patient.patientId,
+          appointment_id: patient.appointmentId,
+          message: `LikhaHealth: You are next in queue (${patient.queue}). Please proceed to the consultation room.`
+        });
+        showToast(`SMS sent to ${patient.name}`);
+      } catch (err) {
+        showToast(`SMS failed: ${err.message}`);
+      }
+      return;
+    }
+
+    const newStatus = statusMap[action];
+    if (!newStatus) return;
+
+    // Optimistic UI update
+    setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: newStatus } : p));
+    if (selected?.id === patient.id) setSelected(prev => prev ? { ...prev, status: newStatus } : null);
+
+    const toastMsg = {
+      call:    `${patient.name} called — ${patient.queue}`,
+      skip:    `${patient.name} marked as skipped`,
+      requeue: `${patient.name} re-queued`,
+      done:    `${patient.name} marked as done`,
+    }[action];
+    showToast(toastMsg);
+    setSelected(null);
+
+    // Sync to backend (silent — don't block UI)
+    try {
+      await queueApi.updateStatus(patient.queueDbId, newStatus);
+    } catch (err) {
+      // Revert optimistic update on failure
+      setQueue(q => q.map(p => p.id === patient.id ? { ...p, status: patient.status } : p));
+      showToast(`Failed to save — please try again`);
+      console.error("[Queue] status update failed:", err.message);
+    }
   };
 
   const callNext = () => {
@@ -322,10 +375,19 @@ export default function ReceptionistQueue({ onNavigate }) {
     return true;
   });
 
+  // Derive doctor list from live queue data
+  const doctors = [...new Set(queue.map(p => p.doctor).filter(Boolean))];
+
   return (
     <div style={{ height: "100vh", background: "#f4f7fb", display: "flex", overflow: "hidden" }}>
-      
-      
+
+      {/* Error banner */}
+      {error && (
+        <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", background: "#fde8e0", color: "#CC0000", border: "1px solid #f5c0b0", borderRadius: 10, padding: "10px 20px", zIndex: 400, fontSize: 14, fontWeight: 600, boxShadow: "0 4px 16px rgba(204,0,0,0.1)" }}>
+          <AlertTriangle size={16} strokeWidth={2} /> {error} — <button onClick={() => fetchQueue()} style={{ background: "none", border: "none", color: "#CC0000", textDecoration: "underline", cursor: "pointer", fontSize: 14, fontWeight: 700 }}>Retry</button>
+        </div>
+      )}
+
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
       <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onNavigate={onNavigate} />
@@ -335,25 +397,27 @@ export default function ReceptionistQueue({ onNavigate }) {
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Queue Management</h1>
-            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>Sunday, March 1, 2026 · Shared Queue</div>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
+              {new Date().toLocaleDateString("en-PH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · {loading ? "Loading…" : `${queue.length} patient${queue.length !== 1 ? "s" : ""} today`}
+            </div>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <div style={{ position: "relative" }}>
-              <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #dde8e5", borderRadius: 10, width: 40, height: 40, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                🔔
+              <button onClick={() => setNotifOpen(o => !o)} style={{ background: "white", border: "1px solid #dde8e5", borderRadius: 10, width: 40, height: 40, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                <Bell size={18} strokeWidth={2} color="#4a5d75" />
                 {(skipped > 0 || priority > 0) && <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#c05080", border: "1.5px solid #f4f7fb" }} />}
               </button>
               {notifOpen && (
                 <div style={{ position: "absolute", right: 0, top: 48, width: 280, background: "white", borderRadius: 14, border: "1px solid #dde8e5", boxShadow: "0 12px 40px rgba(30,45,64,0.14)", zIndex: 100 }}>
                   <div style={{ padding: "12px 16px", borderBottom: "1px solid #f0f3f7", fontSize: 14, fontWeight: 700, color: "#1e2d40" }}>Alerts</div>
-                  {skipped > 0  && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⏭</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{skipped} patient{skipped > 1 ? "s" : ""} skipped</div></div>}
-                  {priority > 0 && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", gap: 10 }}><span>⭐</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{priority} priority patient{priority > 1 ? "s" : ""} waiting</div></div>}
-                  {vitalsDone > 0 && <div style={{ padding: "10px 16px", display: "flex", gap: 10 }}><span>✅</span><div style={{ fontSize: 14, color: "#1e2d40" }}>{vitalsDone} patient{vitalsDone > 1 ? "s" : ""} vitals ready</div></div>}
+                  {skipped > 0  && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", alignItems: "center", gap: 10 }}><SkipForward size={16} strokeWidth={2} color="#c05080" /><div style={{ fontSize: 14, color: "#1e2d40" }}>{skipped} patient{skipped > 1 ? "s" : ""} skipped</div></div>}
+                  {priority > 0 && <div style={{ padding: "10px 16px", borderBottom: "1px solid #f7f9fd", display: "flex", alignItems: "center", gap: 10 }}><AlertCircle size={16} strokeWidth={2} color="#8B5FBF" /><div style={{ fontSize: 14, color: "#1e2d40" }}>{priority} priority patient{priority > 1 ? "s" : ""} waiting</div></div>}
+                  {vitalsDone > 0 && <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}><CheckCircle2 size={16} strokeWidth={2} color="#0047AB" /><div style={{ fontSize: 14, color: "#1e2d40" }}>{vitalsDone} patient{vitalsDone > 1 ? "s" : ""} vitals ready</div></div>}
                 </div>
               )}
             </div>
             <button onClick={() => onNavigate && onNavigate("register")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)", display: "flex", alignItems: "center", gap: 6 }}>
-              ➕ Register Patient
+              <UserPlus size={16} strokeWidth={2} /> Register Patient
             </button>
           </div>
         </div>
@@ -366,14 +430,14 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Stat cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 18 }}>
               {[
-                { label: "In Consult",  value: inConsult,  color: "#2a9d8f", bg: "#e8f7f5", icon: "🩺" },
-                { label: "Waiting",     value: waiting,    color: "#e09040", bg: "#fdf3e8", icon: "⏳" },
-                { label: "Vitals Ready",value: vitalsDone, color: "#0047AB", bg: "#E5EDF8", icon: "✅" },
-                { label: "Skipped",     value: skipped,    color: "#c05080", bg: "#fce8f0", icon: "⏭" },
-                { label: "Priority",    value: priority,   color: "#8B5FBF", bg: "#f0eafb", icon: "⭐" },
+                { label: "In Consult",  value: inConsult,  color: "#2a9d8f", bg: "#e8f7f5", Icon: Stethoscope },
+                { label: "Waiting",     value: waiting,    color: "#e09040", bg: "#fdf3e8", Icon: Clock },
+                { label: "Vitals Ready",value: vitalsDone, color: "#0047AB", bg: "#E5EDF8", Icon: CheckCircle2 },
+                { label: "Skipped",     value: skipped,    color: "#c05080", bg: "#fce8f0", Icon: SkipForward },
+                { label: "Priority",    value: priority,   color: "#8B5FBF", bg: "#f0eafb", Icon: AlertCircle },
               ].map(s => (
                 <div key={s.label} style={{ background: s.bg, borderRadius: 13, padding: "13px 14px", border: `1.5px solid ${s.color}20` }}>
-                  <div style={{ fontSize: 20, marginBottom: 3 }}>{s.icon}</div>
+                  <div style={{ marginBottom: 3, display: "flex", alignItems: "center" }}><s.Icon size={18} strokeWidth={2} color={s.color} /></div>
                   <div style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ fontSize: 14, color: s.color, opacity: 0.8, marginTop: 3, fontWeight: 500 }}>{s.label}</div>
                 </div>
@@ -383,7 +447,7 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Active consultations banner */}
             {activeConsultPatients.length > 0 && (
               <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", borderRadius: 14, padding: "13px 18px", marginBottom: 16, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>🩺 {activeConsultPatients.length} In Consultation</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}><Stethoscope size={14} strokeWidth={2} color="rgba(255,255,255,0.6)" /> {activeConsultPatients.length} In Consultation</div>
                 {activeConsultPatients.map(p => (
                   <div key={p.id} style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9, padding: "5px 12px", display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#52c4b8", animation: "pulse 1.4s infinite" }} />
@@ -419,7 +483,7 @@ export default function ReceptionistQueue({ onNavigate }) {
               </div>
               {vitalsDone > 0 && (
                 <button onClick={callNext} style={{ background: "#2a9d8f", color: "white", border: "none", borderRadius: 9, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>
-                  📣 Call Next ({vitalsDone}) →
+                  <Megaphone size={14} strokeWidth={2} /> Call Next ({vitalsDone}) →
                 </button>
               )}
             </div>
@@ -428,7 +492,7 @@ export default function ReceptionistQueue({ onNavigate }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {filtered.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#8a9bb0" }}>
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+                  <CheckCheck size={32} strokeWidth={1.5} color="#8a9bb0" style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>All clear!</div>
                   <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>
@@ -462,12 +526,12 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Priority waiting */}
             {queue.filter(p => p.priority && ["waiting","vitals-done"].includes(p.status)).length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⭐ Priority Waiting</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><AlertCircle size={14} strokeWidth={2} /> Priority Waiting</div>
                 {queue.filter(p => p.priority && ["waiting","vitals-done"].includes(p.status)).map(p => {
                   const pc = priorityConfig[p.priority];
                   return (
                     <div key={p.id} onClick={() => setSelected(p)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: pc.bg, border: `1.5px solid ${pc.color}30`, marginBottom: 8, cursor: "pointer" }}>
-                      <span style={{ fontSize: 20 }}>{pc.icon}</span>
+                      <span style={{ display: "flex", alignItems: "center" }}><pc.Icon size={18} strokeWidth={2} color={pc.color} /></span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
                         <div style={{ fontSize: 14, color: pc.color, fontWeight: 500 }}>{pc.label} · {p.queue}</div>
@@ -481,7 +545,7 @@ export default function ReceptionistQueue({ onNavigate }) {
             {/* Skipped */}
             {queue.filter(p => p.status === "skipped").length > 0 && (
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>⏭ Skipped</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}><SkipForward size={14} strokeWidth={2} /> Skipped</div>
                 {queue.filter(p => p.status === "skipped").map(p => (
                   <div key={p.id} onClick={() => setSelected(p)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: "#fce8f0", border: "1px solid #f0c0d830", marginBottom: 8, cursor: "pointer" }}>
                     <Avatar name={p.name} size={30} />
@@ -489,7 +553,7 @@ export default function ReceptionistQueue({ onNavigate }) {
                       <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{p.name}</div>
                       <div style={{ fontSize: 14, color: "#c05080" }}>{p.queue} · No response</div>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); handleAction("requeue", p); }} style={{ background: "#c05080", color: "white", border: "none", borderRadius: 7, padding: "4px 10px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>↺</button>
+                    <button onClick={e => { e.stopPropagation(); handleAction("requeue", p); }} style={{ background: "#c05080", color: "white", border: "none", borderRadius: 7, padding: "4px 10px", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center" }}><RefreshCw size={14} strokeWidth={2.5} /></button>
                   </div>
                 ))}
               </div>

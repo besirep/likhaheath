@@ -1,7 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Search, Building2, Plus, Stethoscope, Clock, ClipboardList, BarChart3, CalendarDays, FolderOpen, UserRound, User, Lock, AlertTriangle, Phone, LayoutDashboard, Users, Smartphone, X, Droplets, MapPin } from "lucide-react";
+import { patientsApi } from "../../lib/api/patients.js";
+import { smsApi } from "../../lib/api/sms.js";
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-const patients = [
+/** Normalize a backend patient row to the shape the UI expects */
+function normalizePatient(p) {
+  const dob = p.date_of_birth ? new Date(p.date_of_birth) : null;
+  const age = dob ? Math.floor((Date.now() - dob.getTime()) / (365.25*24*60*60*1000)) : null;
+  const dobStr = dob ? dob.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" }) : "—";
+
+  // Derive a rough "status" — priority patients get 'priority', else 'active'
+  const priority = p.priority_tag || null;
+  const status   = priority ? "priority" : "active";
+
+  const address = [p.barangay, p.municipality].filter(Boolean).join(", ") || "—";
+
+  return {
+    id:          p.id,
+    name:        `${p.first_name} ${p.last_name}${p.suffix ? ` ${p.suffix}` : ""}`.trim(),
+    age,
+    gender:      p.sex === "Female" ? "F" : p.sex === "Male" ? "M" : "?",
+    dob:         dobStr,
+    contact:     p.primary_contact || "—",
+    address,
+    bloodType:   p.blood_type || "—",
+    allergies:   [],
+    status,
+    philhealth:  p.philhealth_no || "—",
+    conditions:  [],
+    lastVisit:   "—",
+    totalVisits: 0,
+    priority,
+    visits:      [],
+    visitsLoaded: false,
+  };
+}
+
+
+/** Normalize a backend visit/appointment row */
+function normalizeVisit(v) {
+  const d = v.scheduled_date ? new Date(v.scheduled_date) : null;
+  return {
+    id:        `v${v.appointment_id}`,
+    date:      d ? d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "—",
+    time:      d ? d.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }) : "—",
+    queue:     v.queue_number ? `Q-${String(v.queue_number).padStart(3, "0")}` : "—",
+    reason:    v.notes || "—",
+    diagnosis: v.diagnosis || "(no diagnosis recorded)",
+    doctor:    v.doctor_name || "—",
+    duration:  "—",
+    status:    v.appointment_status === "Completed" ? "completed" : "scheduled",
+  };
+}
+
+
+// Placeholder start-of-data array (replaced immediately by API)
+const _placeholder = [
   {
     id: 1, name: "Maria Santos", age: 34, gender: "F", dob: "May 12, 1991",
     contact: "+63 912 345 6789", address: "142 Rizal St., Quezon City",
@@ -94,6 +148,7 @@ const patients = [
     ],
   },
 ];
+// ── end placeholder ──────────────────────────────────────────────────────────
 
 const statusStyle = {
   active:   { color: "#2a9d8f", bg: "#e8f7f5", label: "Active"   },
@@ -102,11 +157,11 @@ const statusStyle = {
 };
 
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", color: "#8B5FBF", bg: "#f0eafb" },
-  pregnant:  { label: "Pregnant",       icon: "🤰", color: "#d4709a", bg: "#fce8f3" },
-  pwd:       { label: "PWD",            icon: "♿", color: "#0047AB", bg: "#EBF0FA" },
-  pediatric: { label: "Pedia",          icon: "👶", color: "#e09040", bg: "#fdf3e8" },
-  solo:      { label: "Solo Parent",    icon: "👨‍👧", color: "#2a9d8f", bg: "#e8f7f5" },
+  elderly:   { label: "Senior Citizen", Icon: UserRound, color: "#8B5FBF", bg: "#f0eafb" },
+  pregnant:  { label: "Pregnant",       Icon: UserRound, color: "#d4709a", bg: "#fce8f3" },
+  pwd:       { label: "PWD",            Icon: UserRound, color: "#0047AB", bg: "#EBF0FA" },
+  pediatric: { label: "Pedia",          Icon: UserRound, color: "#e09040", bg: "#fdf3e8" },
+  solo:      { label: "Solo Parent",    Icon: Users, color: "#2a9d8f", bg: "#e8f7f5" },
 };
 
 function Avatar({ name, size = 36 }) {
@@ -129,7 +184,7 @@ function Sidebar() {
     <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🏥</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
             <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
@@ -144,13 +199,13 @@ function Sidebar() {
       </div>
       <nav style={{ padding: "8px 12px", flex: 1 }}>
         {[
-          { icon: "⊞",  label: "Dashboard"                        },
-          { icon: "📋", label: "Queue"                             },
-          { icon: "➕", label: "Register Patient"                  },
-          { icon: "🗂️", label: "Patient Records"                   },
-          { icon: "📅", label: "Appointments",   badge: "3"       },
-          { icon: "📱", label: "SMS Logs"                          },
-          { icon: "📊", label: "Reports"                           },
+          { Icon: LayoutDashboard,  label: "Dashboard"                        },
+          { Icon: ClipboardList, label: "Queue"                             },
+          { icon: Plus, label: "Register Patient"                  },
+          { Icon: FolderOpen, label: "Patient Records"                   },
+          { Icon: CalendarDays, label: "Appointments",   badge: "3"       },
+          { icon: "", label: "SMS Logs"                          },
+          { Icon: BarChart3, label: "Reports"                           },
         ].map(item => (
           <div key={item.label} style={{
             display: "flex", alignItems: "center", gap: 10,
@@ -202,7 +257,7 @@ function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
               <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{visit.diagnosis}</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient?.name} · {visit.date} · {visit.time}</div>
             </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             {[visit.queue, visit.duration, visit.doctor].map(tag => (
@@ -225,7 +280,7 @@ function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
 
           {/* Read-only notice */}
           <div style={{ background: "#fdf3e8", borderRadius: 11, padding: "10px 14px", border: "1px solid #f5ddb8", display: "flex", gap: 10, alignItems: "center" }}>
-            <span style={{ fontSize: 16 }}>🔒</span>
+            <span style={{ fontSize: 16 }}><Lock size={16} strokeWidth={2} /></span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#b07030" }}>Read-only Access</div>
               <div style={{ fontSize: 14, color: "#9a6a40" }}>Clinical notes visible to doctors only. You can view basic visit info.</div>
@@ -252,10 +307,10 @@ function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
           {/* Actions available to receptionist */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
             <button onClick={() => { onBook && onBook(patient); onClose(); }} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.25)" }}>
-              📅 Book Follow-up Appointment
+              Book Follow-up Appointment
             </button>
             <button onClick={() => { onSms && onSms(patient.name); onClose(); }} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
-              📱 Send Visit Summary SMS
+              Send Visit Summary SMS
             </button>
           </div>
         </div>
@@ -270,7 +325,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
   if (!patient) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "#8a9bb0" }}>
-      <div style={{ fontSize: 52 }}>🗂️</div>
+      <div style={{ fontSize: 52 }}><FolderOpen size={16} strokeWidth={2} /></div>
       <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>Select a patient</div>
       <div style={{ fontSize: 14 }}>Click any record from the list</div>
     </div>
@@ -288,36 +343,36 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ position: "relative" }}>
               <Avatar name={patient.name} size={54} />
-              {pc && <div style={{ position: "absolute", bottom: -2, right: -2, fontSize: 16 }}>{pc.icon}</div>}
+              {pc && pc.Icon && <div style={{ position: "absolute", bottom: -2, right: -2 }}><pc.Icon size={14} strokeWidth={2} color={pc.color} /></div>}
             </div>
             <div>
               <div style={{ fontSize: 21, fontWeight: 700, color: "white" }}>{patient.name}</div>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{patient.age} yrs · {patient.gender} · DOB: {patient.dob}</div>
               <div style={{ display: "flex", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
                 <span style={{ background: ss.bg, color: ss.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700 }}>{ss.label}</span>
-                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700 }}>{pc.icon} {pc.label}</span>}
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>🩸 {patient.bloodType}</span>
-                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}>📋 {patient.totalVisits} visits</span>
+                {pc && <span style={{ background: pc.bg, color: pc.color, borderRadius: 7, padding: "3px 10px", fontSize: 14, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>{pc.Icon && <pc.Icon size={13} strokeWidth={2} />} {pc.label}</span>}
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}><Droplets size={16} strokeWidth={2} /> {patient.bloodType}</span>
+                <span style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 7, padding: "3px 10px", fontSize: 14 }}><ClipboardList size={16} strokeWidth={2} /> {patient.totalVisits} visits</span>
               </div>
             </div>
           </div>
 
           {/* Receptionist actions */}
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button onClick={() => onSms && onSms(patient.name)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>📱 SMS</button>
-            <button onClick={() => onAddQueue && onAddQueue(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>➕ Add to Queue</button>
+            <button onClick={() => onSms && onSms(patient.name)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>SMS</button>
+            <button onClick={() => onAddQueue && onAddQueue(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
           </div>
         </div>
 
         {/* Quick info */}
         <div style={{ display: "flex", gap: 20, marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.1)", flexWrap: "wrap" }}>
           {[
-            { icon: "📞", v: patient.contact },
-            { icon: "📍", v: patient.address },
-            { icon: "🏥", v: `PhilHealth: ${patient.philhealth}` },
+            { Icon: Phone,     v: patient.contact },
+            { Icon: MapPin,    v: patient.address },
+            { Icon: Building2, v: `PhilHealth: ${patient.philhealth}` },
           ].map(i => (
             <div key={i.v} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
-              <span>{i.icon}</span>{i.v}
+              <i.Icon size={14} strokeWidth={2} />{i.v}
             </div>
           ))}
         </div>
@@ -351,7 +406,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {/* Conditions */}
               <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>🏥 Conditions</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}><Building2 size={18} strokeWidth={2} /> Conditions</div>
                 {patient.conditions.length > 0 ? patient.conditions.map(c => (
                   <div key={c} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f", flexShrink: 0 }} />
@@ -362,11 +417,11 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
               {/* Allergies */}
               <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>⚠️ Allergies</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Allergies</div>
                 {patient.allergies.length > 0 ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {patient.allergies.map(a => (
-                      <span key={a} style={{ background: "#fde8e0", color: "#CC0000", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, border: "1px solid #f5c8b0" }}>⚠ {a}</span>
+                      <span key={a} style={{ background: "#fde8e0", color: "#CC0000", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, border: "1px solid #f5c8b0" }}><AlertTriangle size={14} strokeWidth={2} /> {a}</span>
                     ))}
                   </div>
                 ) : <div style={{ fontSize: 14, color: "#8a9bb0" }}>No known allergies</div>}
@@ -375,7 +430,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
             {/* Personal info */}
             <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e7ef" }}>
-              <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 14 }}>👤 Patient Details</div>
+              <div style={{ fontSize: 14, color: "#8a9bb0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 14 }}><User size={16} strokeWidth={2} /> Patient Details</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
                 {[
                   { label: "Date of Birth",  value: patient.dob         },
@@ -397,7 +452,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
             {patient.visits[0] && (
               <div onClick={() => { onVisitSelect(patient.visits[0]); setTab("history"); }}
                 style={{ background: "linear-gradient(135deg,#e8f7f5,#d4ede9)", borderRadius: 14, padding: "16px 18px", border: "1px solid #b8e4de", cursor: "pointer" }}>
-                <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>🩺 Last Visit — click to view</div>
+                <div style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}><Stethoscope size={16} strokeWidth={2} /> Last Visit — click to view</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>{patient.visits[0].diagnosis}</div>
                 <div style={{ fontSize: 14, color: "#5a8f80", marginTop: 3 }}>{patient.visits[0].date} · {patient.visits[0].doctor}</div>
               </div>
@@ -405,7 +460,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
             {/* Read-only notice */}
             <div style={{ background: "#fdf3e8", borderRadius: 12, padding: "12px 14px", border: "1px solid #f5ddb8", display: "flex", gap: 10, alignItems: "center" }}>
-              <span>🔒</span>
+              <span><Lock size={16} strokeWidth={2} /></span>
               <div style={{ fontSize: 14, color: "#9a6a40" }}>Clinical notes and prescriptions are visible to doctors only. As reception, you can view basic patient info, visit history, and manage scheduling.</div>
             </div>
           </div>
@@ -439,7 +494,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
                       fontWeight: 700,
                       boxShadow: i === 0 ? "0 0 0 4px #d4ede9" : "none", zIndex: 2,
                     }}>
-                      {i === 0 ? "🩺" : patient.visits.length - i}
+                      {i === 0 ? <Stethoscope size={16} strokeWidth={2} /> : patient.visits.length - i}
                     </div>
 
                     {/* Card */}
@@ -497,7 +552,7 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
         <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: "white" }}>Add to Queue</div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white" }}>✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 14, color: "white" }}><X size={16} strokeWidth={2} /></button>
           </div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>{patient.name} · {patient.age} yrs</div>
         </div>
@@ -526,35 +581,78 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function ReceptionistPatientRecords({ onNavigate }) {
-  const [selected, setSelected]       = useState(patients[0]);
-  const [activeVisit, setActiveVisit] = useState(null);
-  const [search, setSearch]           = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [allPatients, setAllPatients]     = useState([]);
+  const [selected, setSelected]           = useState(null);
+  const [activeVisit, setActiveVisit]     = useState(null);
+  const [search, setSearch]               = useState("");
+  const [statusFilter, setStatusFilter]   = useState("all");
   const [addQueueModal, setAddQueueModal] = useState(null);
-  const [toast, setToast]             = useState(null);
+  const [toast, setToast]                 = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [visitsLoading, setVisitsLoading] = useState(false);
+  const debounceRef = useRef(null);
 
   const showToast = (msg) => { setToast(null); setTimeout(() => setToast(msg), 10); };
 
-  const handlePatientSelect = (p) => { setSelected(p); setActiveVisit(null); };
+  // ── Load patient list ──────────────────────────────────────────────────────
+  const fetchPatients = useCallback(async (q = "") => {
+    setLoading(true);
+    try {
+      const res = await patientsApi.getAll({ search: q, limit: 50 });
+      const normalized = (res.data || []).map(normalizePatient);
+      setAllPatients(normalized);
+      if (!selected && normalized.length > 0) setSelected(normalized[0]);
+    } catch (err) {
+      console.error("[PatientRecords] fetch error:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [selected]);
 
-  const filtered = patients.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.philhealth.toLowerCase().includes(search.toLowerCase()) ||
-      p.conditions.some(c => c.toLowerCase().includes(search.toLowerCase()));
-    const matchStatus = statusFilter === "all" || p.status === statusFilter ||
+  useEffect(() => { fetchPatients(); }, []);
+
+  // Debounced search (400ms)
+  const handleSearchChange = (val) => {
+    setSearch(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchPatients(val), 400);
+  };
+
+  // ── Lazy-load visits when a patient is selected ────────────────────────────
+  const handlePatientSelect = useCallback(async (p) => {
+    setSelected(p);
+    setActiveVisit(null);
+    if (p.visitsLoaded) return;  // already fetched
+    setVisitsLoading(true);
+    try {
+      const res = await patientsApi.getVisits(p.id);
+      const visits = (res.data || []).map(normalizeVisit);
+      setAllPatients(prev => prev.map(pt =>
+        pt.id === p.id ? { ...pt, visits, visitsLoaded: true } : pt
+      ));
+      setSelected(prev => prev ? { ...prev, visits, visitsLoaded: true } : prev);
+    } catch (err) {
+      console.error("[PatientRecords] visits fetch error:", err.message);
+    } finally {
+      setVisitsLoading(false);
+    }
+  }, []);
+
+  // Client-side status filter (search is server-side)
+  const filtered = allPatients.filter(p => {
+    return statusFilter === "all" || p.status === statusFilter ||
       (statusFilter === "priority" && p.priority);
-    return matchSearch && matchStatus;
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f7fb", display: "flex" }}>
+    <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       
       
 
       <AddToQueueModal
         patient={addQueueModal}
         onClose={() => setAddQueueModal(null)}
-        onConfirm={(p, reason, doctor) => showToast(`✅ ${p.name} added to queue for ${doctor}`)}
+        onConfirm={(p, reason, doctor) => showToast(`${p.name} added to queue for ${doctor}`)}
       />
 
       {toast && (
@@ -565,11 +663,11 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
         visit={activeVisit}
         patient={selected}
         onClose={() => setActiveVisit(null)}
-        onBook={(p) => showToast(`📅 Follow-up booking initiated for ${p.name}`)}
-        onSms={(name) => showToast(`📱 Visit summary SMS queued for ${name}`)}
+        onBook={(p) => showToast(`Follow-up booking initiated for ${p.name}`)}
+        onSms={(name) => showToast(`Visit summary SMS queued for ${name}`)}
       />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{
@@ -579,14 +677,14 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Patient Records</h1>
             <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
-              {patients.length} patients · {patients.reduce((a, p) => a + p.visits.length, 0)} total visits
+              {loading ? "Loading…" : `${allPatients.length} patients on file`}
             </div>
           </div>
           <button onClick={() => onNavigate && onNavigate('register')} style={{
             background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",
             borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer",
             boxShadow: "0 4px 14px rgba(42,157,143,0.28)", display: "flex", alignItems: "center", gap: 6,
-          }}>➕ Register New Patient</button>
+          }}><Plus size={16} strokeWidth={2} /> Register New Patient</button>
         </div>
 
         {/* Split */}
@@ -598,9 +696,9 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
             {/* Search */}
             <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid #f0f3f7" }}>
               <div style={{ position: "relative", marginBottom: 10 }}>
-                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}>🔍</span>
-                <input value={search} onChange={e => setSearch(e.target.value)}
-                  placeholder="Name, PhilHealth, condition..."
+                <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#8a9bb0" }}><Search size={14} strokeWidth={2} color="#8a9bb0" /></span>
+                <input value={search} onChange={e => handleSearchChange(e.target.value)}
+                  placeholder="Name, PhilHealth..."
                   style={{ width: "100%", padding: "9px 12px 9px 32px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", background: "#f7f9fb" }}
                   onFocus={e => e.target.style.borderColor = "#2a9d8f"}
                   onBlur={e => e.target.style.borderColor = "#e0e7ef"}
@@ -621,7 +719,12 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
 
             {/* List */}
             <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
-              {filtered.map(p => {
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "40px 16px", color: "#8a9bb0" }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}><Clock size={16} strokeWidth={2} /></div>
+                  <div style={{ fontSize: 14 }}>Loading patients…</div>
+                </div>
+              ) : filtered.map(p => {
                 const ss = statusStyle[p.status];
                 const pc = p.priority ? priorityConfig[p.priority] : null;
                 const isSelected = selected?.id === p.id;
@@ -639,7 +742,7 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
                     <div style={{ display: "flex", gap: 10, paddingLeft: p.priority ? 6 : 0 }}>
                       <div style={{ position: "relative" }}>
                         <Avatar name={p.name} size={36} />
-                        {pc && <div style={{ position: "absolute", bottom: -1, right: -1, fontSize: 14 }}>{pc.icon}</div>}
+                        {pc && pc.Icon && <div style={{ position: "absolute", bottom: -1, right: -1 }}><pc.Icon size={13} strokeWidth={2} color={pc.color} /></div>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -659,9 +762,9 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
                   </div>
                 );
               })}
-              {filtered.length === 0 && (
+              {!loading && filtered.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 16px", color: "#8a9bb0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}><Search size={14} strokeWidth={2} color="#8a9bb0" /></div>
                   <div style={{ fontSize: 14 }}>No patients found</div>
                 </div>
               )}
@@ -675,7 +778,15 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
               onVisitSelect={setActiveVisit}
               selectedVisitId={activeVisit?.id}
               onAddQueue={(p) => setAddQueueModal(p)}
-              onSms={(name) => showToast(`📱 SMS queued for ${name}`)}
+              onSms={async (name) => {
+                try {
+                  await smsApi.send({ patient_id: selected.id, message: `LikhaHealth: Reminder regarding your recent clinic visit. Please contact us for follow-up.` });
+                  showToast(`SMS sent to ${name}`);
+                } catch (err) {
+                  showToast(`SMS failed: ${err.message}`);
+                }
+              }}
+              visitsLoading={visitsLoading}
             />
           </div>
         </div>
