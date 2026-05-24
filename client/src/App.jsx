@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, CalendarDays, MessageSquare, BarChart3, Stethoscope, LogOut } from "lucide-react";
 import { useAuth } from "./lib/api/useAuth.js";
 
@@ -46,6 +46,47 @@ const ROLE_META = {
   receptionist: { label: "Medical Staff", color: "#2a9d8f", accent: "#52c4b8",   badge: "RECEPTIONIST", badgeBg: "rgba(42,157,143,0.18)",  badgeColor: "#52c4b8" },
   doctor:       { label: "Doctor",        color: "#0047AB", accent: "#1565D8",   badge: "PHYSICIAN",    badgeBg: "rgba(0,71,171,0.18)",   badgeColor: "#1565D8" },
 };
+
+// ── Screen Error Boundary (prevents white screen crashes) ─────────────────────
+class ScreenErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('[ScreenErrorBoundary]', error, errorInfo);
+    this.setState({ errorInfo });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "40px 32px", maxWidth: 700 }}>
+          <div style={{ background: "#fdeee8", border: "1.5px solid #f5c0b0", borderRadius: 16, padding: "28px 24px" }}>
+            <h2 style={{ margin: "0 0 8px", fontSize: 20, color: "#CC0000" }}>⚠ Something went wrong</h2>
+            <p style={{ color: "#7a4030", fontSize: 14, margin: "0 0 16px" }}>This screen crashed unexpectedly. You can try reloading or navigating to another screen.</p>
+            <pre style={{ background: "#fff5f0", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#993322", overflowX: "auto", whiteSpace: "pre-wrap", margin: "0 0 16px", border: "1px solid #f0d0c0" }}>
+              {this.state.error?.toString()}
+              {"\n"}
+              {this.state.error?.stack}
+            </pre>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+              style={{ background: "#CC0000", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", marginRight: 10 }}
+            >Try Again</button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ background: "white", color: "#CC0000", border: "1.5px solid #CC0000", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+            >Reload Page</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
@@ -247,6 +288,7 @@ export default function App() {
         </div>
 
         {/* Screen content — pass onNavigate + registration session */}
+        <ScreenErrorBoundary key={resolvedActiveId}>
         {Screen && (
           activeScreen?.id === 'register'
             ? <PatientRegistration
@@ -274,6 +316,7 @@ export default function App() {
               />
             : <Screen key={resolvedActiveId} onNavigate={setActiveId} user={user} />
         )}
+        </ScreenErrorBoundary>
       </div>
     </div>
   );

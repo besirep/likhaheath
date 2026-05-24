@@ -301,9 +301,11 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
     setError(null);
     try {
       const data = await consultationsApi.getHistory();
-      setHistory(data);
-      if (data.length > 0) setRecord(data[0]);
+      const arr = Array.isArray(data) ? data : [];
+      setHistory(arr);
+      if (arr.length > 0) setRecord(arr[0]);
     } catch (e) {
+      console.error('[Consultations] loadHistory error:', e);
       setError("Could not load consultation history.");
     } finally {
       setLoading(false);
@@ -332,7 +334,9 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
     }
   };
 
-  const filtered = history.filter(r => {
+  const safeHistory = Array.isArray(history) ? history : [];
+
+  const filtered = safeHistory.filter(r => {
     const name = r.patient?.name || "";
     const diag = r.diagnosis || "";
     return name.toLowerCase().includes(search.toLowerCase()) ||
@@ -349,11 +353,14 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
     return acc;
   }, {});
 
-  const todayCount     = history.filter(r => new Date(r.date).toDateString() === new Date().toDateString()).length;
-  const completedCount = history.length;
+  const todayCount     = safeHistory.filter(r => {
+    try { return new Date(r.date).toDateString() === new Date().toDateString(); }
+    catch { return false; }
+  }).length;
+  const completedCount = safeHistory.length;
 
   return (
-    <div style={{ height: "100vh", background: "#EBF0FA", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "100%", background: "#EBF0FA", display: "flex", overflow: "hidden" }}>
       <style>{`
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
@@ -367,7 +374,7 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
 
         {/* Top Bar */}
         <div style={{ background: "#EBF0FA", borderBottom: "1px solid #CCDAF0", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
