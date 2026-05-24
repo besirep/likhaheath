@@ -95,9 +95,20 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndCons
 
   const handleEndConsult = async () => {
     try {
-      // Mark the queue entry as Done via API
-      await consultationsApi.updateQueueStatus(patient.id, 'Done');
-      showToast("✓ Consultation ended — patient marked as Done");
+      // 1. Save the consultation record (diagnosis + notes) so it appears in history
+      if (diagnosis.trim() || notes.trim()) {
+        await consultationsApi.saveConsultation({
+          appointmentId: patient.appointmentId,
+          patientId:     patient.patientId,
+          diagnosis:     diagnosis.trim() || 'General consultation',
+          treatment:     notes.trim() || 'See doctor notes',
+          notes:         notes.trim() || null,
+        });
+      } else {
+        // No diagnosis/notes entered — just mark queue as Done
+        await consultationsApi.updateQueueStatus(patient.id, 'Done');
+      }
+      showToast("\u2713 Consultation ended & saved");
       if (onEndConsult) onEndConsult();
       setTimeout(onClose, 400);
     } catch (e) {
@@ -455,7 +466,9 @@ export default function DoctorDashboard({ user, onNavigate }) {
     try {
       const data = await consultationsApi.getDoctorQueue();
       const normalized = data.map(p => ({
-        id:       p.queueId,
+        id:            p.queueId,
+        appointmentId: p.appointmentId,
+        patientId:     p.patientId,
         queue:    `Q-${String(p.queueNumber).padStart(3, "0")}`,
         name:     p.name,
         age:      p.age,
