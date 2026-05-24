@@ -93,10 +93,14 @@ exports.updateStatus = async (req, res) => {
     return res.status(400).json({ error: `Status must be one of: ${allowed.join(', ')}` });
   try {
     await db.query('UPDATE queue SET status=? WHERE id=?', [status, req.params.id]);
-    // Sync appointment status when Done
-    if (status === 'Done') {
-      const [q] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [req.params.id]);
-      if (q.length) await db.query('UPDATE appointments SET status="Completed" WHERE id=?', [q[0].appointment_id]);
+    // Sync appointment status
+    const [q] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [req.params.id]);
+    if (q.length) {
+      if (status === 'Done') {
+        await db.query('UPDATE appointments SET status="Completed" WHERE id=?', [q[0].appointment_id]);
+      } else if (status === 'Skipped') {
+        await db.query('UPDATE appointments SET status="No-Show" WHERE id=?', [q[0].appointment_id]);
+      }
     }
     res.json({ message: 'Queue status updated.' });
   } catch (err) {

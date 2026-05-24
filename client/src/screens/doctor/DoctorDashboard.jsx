@@ -66,7 +66,7 @@ function MiniModal({ title, icon, children, onClose }) {
 }
 
 // ── Consultation Modal ─────────────────────────────────────────────────────────
-function ConsultationModal({ patient, onClose, onNavigate, queue = [] }) {
+function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndConsult }) {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -91,6 +91,19 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [] }) {
       vitals: patient.vitals || null,
       staffName: 'Dr. Reyes',
     });
+  };
+
+  const handleEndConsult = async () => {
+    try {
+      // Mark the queue entry as Done via API
+      await consultationsApi.updateQueueStatus(patient.id, 'Done');
+      showToast("✓ Consultation ended — patient marked as Done");
+      if (onEndConsult) onEndConsult();
+      setTimeout(onClose, 400);
+    } catch (e) {
+      console.error('[Dashboard] End consult failed:', e);
+      showToast("Failed to end consultation");
+    }
   };
 
   return (
@@ -173,7 +186,7 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [] }) {
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={handlePrint} style={{ background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Printer size={16} strokeWidth={2} /> Print Summary</button>
-          <button onClick={() => { showToast("Consultation ended"); setTimeout(onClose, 400); }} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)" }}>End Consultation</button>
+          <button onClick={handleEndConsult} style={{ background: "#0047AB", color: "white", border: "none", borderRadius: 10, padding: "9px 18px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,71,171,0.3)" }}>End Consultation</button>
           <button onClick={onClose} style={{ background: "#f0f3fa", border: "none", borderRadius: 10, padding: "9px 14px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}><X size={16} strokeWidth={2} /></button>
         </div>
       </div>
@@ -494,7 +507,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
       
       
 
-      {activeConsult && <ConsultationModal patient={activeConsult} onClose={() => setActiveConsult(null)} onNavigate={onNavigate} queue={myQueue} />}
+      {activeConsult && <ConsultationModal patient={activeConsult} onClose={() => setActiveConsult(null)} onNavigate={onNavigate} queue={myQueue} onEndConsult={loadQueue} />}
 
       <div style={{ padding: "0 28px 32px" }}>
 

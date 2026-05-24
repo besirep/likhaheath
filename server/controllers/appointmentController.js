@@ -77,15 +77,22 @@ exports.create = async (req, res) => {
 
   const created_by_id = req.user.staffId; // from JWT payload
 
+  const conn = await db.getConnection();
   try {
-    // Get next queue number for the given day
-    const [[{ max_q }]] = await db.query(
-      `SELECT MAX(queue_number) AS max_q FROM appointments WHERE DATE(scheduled_date) = DATE(?)`,
+    await conn.beginTransaction();
+
+    // Get next queue number for the given day — use FOR UPDATE to prevent race conditions
+    const [[{ max_q }]] = await conn.query(
+      `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
+       FROM queue q
+       JOIN appointments a ON a.id = q.appointment_id
+       WHERE DATE(a.scheduled_date) = DATE(?)
+       FOR UPDATE`,
       [scheduled_date]
     );
     const queueNumber = (max_q || 0) + 1;
 
-    const [result] = await db.query(
+    const [result] = await conn.query(
       `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, queue_number)
        VALUES (?, ?, ?, ?, ?)`,
       [patient_id, doctor_id || null, created_by_id, scheduled_date, queueNumber]
@@ -93,7 +100,7 @@ exports.create = async (req, res) => {
     const appointmentId = result.insertId;
 
     // Create queue entry
-    await db.query(
+    await conn.query(
       `INSERT INTO queue (appointment_id, queue_number) VALUES (?, ?)`,
       [appointmentId, queueNumber]
     );
@@ -106,15 +113,20 @@ exports.create = async (req, res) => {
         s.quantity || 1,
         s.notes || null,
       ]);
-      await db.query(
+      await conn.query(
         `INSERT INTO appointment_services (appointment_id, service_name, quantity, notes) VALUES ?`,
         [serviceValues]
       );
     }
 
+    await conn.commit();
     res.status(201).json({ id: appointmentId, queue_number: queueNumber, message: 'Appointment created.' });
   } catch (err) {
+    await conn.rollback();
+    console.error('[Appointment] create error:', err);
     res.status(500).json({ error: err.message });
+  } finally {
+    conn.release();
   }
 };
 

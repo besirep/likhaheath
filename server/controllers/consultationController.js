@@ -98,6 +98,18 @@ const updateQueueStatus = async (req, res) => {
       'UPDATE queue SET status = ? WHERE id = ?',
       [status, queueId]
     );
+
+    // Sync appointment status based on queue status
+    const [qRows] = await db.query('SELECT appointment_id FROM queue WHERE id = ?', [queueId]);
+    if (qRows.length) {
+      const appointmentId = qRows[0].appointment_id;
+      if (status === 'Done') {
+        await db.query('UPDATE appointments SET status = "Completed" WHERE id = ?', [appointmentId]);
+      } else if (status === 'Skipped') {
+        await db.query('UPDATE appointments SET status = "No-Show" WHERE id = ?', [appointmentId]);
+      }
+    }
+
     res.json({ message: `Queue status updated to ${status}.` });
   } catch (err) {
     console.error('updateQueueStatus error:', err);
@@ -158,9 +170,12 @@ const saveConsultation = async (req, res) => {
 
     // 4. If a follow-up date is provided, create a new appointment + queue entry
     if (followUpDate) {
-      // Issue #5 — Use MAX(queue_number)+1 instead of COUNT(*) to avoid duplicate queue numbers
+      // Issue #5 — Use MAX from queue table (joined with appointments) to avoid duplicate queue numbers
       const [queueMax] = await conn.query(
-        `SELECT COALESCE(MAX(queue_number), 0) AS max_q FROM appointments WHERE DATE(scheduled_date) = ?`,
+        `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
+         FROM queue q
+         JOIN appointments a ON a.id = q.appointment_id
+         WHERE DATE(a.scheduled_date) = ?`,
         [followUpDate]
       );
       const nextQueue = (queueMax[0].max_q || 0) + 1;
