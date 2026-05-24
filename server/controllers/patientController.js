@@ -18,15 +18,14 @@ async function resolveId(conn, table, column, value) {
 }
 
 async function getNextQueueNumber(conn) {
-  const today = new Date().toISOString().slice(0, 10);
-  // Use FOR UPDATE to lock the row and prevent race conditions under concurrent registrations (Issue #4)
+  // Use CURDATE() (MySQL server timezone) instead of JavaScript's toISOString() (UTC)
+  // to avoid timezone mismatch — toISOString gives yesterday's date in UTC+8 before 8AM
   const [rows] = await conn.query(
     `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
      FROM queue q
      JOIN appointments a ON q.appointment_id = a.id
-     WHERE DATE(a.scheduled_date) = ?
-     FOR UPDATE`,
-    [today]
+     WHERE DATE(a.scheduled_date) = CURDATE()
+     FOR UPDATE`
   );
   return (rows[0].max_q || 0) + 1;
 }
