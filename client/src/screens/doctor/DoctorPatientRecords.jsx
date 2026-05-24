@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, CalendarDays, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil, Building2, FolderOpen, ClipboardList } from "lucide-react";
+import { Search, Plus, CalendarDays, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil, Building2, FolderOpen, ClipboardList, Stethoscope } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
