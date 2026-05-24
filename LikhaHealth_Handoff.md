@@ -16,6 +16,8 @@ LikhaHealth is a locally-deployed (LAN-only) web application designed to digitiz
 - Role-based Access Control (Admin, Doctor, Nurse, Midwife, BHW)
 - Medical Records & Consultation Tracking
 - Built-in SMS Notification Triggers
+- Automated SMS Follow-Up Reminders (7 days, 3 days, 1 day before appointments)
+- 5-Year Data Retention Policy (automated archival)
 - Operational Reports & Analytics
 
 ---
@@ -62,6 +64,8 @@ likhahealth-root/
 ├── server/                 # Express.js Backend
 │   ├── config/             # Database connection pool
 │   ├── controllers/        # Route logic (auth, appointments, consultations, dashboard, patients, queue, reports, sms)
+│   ├── jobs/               # Scheduled background tasks
+│   │   └── scheduledJobs.js # Data retention + SMS follow-up reminders (node-cron)
 │   ├── middleware/         # JWT auth middleware
 │   ├── routes/             # Express routers
 │   ├── server.js           # Express entry point
@@ -169,24 +173,41 @@ All screens receive an `onNavigate` prop (bound to `setActiveId`) for cross-scre
 > - ✅ Phase 2: UI Development (all receptionist + doctor screens)
 > - ✅ Phase 2.5: API Data Binding (Registration, Queue, Appointments, Consultations, Reports)
 > - ✅ Phase 3a: Bug Fixes & UI Stabilization (all crash bugs resolved, build clean)
-> - 🔲 Phase 3b: Final Polish & SMS Gateway Configuration
+> - ✅ Phase 3b: SMS Gateway Configuration & Scheduled Jobs
+> - 🔲 Phase 3c: Final Polish & Data Validation
 > - 🔲 Phase 4: Deployment & User Acceptance Testing
 
 ---
 
-## 8. Remaining Next Steps
+## 8. Scheduled Background Jobs
 
-| # | Task | Priority | Description |
-|---|------|----------|-------------|
-| 1 | **Configure SMS Gateway** | High | Add the actual Semaphore API key to `SMS_API_KEY` in `server/.env` to enable real SMS delivery |
-| 2 | **End-to-End Testing** | High | Full walkthrough of patient registration → queue → consultation → medical record save → reports |
-| 3 | **Reports Live Data Cleanup** | Medium | Some placeholder values remain in receptionist reports (avg wait time, SMS count) |
-| 4 | **Role Access Guards** | Medium | Doctors should not see receptionist-only screens; receptionists should not access consultation records |
-| 5 | **Production Build & Deployment** | Low | Build production bundle, configure LAN static IP, set up XAMPP for production use |
+Two cron jobs run automatically when the server starts (via `node-cron`):
+
+### Data Retention (5-Year Policy)
+- **Schedule:** Daily at 2:00 AM (Asia/Manila)
+- **Action:** Soft-deletes (`is_deleted = 1`) patients with no appointments in the last 5 years. Also cancels any stale `Scheduled` appointments beyond the retention window.
+- **Config:** `DATA_RETENTION_YEARS=5` in `server/.env`
+
+### SMS Follow-Up Reminders
+- **Schedule:** Daily at 8:00 AM (Asia/Manila)
+- **Action:** Sends SMS reminders via Semaphore for upcoming follow-up appointments at **7 days**, **3 days**, and **1 day** before the appointment date.
+- **Deduplication:** Won't re-send a reminder if one was already sent for the same interval.
+- **Config:** `SMS_REMINDERS_ENABLED=true` in `server/.env`
 
 ---
 
-## 9. Known Issues & Important Notes
+## 9. Remaining Next Steps
+
+| # | Task | Priority | Description |
+|---|------|----------|-------------|
+| 1 | **End-to-End Testing** | High | Full walkthrough of patient registration → queue → consultation → medical record save → reports |
+| 2 | **Reports Live Data Cleanup** | Medium | Some placeholder values remain in receptionist reports (avg wait time, SMS count) |
+| 3 | **Role Access Guards** | Medium | Doctors should not see receptionist-only screens; receptionists should not access consultation records |
+| 4 | **Production Build & Deployment** | Low | Build production bundle, configure LAN static IP, set up XAMPP for production use |
+
+---
+
+## 10. Known Issues & Important Notes
 
 - **Component Icon Pattern:** When adding icons, use `Icon: ComponentRef` + render as `<f.Icon size={16} />`. **Never** use bare component refs inside `{f.icon}` (renders `[object Object]`) or JSX inside template literal strings (renders raw text).
 - **Sidebar Rule:** The global `Sidebar` is rendered once by `App.jsx`. Individual screen components **must not** define or render their own `Sidebar()` functions — this causes double sidebars and layout collisions.
