@@ -78,4 +78,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`LikhaHealth server running on http://localhost:${PORT}`);
+
+  // Start background scheduled jobs (data retention, SMS reminders)
+  const { startScheduledJobs } = require('./jobs/scheduledJobs');
+  startScheduledJobs();
 });
