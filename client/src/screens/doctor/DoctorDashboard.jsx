@@ -66,7 +66,7 @@ function MiniModal({ title, icon, children, onClose }) {
 }
 
 // ── Consultation Modal ─────────────────────────────────────────────────────────
-function ConsultationModal({ patient, onClose, onNavigate }) {
+function ConsultationModal({ patient, onClose, onNavigate, queue = [] }) {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -240,7 +240,7 @@ function ConsultationModal({ patient, onClose, onNavigate }) {
         {/* Right */}
         <div style={{ background: "white", borderLeft: "1px solid #e8edf7", padding: "24px 20px", overflowY: "auto" }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#b0bdd6", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 14 }}>Up Next</div>
-          {myQueue.filter(p => p.status === "waiting").map((p, i) => (
+          {queue.filter(p => p.status === "waiting").map((p, i) => (
             <div key={p.id} style={{ padding: "12px 14px", borderRadius: 12, marginBottom: 8, background: i === 0 ? "#EBF0FA" : "#f7f9fd", border: i === 0 ? "1.5px solid #B8CCEC" : "1.5px solid transparent" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#0047AB" }}>{p.queue}</span>
@@ -494,7 +494,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
       
       
 
-      {activeConsult && <ConsultationModal patient={activeConsult} onClose={() => setActiveConsult(null)} onNavigate={onNavigate} />}
+      {activeConsult && <ConsultationModal patient={activeConsult} onClose={() => setActiveConsult(null)} onNavigate={onNavigate} queue={myQueue} />}
 
       <div style={{ padding: "0 28px 32px" }}>
 
