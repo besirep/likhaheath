@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Building2, Plus, Stethoscope, ClipboardList, CalendarDays, FolderOpen, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, LayoutDashboard, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil } from "lucide-react";
+import { Search, Plus, CalendarDays, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil, Building2, FolderOpen, ClipboardList } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -254,58 +254,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-function Sidebar() {
-  return (
-    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "12px 20px" }}>
-        <div style={{ background: "rgba(0,71,171,0.18)", border: "1px solid rgba(0,71,171,0.35)", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#1565D8" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#7eb3f5", letterSpacing: 0.4 }}>PHYSICIAN MODE</span>
-        </div>
-      </div>
-      <nav style={{ padding: "8px 12px", flex: 1 }}>
-        {[
-          { Icon: LayoutDashboard,  label: "Dashboard"                              },
-          { Icon: ClipboardList, label: "Queue",          badge: "4"             },
-          { Icon: Stethoscope, label: "Consultations",  badge: "1"             },
-          { Icon: FolderOpen, label: "Patient Records", active: true          },
-          { Icon: CalendarDays, label: "Appointments",   badge: "3"             },
-        ].map(item => (
-          <div key={item.label} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
-            background: item.active ? "rgba(0,71,171,0.22)" : "transparent",
-            color: item.active ? "#7eb3f5" : "rgba(255,255,255,0.55)",
-            fontWeight: item.active ? 600 : 400, fontSize: 14, transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}}
-            onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}}
-          >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
-            {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#0047AB", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
-          </div>
-        ))}
-      </nav>
-      <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#1565D8,#0047AB)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>DR</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>Dr. Reyes</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>Internal Medicine</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Visit Drawer ──────────────────────────────────────────────────────────────
 function VisitDrawer({ visit, patient, onClose }) {
@@ -386,18 +334,18 @@ function VisitDrawer({ visit, patient, onClose }) {
             <div style={{ fontSize: 14, color: "#9aabc0", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Vitals at This Visit</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
               {v && [
-                { label: "Blood Pressure", value: v.bp,   unit: "mmHg", flag: bpFlag(v.bp),    icon: Heart },
-                { label: "Temperature",    value: v.temp, unit: "°C",   flag: tempFlag(v.temp), icon: Thermometer },
-                { label: "Heart Rate",     value: v.hr,   unit: "bpm",  flag: "normal",         icon: Activity },
-                { label: "SpO₂",          value: v.spo2, unit: "%",    flag: spo2Flag(v.spo2), icon: Wind },
-                { label: "Weight",         value: v.weight, unit: "kg", flag: "normal",         icon: Scale },
+                { label: "Blood Pressure", value: v.bp,   unit: "mmHg", flag: bpFlag(v.bp),    Icon: Heart },
+                { label: "Temperature",    value: v.temp, unit: "°C",   flag: tempFlag(v.temp), Icon: Thermometer },
+                { label: "Heart Rate",     value: v.hr,   unit: "bpm",  flag: "normal",         Icon: Activity },
+                { label: "SpO₂",          value: v.spo2, unit: "%",    flag: spo2Flag(v.spo2), Icon: Wind },
+                { label: "Weight",         value: v.weight, unit: "kg", flag: "normal",         Icon: Scale },
                 { label: "BMI",            value: bmi,    unit: "kg/m²",flag: Number(bmi) > 25 ? "high" : "normal", Icon: Ruler },
               ].map(f => (
                 <div key={f.label} style={{
                   background: flagBg[f.flag], borderRadius: 11, padding: "11px 13px",
                   border: `1.5px solid ${f.flag !== "normal" ? flagColor[f.flag] + "35" : "#e8edf7"}`,
                 }}>
-                  <div style={{ fontSize: 15, marginBottom: 3 }}>{f.icon}</div>
+                  <div style={{ fontSize: 15, marginBottom: 3 }}><f.Icon size={15} strokeWidth={2} /></div>
                   <div style={{ fontSize: 17, fontWeight: 700, color: flagColor[f.flag], lineHeight: 1 }}>{f.value}</div>
                   <div style={{ fontSize: 11, color: "#9aabc0", marginTop: 1 }}>{f.unit}</div>
                   <div style={{ fontSize: 11, color: "#b0bdd6", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.3 }}>{f.label}</div>
@@ -513,9 +461,13 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onSchedule, onE
           </div>
         </div>
         <div style={{ display: "flex", gap: 20, marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-          {[{ icon: Phone, label: patient.contact }, { Icon: MapPin, label: patient.address }, { Icon: CalendarDays, label: `Last visit: ${patient.lastVisit}` }].map(item => (
+          {[
+            { icon: <Phone size={14} strokeWidth={2} />,        label: patient.contact },
+            { icon: <MapPin size={14} strokeWidth={2} />,       label: patient.address },
+            { icon: <CalendarDays size={14} strokeWidth={2} />, label: `Last visit: ${patient.lastVisit}` },
+          ].map(item => (
             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
-              <span>{item.icon}</span>{item.label}
+              {item.icon}{item.label}
             </div>
           ))}
         </div>

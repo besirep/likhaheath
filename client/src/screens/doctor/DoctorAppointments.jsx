@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Stethoscope, ClipboardList, CalendarDays, FolderOpen, Phone, FileText, LayoutDashboard, X, Pencil, AlertTriangle } from "lucide-react";
+import { Plus, CalendarDays, Phone, FileText, X, Pencil, AlertTriangle } from "lucide-react";
 import { appointmentsApi } from "../../lib/api/appointments.js";
 
 // ── Helpers / normalizers ────────────────────────────────────────────────────
@@ -66,58 +66,6 @@ function Avatar({ name, size = 32 }) {
   );
 }
 
-function Sidebar() {
-  return (
-    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "#1a2540", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "3px 0 20px rgba(20,40,90,0.18)" }}>
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#0047AB,#1565D8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>CareQueue</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Doctor Portal</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "12px 20px" }}>
-        <div style={{ background: "rgba(0,71,171,0.18)", border: "1px solid rgba(0,71,171,0.35)", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#1565D8" }} />
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#7eb3f5", letterSpacing: 0.4 }}>PHYSICIAN MODE</span>
-        </div>
-      </div>
-      <nav style={{ padding: "8px 12px", flex: 1 }}>
-        {[
-          { Icon: LayoutDashboard,  label: "Dashboard"                             },
-          { Icon: ClipboardList,    label: "Queue",         badge: "4"             },
-          { Icon: Stethoscope,      label: "Consultations", badge: "1"             },
-          { Icon: FolderOpen,       label: "Patient Records"                       },
-          { Icon: CalendarDays,     label: "Appointments",  active: true           },
-        ].map(item => (
-          <div key={item.label} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
-            background: item.active ? "rgba(0,71,171,0.22)" : "transparent",
-            color: item.active ? "#7eb3f5" : "rgba(255,255,255,0.55)",
-            fontWeight: item.active ? 600 : 400, fontSize: 14, transition: "all 0.2s",
-          }}
-            onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}}
-            onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}}
-          >
-            {item.Icon && <item.Icon size={16} strokeWidth={2} />}
-            {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#0047AB", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>{item.badge}</span>}
-          </div>
-        ))}
-      </nav>
-      <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#1565D8,#0047AB)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>DR</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>Dr. Reyes</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Internal Medicine</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Appointment Detail Drawer ──────────────────────────────────────────────────
 function AppointmentDrawer({ appt, onClose, onCancel, onNavigate }) {
@@ -538,9 +486,7 @@ export default function DoctorAppointments({ onNavigate }) {
   const today    = appointments.filter(a => a.date === todayStr);
 
   return (
-    <div style={{ height: "100vh", background: "#EBF0FA", display: "flex", overflow: "hidden" }}>
-      <Sidebar />
-
+    <>
       {loading && (
         <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, background: "rgba(235,240,250,0.7)" }}>
           <div style={{ width: 32, height: 32, border: "3px solid #CCDAF0", borderTopColor: "#0047AB", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
@@ -551,7 +497,7 @@ export default function DoctorAppointments({ onNavigate }) {
       {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} />}
       <AppointmentDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCancel={handleCancel} onNavigate={onNavigate} />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", marginLeft: 220 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#EBF0FA", borderBottom: "1px solid #CCDAF0", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -647,6 +593,6 @@ export default function DoctorAppointments({ onNavigate }) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

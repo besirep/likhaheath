@@ -82,61 +82,6 @@ function Avatar({ name, size = 32 }) {
   );
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar() {
-  return (
-    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}><Building2 size={18} strokeWidth={2} /></div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
-            <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "10px 20px" }}>
-        <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
-        </div>
-      </div>
-      <nav style={{ padding: "8px 12px", flex: 1 }}>
-        {[
-          { Icon: LayoutDashboard,  label: "Dashboard"                        },
-          { Icon: ClipboardList, label: "Queue"                             },
-          { icon: Plus, label: "Register Patient"                  },
-          { Icon: FolderOpen, label: "Patient Records"                   },
-          { Icon: CalendarDays, label: "Appointments",   badge: "3"       },
-          { icon: "", label: "SMS Logs"                          },
-          { Icon: BarChart3, label: "Reports"                           },
-        ].map(item => (
-          <div key={item.label} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
-            background: item.label === "Appointments" ? "#e8f7f5" : "transparent",
-            color: item.label === "Appointments" ? "#2a9d8f" : "#4a5d75",
-            fontWeight: item.label === "Appointments" ? 600 : 400, fontSize: 14, transition: "all 0.18s",
-          }}
-            onMouseEnter={e => { if (item.label !== "Appointments") { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; }}}
-            onMouseLeave={e => { if (item.label !== "Appointments") { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; }}}
-          >
-            <span style={{ fontSize: 16 }}>{item.icon}</span>
-            {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
-          </div>
-        ))}
-      </nav>
-      <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>AR</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
-          <div style={{ fontSize: 14, color: "#8a9bb0" }}>Front Desk</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Book Modal ────────────────────────────────────────────────────────────────
 function BookModal({ defaultDate, onClose, onSubmit }) {
@@ -277,7 +222,7 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
 }
 
 // ── Appointment Drawer ────────────────────────────────────────────────────────
-function ApptDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue }) {
+function AppointmentDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue }) {
   if (!appt) return null;
   const tc = typeConfig[appt.type];
   const sc = statusConfig[appt.status];

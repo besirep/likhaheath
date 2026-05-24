@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { queueApi } from "../../lib/api/queue.js";
 import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
-import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X } from "lucide-react";
+import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X, Check } from "lucide-react";
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: true  },
@@ -36,61 +36,6 @@ function Avatar({ name, size = 34 }) {
   );
 }
 
-// ── Receptionist Sidebar ──────────────────────────────────────────────────────
-function Sidebar() {
-  return (
-    <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: "white", borderRight: "1px solid #edf1f7", display: "flex", flexDirection: "column", zIndex: 10, boxShadow: "2px 0 12px rgba(100,120,150,0.07)" }}>
-      <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #f0f3f7" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center" }}><Building2 size={18} strokeWidth={2} color="white" /></div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>CareQueue</div>
-            <div style={{ fontSize: 14, color: "#8a9bb0" }}>Reception</div>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "10px 20px" }}>
-        <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 8, padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2a9d8f" }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#2a9d8f", letterSpacing: 0.4 }}>RECEPTIONIST MODE</span>
-        </div>
-      </div>
-      <nav style={{ padding: "8px 12px", flex: 1 }}>
-        {[
-          { Icon: LayoutDashboard, label: "Dashboard"                        },
-          { Icon: ClipboardList,   label: "Queue",          active: true     },
-          { Icon: UserPlus,        label: "Register Patient"                  },
-          { Icon: FolderOpen,      label: "Patient Records"                   },
-          { Icon: CalendarDays,    label: "Appointments",   badge: "3"       },
-          { Icon: MessageSquare,   label: "SMS Logs"                          },
-          { Icon: BarChart3,       label: "Reports"                           },
-        ].map(item => (
-          <div key={item.label} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "10px 12px", borderRadius: 10, marginBottom: 2, cursor: "pointer",
-            background: item.active ? "#e8f7f5" : "transparent",
-            color: item.active ? "#2a9d8f" : "#4a5d75",
-            fontWeight: item.active ? 600 : 400, fontSize: 14, transition: "all 0.18s",
-          }}
-            onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "#f4f7fb"; e.currentTarget.style.color = "#1e2d40"; }}}
-            onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4a5d75"; }}}
-          >
-            <item.Icon size={16} strokeWidth={item.active ? 2.2 : 1.8} />
-            {item.label}
-            {item.badge && <span style={{ marginLeft: "auto", background: "#2a9d8f", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 14, fontWeight: 700 }}>{item.badge}</span>}
-          </div>
-        ))}
-      </nav>
-      <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f3f7", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#a8d5c2,#2a9d8f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white" }}>AR</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>Ana R.</div>
-          <div style={{ fontSize: 14, color: "#8a9bb0" }}>Front Desk</div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function Toast({ msg, onDone }) {
@@ -481,9 +426,9 @@ export default function ReceptionistQueue({ onNavigate }) {
                   </button>
                 ))}
               </div>
-              {vitalsDone > 0 && (
+              {(waiting + vitalsDone) > 0 && (
                 <button onClick={callNext} style={{ background: "#2a9d8f", color: "white", border: "none", borderRadius: 9, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}>
-                  <Megaphone size={14} strokeWidth={2} /> Call Next ({vitalsDone}) →
+                  <Megaphone size={14} strokeWidth={2} /> Call Next ({waiting + vitalsDone}) →
                 </button>
               )}
             </div>

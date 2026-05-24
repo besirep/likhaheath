@@ -332,10 +332,12 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
     }
   };
 
-  const filtered = history.filter(r =>
-    r.patient.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.diagnosis.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = history.filter(r => {
+    const name = r.patient?.name || "";
+    const diag = r.diagnosis || "";
+    return name.toLowerCase().includes(search.toLowerCase()) ||
+      diag.toLowerCase().includes(search.toLowerCase());
+  });
 
   const grouped = filtered.reduce((acc, r) => {
     const d = new Date(r.date);
@@ -427,9 +429,9 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
                         onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = "transparent"; }}
                       >
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <Avatar name={r.patient.name} size={34} />
+                          <Avatar name={r.patient?.name || "?"} size={34} />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: "#1a2540" }}>{r.patient.name}</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "#1a2540" }}>{r.patient?.name || "Unknown"}</div>
                             <div style={{ fontSize: 13, color: "#7a8fb0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.diagnosis}</div>
                             <div style={{ fontSize: 12, color: "#b0bdd6", marginTop: 2 }}>{new Date(r.date).toLocaleDateString()}</div>
                           </div>
@@ -452,18 +454,18 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
 
           {/* Right — Detail or Active Form */}
           <div style={{ display: "flex", overflow: "hidden" }}>
-            {mode === "active" && activePatient ? (
-              <ErrorBoundary>
+            <ErrorBoundary>
+              {mode === "active" && activePatient ? (
                 <ConsultationForm
                   patient={activePatient}
                   onSave={handleSave}
                   onCancel={() => setMode("history")}
                   saving={saving}
                 />
-              </ErrorBoundary>
-            ) : (
-              <HistoryDetail record={selectedRecord} />
-            )}
+              ) : (
+                <HistoryDetail record={selectedRecord} />
+              )}
+            </ErrorBoundary>
           </div>
         </div>
       </div>

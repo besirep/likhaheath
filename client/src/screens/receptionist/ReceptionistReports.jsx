@@ -208,9 +208,10 @@ export default function Reports() {
   const priorityBreakdown = (charts?.priorityBreakdown?.length ? charts.priorityBreakdown.map((r, i) => ({ name: r.priority || "Regular", value: Number(r.value) || 0, color: ["#0047AB","#8B5FBF","#d4709a","#e09040","#2a9d8f"][i % 5] })) : _priorityBreakdown);
 
   // ── KPIs ─────────────────────────────────────────────────────────────────────
-  const todayTotal     = kpi?.today_appointments ?? weeklyQueue.reduce((s, r) => s + r.total, 0);
-  const todayCompleted = weeklyQueue.reduce((s, r) => s + r.completed, 0);
-  const todaySkipped   = weeklyQueue.reduce((s, r) => s + r.skipped, 0);
+  const periodRows     = period === "today" ? weeklyQueue.slice(0, 1) : weeklyQueue;
+  const todayTotal     = kpi?.today_appointments ?? periodRows.reduce((s, r) => s + r.total, 0);
+  const todayCompleted = periodRows.reduce((s, r) => s + r.completed, 0);
+  const todaySkipped   = periodRows.reduce((s, r) => s + r.skipped, 0);
   const avgWait        = waitTimeWeek.length ? Math.round(waitTimeWeek.reduce((s, r) => s + r.avg, 0) / waitTimeWeek.length) : 22;
   const smsSent        = smsWeekly.reduce((s, r) => s + r.sent, 0);
   const smsFailed      = smsWeekly.reduce((s, r) => s + r.failed, 0);

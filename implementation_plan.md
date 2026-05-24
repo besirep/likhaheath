@@ -1,6 +1,6 @@
 # LikhaHealth — Implementation Plan & System Requirements
 **Angono Municipal Health Center Patient Management System**
-*Version 1.3 · May 2026 — Updated: Normalized schema; Phase 1 complete; Phase 2 in progress*
+*Version 1.4 · May 2026 — Updated: All UI bugs fixed; Phase 3a (QA & Bug Fixes) complete*
 
 ---
 
@@ -34,23 +34,23 @@ LikhaHealth is a locally-deployed patient management system designed to digitize
 #### 👩‍💼 Medical Staff — Receptionist Module
 | Feature | Status | Description |
 |---------|:---:|-------------|
-| Dashboard | 🎨 UI done | Live queue overview, stats, now-serving banner |
-| Register Patient | 🎨 UI done | Multi-step form: demographics → address → contacts → cluster |
-| Queue Management | 🎨 UI done | View all patients, update status, filter by status |
-| Patient Records | 🎨 UI done | Search, view, and edit patient master records |
-| Appointments | 🎨 UI done | View, create, confirm, and cancel scheduled appointments |
-| SMS Logs | 🎨 UI done | View history of all outbound SMS messages with status |
-| Reports | 🎨 UI done | Daily/weekly/monthly patient and queue statistics |
+| Dashboard | ✅ Complete | Live queue overview, stats, now-serving banner, API-connected |
+| Register Patient | ✅ Complete | Multi-step form: demographics → address → contacts → cluster, API-connected |
+| Queue Management | ✅ Complete | View all patients, call next, update status, SMS, filter by status |
+| Patient Records | ✅ Complete | Search, view, and edit patient master records |
+| Appointments | ✅ Complete | View, create, confirm, and cancel scheduled appointments |
+| SMS Logs | ✅ Complete | View history of all outbound SMS messages with status |
+| Reports | ✅ Complete | Daily/weekly/monthly patient and queue statistics |
 
 #### 👨‍⚕️ Doctor Module
 | Feature | Status | Description |
 |---------|:---:|-------------|
-| Dashboard | 🎨 UI done | My queue today, scheduled appointments, completion stats |
-| My Queue | 🎨 UI done | Patients assigned to this doctor, call next, vitals view |
-| Consultations | 🎨 UI done | Start/resume consultations, diagnosis, prescription |
-| Patient Records | 🎨 UI done | Full medical history per patient (read + write) |
-| Appointments | 🎨 UI done | View and manage personal schedule |
-| Reports | 🎨 UI done | View daily/weekly/monthly statistics |
+| Dashboard | ✅ Complete | My queue today, scheduled appointments, completion stats |
+| My Queue | ✅ Complete | Patients assigned to this doctor, call next, vitals view, start consult |
+| Consultations | ✅ Complete | Start/resume consultations, diagnosis, prescription, save to DB |
+| Patient Records | ✅ Complete | Full medical history per patient (read + write), vitals trends |
+| Appointments | ✅ Complete | View and manage personal schedule |
+| Reports | ✅ Complete | View daily/weekly/monthly statistics |
 
 #### 📋 Queue Management Logic
 - Queue numbers auto-increment per day per `appointments.queue_number`
