@@ -2,12 +2,11 @@ import { apiFetch } from './apiFetch.js';
 
 export const dashboardApi = {
   /**
-   * GET /api/dashboard/stats
-   * Returns: { total_patients, today_appointments, waiting_queue,
-   *            total_doctors, total_staff, records_today, expiring_licenses }
+   * GET /api/dashboard/stats?period=today|week|month
+   * Returns stats scoped to the given time frame.
    */
-  getStats: async () => {
-    const res  = await apiFetch('/dashboard/stats');
+  getStats: async (period = 'today') => {
+    const res  = await apiFetch(`/dashboard/stats?period=${period}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to fetch dashboard stats.');
     return data;

@@ -175,7 +175,7 @@ export default function ClinicDashboard({ onNavigate, user }) {
             {[
               { label: "Total Patients on File", value: stats.total_patients?.toLocaleString() || "—", Icon: Building2, color: "#2a9d8f" },
               { label: "Active Doctors Today",   value: stats.total_doctors || "—",                   Icon: Stethoscope, color: "#0047AB" },
-              { label: "Records Today",          value: stats.records_today || "0",                   Icon: ClipboardList, color: "#8B5FBF" },
+              { label: "Records Today",          value: stats.records_count || "0",                   Icon: ClipboardList, color: "#8B5FBF" },
             ].map(s => (
               <div key={s.label} style={{ background: "white", borderRadius: 14, padding: "14px 18px", border: "1px solid #edf1f7", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 6px rgba(100,120,150,0.06)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 12, background: `${s.color}14` }}><s.Icon size={22} strokeWidth={1.8} color={s.color} /></div>
