@@ -61,6 +61,7 @@ export function normalizeQueueItem(row) {
   return {
     id:           row.id,                             // queue.id
     queueDbId:    row.id,                             // same, used for PATCH
+    queue_number: row.queue_number,                   // raw number for sorting
     queue:        `Q-${String(row.queue_number).padStart(3, '0')}`,
     name:         row.patient_name,
     age,

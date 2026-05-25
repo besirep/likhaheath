@@ -289,6 +289,15 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
     return p.status === filter;
   });
 
+  // Auto-rearrange: active statuses at top, done/skipped at bottom, queue_number order within each group
+  const statusOrder = { "in-consultation": 0, "vitals-done": 1, "waiting": 2, "skipped": 3, "done": 4 };
+  const sorted = [...filtered].sort((a, b) => {
+    const orderA = statusOrder[a.status] ?? 99;
+    const orderB = statusOrder[b.status] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.queue_number || 0) - (b.queue_number || 0);
+  });
+
   const markDone = async id => {
     const p = queue.find(q => q.id === id);
     if (!p) return;
@@ -461,7 +470,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
 
             {/* Cards */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {filtered.map((p, i) => {
+              {sorted.map((p, i) => {
                 const sc = statusConfig[p.status] || statusConfig["waiting"];
                 const pc = p.priority ? priorityConfig[p.priority] : null;
                 const isSelected = p.id === selectedId;
@@ -528,7 +537,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
                 );
               })}
 
-              {!loading && filtered.length === 0 && (
+              {!loading && sorted.length === 0 && (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#9aabc0" }}>
                   <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1a2540" }}>All clear!</div>

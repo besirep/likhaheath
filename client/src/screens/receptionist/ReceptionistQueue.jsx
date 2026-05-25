@@ -320,6 +320,15 @@ export default function ReceptionistQueue({ onNavigate }) {
     return true;
   });
 
+  // Auto-rearrange: active statuses at top, done/skipped at bottom, queue_number order within each group
+  const statusOrder = { "in-consultation": 0, "vitals-done": 1, "waiting": 2, "skipped": 3, "done": 4 };
+  const sorted = [...filtered].sort((a, b) => {
+    const orderA = statusOrder[a.status] ?? 99;
+    const orderB = statusOrder[b.status] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.queue_number || 0) - (b.queue_number || 0);
+  });
+
   // Derive doctor list from live queue data
   const doctors = [...new Set(queue.map(p => p.doctor).filter(Boolean))];
 
@@ -435,13 +444,13 @@ export default function ReceptionistQueue({ onNavigate }) {
 
             {/* Cards */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {filtered.length === 0 ? (
+              {sorted.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#8a9bb0" }}>
                   <CheckCheck size={32} strokeWidth={1.5} color="#8a9bb0" style={{ marginBottom: 8 }} />
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>All clear!</div>
                   <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>
-              ) : filtered.map((p, i) => (
+              ) : sorted.map((p, i) => (
                 <QueueCard key={p.id} patient={p} index={i} onSelect={setSelected} isSelected={selected?.id === p.id} />
               ))}
             </div>

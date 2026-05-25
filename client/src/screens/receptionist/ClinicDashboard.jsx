@@ -101,7 +101,15 @@ export default function ClinicDashboard({ onNavigate, user }) {
     }
   };
 
-  const filtered   = activeTab === "all" ? patients : patients.filter(p => p.status === activeTab);
+  const _filtered  = activeTab === "all" ? patients : patients.filter(p => p.status === activeTab);
+  // Auto-rearrange: active statuses at top, done at bottom, queue_number order within each group
+  const _statusOrder = { "in-consultation": 0, "vitals-done": 1, "waiting": 2, "skipped": 3, "done": 4 };
+  const filtered = [..._filtered].sort((a, b) => {
+    const orderA = _statusOrder[a.status] ?? 99;
+    const orderB = _statusOrder[b.status] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.queue_number || 0) - (b.queue_number || 0);
+  });
   const timeStr    = time.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const dateStr    = time.toLocaleDateString("en-PH", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
