@@ -290,7 +290,7 @@ export default function App() {
         {/* Screen content — pass onNavigate + registration session */}
         <ScreenErrorBoundary key={resolvedActiveId}>
         {Screen && (
-          activeScreen?.id === 'register'
+           activeScreen?.id === 'register'
             ? <PatientRegistration
                 key="register-persistent"
                 onNavigate={setActiveId}
@@ -298,6 +298,13 @@ export default function App() {
                 draft={registrationDraft}
                 onDraftChange={setRegistrationDraft}
                 onDraftClear={clearDraft}
+              />
+            : activeScreen?.id === 'dr-dashboard'
+            ? <DoctorDashboard
+                key="dr-dashboard"
+                onNavigate={setActiveId}
+                onStartConsult={setActivePatient}
+                user={user}
               />
             : activeScreen?.id === 'dr-queue'
             ? <DoctorQueue

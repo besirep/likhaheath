@@ -445,11 +445,34 @@ function QueueRow({ patient, index, onStartConsult }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorDashboard({ user, onNavigate }) {
+export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const [time, setTime]             = useState(new Date());
-  const [activeConsult, setActiveConsult] = useState(null);
   const [notifOpen, setNotifOpen]   = useState(false);
   const [myQueue, setMyQueue]       = useState([]);
+
+  // Shared consultation start: updates queue status → sets active patient in App → navigates to Consultations
+  const handleStartConsult = async (patient) => {
+    try {
+      await consultationsApi.updateQueueStatus(patient.id, "In-Progress");
+      setMyQueue(q => q.map(e => e.id === patient.id ? { ...e, status: "in-consultation" } : e));
+      if (onStartConsult) {
+        onStartConsult({
+          queueId:       patient.id,
+          appointmentId: patient.appointmentId,
+          patientId:     patient.patientId,
+          name:          patient.name,
+          age:           patient.age,
+          sex:           patient.gender || '?',
+          queueNumber:   patient.queue,
+          visitReason:   patient.reason,
+          vitals:        patient.vitals,
+        });
+      }
+      if (onNavigate) onNavigate("dr-consult");
+    } catch (e) {
+      console.error("[DoctorDashboard] Failed to start consultation:", e);
+    }
+  };
 
   // Derive display name: "Dr. Dela Cruz" from full name
   const lastName   = user?.name?.split(" ").slice(-1)[0] ?? "Doctor";
@@ -520,7 +543,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
       
       
 
-      {activeConsult && <ConsultationModal patient={activeConsult} onClose={() => setActiveConsult(null)} onNavigate={onNavigate} queue={myQueue} onEndConsult={loadQueue} />}
+
 
       <div style={{ padding: "0 28px 32px" }}>
 
@@ -609,7 +632,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
         {/* ── Now Serving Banner ── */}
         <NowServingBanner
           consultations={allConsultations}
-          onResume={() => setActiveConsult(myQueue[0])}
+          onResume={() => { const p = myQueue.find(q => q.status === 'in-consultation') || myQueue[0]; if (p) handleStartConsult(p); }}
           fade={bannerFade}
           displayName={displayName}
         />
@@ -636,7 +659,7 @@ export default function DoctorDashboard({ user, onNavigate }) {
               ))}
             </div>
 
-            {myQueue.map((p, i) => <QueueRow key={p.id} patient={p} index={i} onStartConsult={setActiveConsult} />)}
+            {myQueue.map((p, i) => <QueueRow key={p.id} patient={p} index={i} onStartConsult={handleStartConsult} />)}
 
             <div style={{ padding: "11px 20px", borderTop: "1px solid #f0f3fa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 14, color: "#b0bdd6" }}>{myQueue.filter(p => p.status === "waiting").length} patients waiting</span>

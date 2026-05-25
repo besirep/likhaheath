@@ -278,7 +278,15 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
     }
   }, []);
 
-  useEffect(() => { loadQueue(); }, [loadQueue]);
+  useEffect(() => {
+    loadQueue();
+    // Poll every 15s for live updates
+    const interval = setInterval(() => loadQueue(), 15_000);
+    // Re-fetch immediately when user switches back to this tab/screen
+    const onVisible = () => { if (!document.hidden) loadQueue(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
+  }, [loadQueue]);
 
   const selected = queue.find(p => p.id === selectedId);
 
