@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { queueApi } from "../../lib/api/queue.js";
 import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
+import { dashboardApi } from "../../lib/api/dashboard.js";
 import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X, Check } from "lucide-react";
 
 const statusConfig = {
@@ -224,6 +225,7 @@ export default function ReceptionistQueue({ onNavigate }) {
   const [selected, setSelected]   = useState(null);
   const [toast, setToast]         = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [summaryStats, setSummaryStats] = useState({ avg_wait: 0, sms_sent: 0 });
 
   const showToast = msg => setToast(msg);
 
@@ -244,7 +246,8 @@ export default function ReceptionistQueue({ onNavigate }) {
   // Initial load + 30-second polling
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(() => fetchQueue(true), 30_000);
+    dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {});
+    const interval = setInterval(() => { fetchQueue(true); dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {}); }, 30_000);
     return () => clearInterval(interval);
   }, [fetchQueue]);
 
@@ -519,8 +522,8 @@ export default function ReceptionistQueue({ onNavigate }) {
               {[
                 { label: "Total Registered", value: queue.length },
                 { label: "Consultations Done", value: done },
-                { label: "Avg. Wait Time",   value: "22 min" },
-                { label: "SMS Sent",         value: "14" },
+                { label: "Avg. Wait Time",   value: `${summaryStats.avg_wait}m` },
+                { label: "SMS Sent",         value: summaryStats.sms_sent },
               ].map(r => (
                 <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #edf1f7" }}>
                   <span style={{ fontSize: 14, color: "#8a9bb0" }}>{r.label}</span>

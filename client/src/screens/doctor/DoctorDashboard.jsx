@@ -3,31 +3,6 @@ import { Building2, Stethoscope, Clock, AlertCircle, SkipForward, Bell, Clipboar
 import { consultationsApi } from "../../lib/api/consultations.js";
 import { printConsultationSummary, printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
 
-// Status mapping: API → UI key
-const mapStatus = s => {
-  if (!s) return "waiting";
-  const m = { Waiting: "waiting", "In-Progress": "in-consultation", Done: "done", Skipped: "skipped" };
-  return m[s] || s.toLowerCase();
-};
-
-const appointments = [
-  { time: "1:00 PM", name: "Pedro Bautista", age: 51, reason: "Annual physical",     type: "scheduled" },
-  { time: "2:30 PM", name: "Luisa Ramos",    age: 39, reason: "Post-op follow-up",   type: "scheduled" },
-  { time: "4:00 PM", name: "Elena Cruz",     age: 66, reason: "Hypertension review", type: "urgent"    },
-];
-
-const notifications = [
-  { id: 1, text: "A-001 vitals recorded by nurse",    time: "2m ago",  type: "info"   },
-  { id: 2, text: "Elena Cruz marked as urgent",       time: "18m ago", type: "urgent" },
-  { id: 3, text: "Lab results ready: Jose Dela Cruz", time: "34m ago", type: "lab"    },
-];
-
-const priorityConfig = {
-  elderly:   { Icon: UserRound, label: "Senior Citizen", color: "#8B5FBF" },
-  pregnant:  { Icon: UserRound, label: "Pregnant",       color: "#d4709a" },
-  pwd:       { Icon: UserRound, label: "PWD",             color: "#0047AB" },
-  pediatric: { Icon: UserRound, label: "Pedia",           color: "#e09040" },
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function Avatar({ name, size = 36 }) {
