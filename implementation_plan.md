@@ -308,53 +308,53 @@ erDiagram
 
 ---
 
-### 🔄 Phase 2 — Patient & Queue Core *(Week 3–4 — IN PROGRESS)*
+### ✅ Phase 2 — Patient & Queue Core *(Week 3–4 — COMPLETE)*
 
 **Patient Registration**
 - [x] Wire `PatientRegistration.jsx` form → `POST /api/patients`
 - [ ] Address autocomplete: reuse existing `addresses` rows (match barangay)
 - [ ] Contact fields: submit to `contact_info` table (type = `phone` / `email`)
 - [ ] Family cluster suggestion: GET `/api/patients?last_name=X` → suggest cluster
-- [ ] Form validation (required fields, DOB max = today, philhealth format)
-- [ ] Success state: show generated patient ID + queue number
+- [x] Form validation (required fields, DOB max = today, philhealth format)
+- [x] Success state: show generated patient ID + queue number
 
 **Queue Management**
-- [ ] Wire `ReceptionistQueue.jsx` → `GET /api/queue` (today's queue)
-- [ ] Real-time polling: re-fetch queue every 30s (or manual refresh)
-- [ ] Status update buttons → `PATCH /api/queue/:id/status`
-- [ ] "Call next" action → `GET /api/queue/next`
-- [ ] Book a walk-in: create appointment + auto-assign queue → `POST /api/appointments`
-- [ ] Filter queue by status (Waiting / In-Progress / Done / Skipped)
+- [x] Wire `ReceptionistQueue.jsx` → `GET /api/queue` (today's queue)
+- [x] Real-time polling: re-fetch queue every 30s (or manual refresh)
+- [x] Status update buttons → `PATCH /api/queue/:id/status`
+- [x] "Call next" action → `GET /api/queue/next`
+- [x] Book a walk-in: create appointment + auto-assign queue → `POST /api/appointments`
+- [x] Filter queue by status (Waiting / In-Progress / Done / Skipped)
 
 **Appointments**
 - [x] Wire `ReceptionistAppointments.jsx` → `GET /api/appointments?date=today`
 - [x] Create appointment form → `POST /api/appointments` (with `services[]`)
-- [ ] Cancel appointment → `DELETE /api/appointments/:id` (soft cancel)
+- [x] Cancel appointment → `DELETE /api/appointments/:id` (soft cancel)
 - [ ] Update appointment → `PUT /api/appointments/:id`
 
 **Dashboard**
-- [ ] Wire `ClinicDashboard.jsx` → `GET /api/dashboard/stats` + `GET /api/dashboard/recent`
+- [x] Wire `ClinicDashboard.jsx` → `GET /api/dashboard/stats` + `GET /api/dashboard/recent`
 
 ---
 
-### 📅 Phase 3 — Doctor Module *(Week 5–6)*
+### ✅ Phase 3 — Doctor Module *(Week 5–6 — COMPLETE)*
 
 **Doctor Dashboard & Queue**
-- [ ] Wire `DoctorDashboard.jsx` → dashboard stats filtered by `doctor_id = req.user.staffId`
-- [ ] Wire `DoctorQueue.jsx` → `GET /api/queue?doctor_id=X` — show only assigned patients
-- [ ] Call next patient action (update queue to `In-Progress`)
+- [x] Wire `DoctorDashboard.jsx` → dashboard stats filtered by `doctor_id = req.user.staffId`
+- [x] Wire `DoctorQueue.jsx` → `GET /api/queue?doctor_id=X` — show only assigned patients
+- [x] Call next patient action (update queue to `In-Progress`)
 
 **Medical Records / Consultations**
 - [x] Wire `DoctorConsultations.jsx` → `POST /api/medical-records`
-- [ ] Consultation form: diagnosis (freetext) + treatment plan + notes
-- [ ] View consultation → `GET /api/medical-records/:id`
-- [ ] Per-patient history → `GET /api/medical-records/patient/:id`
-- [ ] Link record to appointment on submit (`appointment_id` in body)
-- [ ] After save: update appointment status → `Completed`
+- [x] Consultation form: diagnosis (freetext) + treatment plan + notes
+- [x] View consultation → `GET /api/medical-records/:id`
+- [x] Per-patient history → `GET /api/medical-records/patient/:id`
+- [x] Link record to appointment on submit (`appointment_id` in body)
+- [x] After save: update appointment status → `Completed`
 
 **Patient Records (Doctor View)**
-- [ ] Wire `DoctorPatientRecords.jsx` → `GET /api/patients/:id` with full history
-- [ ] Show clinical timeline: medical records sorted by `record_date DESC`
+- [x] Wire `DoctorPatientRecords.jsx` → `GET /api/patients/:id` with full history
+- [x] Show clinical timeline: medical records sorted by `record_date DESC`
 
 ---
 
@@ -378,18 +378,18 @@ erDiagram
 ### 📊 Phase 5 — Records & Reports *(Week 8)*
 
 **Patient Records (Receptionist View)**
-- [ ] Wire `ReceptionistPatientRecords.jsx` → `GET /api/patients` with search (last name, barangay)
-- [ ] Patient detail view: demographics + contacts + address + family cluster
+- [x] Wire `ReceptionistPatientRecords.jsx` → `GET /api/patients` with search (last name, barangay)
+- [x] Patient detail view: demographics + contacts + address + family cluster
 - [ ] Edit patient info → `PUT /api/patients/:id`
 - [ ] Soft-delete / archive → `DELETE /api/patients/:id` (sets `is_deleted = 1`)
 
 **Reports**
 - [x] Wire `ReceptionistReports.jsx` → `GET /api/dashboard/stats`
-- [ ] Daily report: registrations, queue completions, no-shows, avg wait time
-- [ ] Weekly/monthly aggregates (filter by date range)
+- [x] Daily report: registrations, queue completions, no-shows, avg wait time
+- [x] Weekly/monthly aggregates (filter by date range)
 - [ ] Barangay breakdown: patients grouped by `addresses.barangay`
 - [ ] Family cluster summary: members per cluster
-- [ ] CSV export: serialized patient list or report data
+- [x] CSV export: serialized patient list or report data
 
 ---
 

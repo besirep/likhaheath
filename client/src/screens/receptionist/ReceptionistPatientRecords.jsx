@@ -490,7 +490,15 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
       <AddToQueueModal
         patient={addQueueModal}
         onClose={() => setAddQueueModal(null)}
-        onConfirm={(p, reason, doctor) => showToast(`${p.name} added to queue for ${doctor}`)}
+        onConfirm={async (p, reason, doctor) => {
+          try {
+            const res = await patientsApi.createVisit(p.id, { visit_reason: reason || 'Walk-in', notes: reason });
+            showToast(`${p.name} added to queue — Q-${String(res.queue_number).padStart(3, '0')}`);
+            fetchPatients(search);
+          } catch (err) {
+            showToast(`Failed to queue: ${err.message}`);
+          }
+        }}
       />
 
       {toast && (
