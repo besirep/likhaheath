@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { sendSMS, getPatientPhone, queueCalledMessage } = require('../helpers/smsHelper');
 
 // GET /api/queue  (today's queue — enriched with patient & vitals data)
 exports.getToday = async (req, res) => {
@@ -94,12 +95,39 @@ exports.updateStatus = async (req, res) => {
   try {
     await db.query('UPDATE queue SET status=? WHERE id=?', [status, req.params.id]);
     // Sync appointment status
-    const [q] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [req.params.id]);
+    const [q] = await db.query('SELECT appointment_id, queue_number FROM queue WHERE id=?', [req.params.id]);
     if (q.length) {
       if (status === 'Done') {
         await db.query('UPDATE appointments SET status="Completed" WHERE id=?', [q[0].appointment_id]);
       } else if (status === 'Skipped') {
         await db.query('UPDATE appointments SET status="No-Show" WHERE id=?', [q[0].appointment_id]);
+      }
+
+      // ── Fire "queue called" SMS when patient's turn starts ──────────────────
+      if (status === 'In-Progress') {
+        (async () => {
+          try {
+            const [[appt]] = await db.query(
+              `SELECT a.patient_id, p.first_name
+               FROM appointments a
+               JOIN patients p ON a.patient_id = p.id
+               WHERE a.id = ?`,
+              [q[0].appointment_id]
+            );
+            if (!appt) return;
+            const phone = await getPatientPhone(appt.patient_id);
+            if (!phone) return;
+            const smsMsg = queueCalledMessage(appt.first_name, q[0].queue_number);
+            const r = await sendSMS({
+              phone, message: smsMsg,
+              patient_id: appt.patient_id,
+              appointment_id: q[0].appointment_id,
+            });
+            console.log(`[SMS] Queue-called SMS to patient ${appt.patient_id}: ${r.success ? 'SENT' : 'FAILED'}`);
+          } catch (err) {
+            console.error('[SMS] Queue-called SMS error:', err.message);
+          }
+        })();
       }
     }
     res.json({ message: 'Queue status updated.' });

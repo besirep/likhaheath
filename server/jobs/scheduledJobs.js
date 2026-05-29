@@ -17,61 +17,19 @@
 const cron = require('node-cron');
 const db   = require('../config/db');
 
-// ── SMS Helper (reuses Semaphore integration from smsController) ─────────────
-const SEMAPHORE_URL  = 'https://api.semaphore.co/api/v4/messages';
-const SEMAPHORE_KEY  = process.env.SEMAPHORE_API_KEY;
-const SENDER_NAME    = process.env.SEMAPHORE_SENDER_NAME || 'LikhaHealth';
-
-function normalizePhone(raw) {
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('63') && digits.length === 12) return '0' + digits.slice(2);
-  if (digits.startsWith('9')  && digits.length === 10) return '0' + digits;
-  if (digits.startsWith('09') && digits.length === 11) return digits;
-  return null;
-}
+// ── SMS Helper (reuses shared module) ────────────────────────────────────────
+const { sendSMS: sendSMSHelper, normalizePhone } = require('../helpers/smsHelper');
 
 async function sendSMS(phone, message, patientId, appointmentId) {
-  const recipient = normalizePhone(phone);
-  if (!recipient || !SEMAPHORE_KEY) return null;
-
-  try {
-    const res = await fetch(SEMAPHORE_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apikey:     SEMAPHORE_KEY,
-        number:     recipient,
-        message,
-        sendername: SENDER_NAME,
-      }),
-    });
-
-    const data = await res.json();
-    const success = res.ok && Array.isArray(data) && data[0]?.message_id;
-
-    // Log to DB
-    await db.query(
-      `INSERT INTO sms_notifications
-         (patient_id, appointment_id, message, recipient, status, semaphore_id, error_message)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        patientId,
-        appointmentId || null,
-        message,
-        recipient,
-        success ? 'Sent' : 'Failed',
-        success ? String(data[0].message_id) : null,
-        success ? null : JSON.stringify(data),
-      ]
-    );
-
-    return success;
-  } catch (err) {
-    console.error('[SMS Job] Send error:', err.message);
-    return false;
-  }
+  const result = await sendSMSHelper({
+    phone,
+    message,
+    patient_id: patientId,
+    appointment_id: appointmentId,
+  });
+  return result.success;
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // JOB 1: DATA RETENTION — 5-Year Policy

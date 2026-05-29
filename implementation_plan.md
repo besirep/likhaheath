@@ -1,6 +1,6 @@
 # LikhaHealth — Implementation Plan & System Requirements
 **Angono Municipal Health Center Patient Management System**
-*Version 1.4 · May 2026 — Updated: All UI bugs fixed; Phase 3a (QA & Bug Fixes) complete*
+*Version 1.4 · May 2026 — Updated: Phase 4 (SMS Notifications) complete*
 
 ---
 
@@ -95,7 +95,7 @@ Auth Store       JWT in localStorage (lh_token key)
 Backend          Node.js + Express.js (CommonJS)
 Auth             JWT (jsonwebtoken) + bcrypt (bcryptjs, cost 12)
 Database Access  mysql2 (raw queries via promise pool)
-SMS API          Semaphore PH (local SMS gateway) — Phase 4
+SMS API          Semaphore PH (local SMS gateway) — ✅ Complete
 ─────────────────────────────────────────────────────────────
 Database         MySQL 8.x (via XAMPP)
 Runtime          Node.js v20 LTS
@@ -358,16 +358,20 @@ erDiagram
 
 ---
 
-### 📱 Phase 4 — SMS Notifications *(Week 7)*
+### 📱 Phase 4 — SMS Notifications *(Week 7 — COMPLETE)*
 
-- [x] Register Semaphore PH API key in `server/.env` as `SMS_API_KEY`
-- [ ] Implement `smsController.send` using Semaphore PH REST API
-- [ ] Trigger SMS on patient registration (queue number + wait estimate)
-- [ ] Trigger SMS on appointment creation (date/time confirmation)
-- [ ] Trigger SMS on queue called (`PATCH /api/queue/:id/status` → `In-Progress`)
-- [ ] Scheduled reminder: day-before appointment SMS (cron or manual batch)
-- [ ] Wire `ReceptionistSMSLogs.jsx` → `GET /api/sms/history`
-- [ ] Per-patient SMS history → `GET /api/sms/patient/:id`
+- [x] Register Semaphore PH API key in `server/.env` as `SEMAPHORE_API_KEY`
+- [x] Register sender name `LikhaHealth` on Semaphore PH dashboard
+- [x] Implement shared `smsHelper.js` — centralised Semaphore integration
+- [x] Refactor `smsController.send` to use shared helper
+- [x] Trigger SMS on patient registration (queue number + confirmation)
+- [x] Trigger SMS on returning patient queue entry (`createVisit`)
+- [x] Trigger SMS on appointment creation (date/time confirmation)
+- [x] Trigger SMS on queue called (`PATCH /api/queue/:id/status` → `In-Progress`)
+- [x] Scheduled reminder: day-before appointment SMS (cron job in `scheduledJobs.js`)
+- [x] Wire `ReceptionistSMSLogs.jsx` → `GET /api/sms/history` (live data)
+- [x] Wire bulk SMS send + resend to live `POST /api/sms/send` API
+- [x] Per-patient SMS history → `GET /api/sms/patient/:id`
 
 ---
 

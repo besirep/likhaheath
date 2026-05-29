@@ -1,20 +1,6 @@
-import { useState } from "react";
-import { Search, Building2, Plus, Clock, Bell, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, AlertTriangle, LayoutDashboard, X, Check, Inbox } from "lucide-react";
-
-const smsLogs = [
-  { id: 1,  patient: "Maria Santos",   contact: "+63 912 345 6789", time: "9:05 AM",  date: "Mar 1, 2026",  type: "queue",      status: "sent",    message: "Hi Maria! Your queue number is A-001. Estimated wait: ~5 minutes. Please proceed to Room 1. — CareQueue Health Center" },
-  { id: 2,  patient: "Jose Dela Cruz", contact: "+63 917 234 5678", time: "9:10 AM",  date: "Mar 1, 2026",  type: "queue",      status: "sent",    message: "Hi Jose! Your queue number is A-002. Estimated wait: ~15 minutes. — CareQueue Health Center" },
-  { id: 3,  patient: "Elena Cruz",     contact: "+63 915 999 8877", time: "9:15 AM",  date: "Mar 1, 2026",  type: "queue",      status: "sent",    message: "Hi Elena! Your queue number is A-003 (Priority Lane). Please be seated near the priority area. — CareQueue Health Center" },
-  { id: 4,  patient: "Luisa Ramos",    contact: "+63 921 333 4455", time: "9:20 AM",  date: "Mar 1, 2026",  type: "queue",      status: "failed",  message: "Hi Luisa! Your queue number is A-004 (Priority). Estimated wait: ~25 minutes. — CareQueue Health Center" },
-  { id: 5,  patient: "Ramon Valdez",   contact: "+63 920 111 2233", time: "9:32 AM",  date: "Mar 1, 2026",  type: "queue",      status: "sent",    message: "Hi Ramon! Your queue number is A-005. Estimated wait: ~35 minutes. — CareQueue Health Center" },
-  { id: 6,  patient: "Pedro Bautista", contact: "+63 919 444 5566", time: "9:45 AM",  date: "Mar 1, 2026",  type: "call-alert", status: "sent",    message: "Hi Pedro! You are now being called. Please proceed to Room 1 for your consultation. Queue: A-008. — CareQueue" },
-  { id: 7,  patient: "Ana Lim",        contact: "+63 918 765 4321", time: "10:02 AM", date: "Mar 1, 2026",  type: "queue",      status: "pending", message: "Hi Ana! Your queue number is A-007. Estimated wait: ~45 minutes. — CareQueue Health Center" },
-  { id: 8,  patient: "Celia Marcos",   contact: "+63 915 888 7766", time: "8:20 AM",  date: "Mar 1, 2026",  type: "reminder",   status: "sent",    message: "Reminder: You have an appointment with Dr. Cruz today at 9:00 AM. Please arrive 10 minutes early. Reply CANCEL to cancel. — CareQueue" },
-  { id: 9,  patient: "Jose Dela Cruz", contact: "+63 917 234 5678", time: "8:15 AM",  date: "Mar 1, 2026",  type: "reminder",   status: "sent",    message: "Reminder: You have an appointment with Dr. Santos today at 9:28 AM. Don't forget to bring your latest FBS result. — CareQueue" },
-  { id: 10, patient: "Maria Santos",   contact: "+63 912 345 6789", time: "8:00 AM",  date: "Mar 1, 2026",  type: "reminder",   status: "failed",  message: "Reminder: You have an appointment with Dr. Reyes today at 9:00 AM. Please arrive 10 minutes early. — CareQueue" },
-  { id: 11, patient: "Ramon Valdez",   contact: "+63 920 111 2233", time: "2:30 PM",  date: "Feb 28, 2026", type: "follow-up",  status: "sent",    message: "Hi Ramon! Your follow-up appointment with Dr. Reyes is on March 8, 2026 at 9:00 AM. — CareQueue Health Center" },
-  { id: 12, patient: "Ana Lim",        contact: "+63 918 765 4321", time: "11:45 AM", date: "Feb 25, 2026", type: "follow-up",  status: "sent",    message: "Hi Ana! Please return for follow-up on March 2, 2026. If symptoms worsen before then, please visit immediately. — CareQueue" },
-];
+import { useState, useEffect } from "react";
+import { Search, Building2, Plus, Clock, Bell, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, AlertTriangle, LayoutDashboard, X, Check, Inbox, RefreshCw } from "lucide-react";
+import { smsApi } from "../../lib/api/sms.js";
 
 const typeConfig = {
   "queue":      { label: "Queue #",    color: "#2a9d8f", bg: "#e8f7f5", Icon: ClipboardList },
@@ -232,7 +218,8 @@ function BulkSMSModal({ patients, onClose, onSend }) {
 
 export default function ReceptionistSMSLogs() {
 
-  const [logs, setLogs]           = useState(smsLogs);
+  const [logs, setLogs]           = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter]     = useState("all");
@@ -241,32 +228,107 @@ export default function ReceptionistSMSLogs() {
   const [toast, setToast]         = useState(null);
   const [bulkOpen, setBulkOpen]   = useState(false);
 
+  // ── Fetch live SMS history from API ─────────────────────────────────────────
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const data = await smsApi.getHistory();
+      // Map DB rows to the shape the UI expects
+      const mapped = (data || []).map(row => {
+        const sentDate = new Date(row.sent_at);
+        // Detect SMS type from message content
+        let type = 'queue';
+        const msg = (row.message || '').toLowerCase();
+        if (msg.includes("it's your turn") || msg.includes('has been called')) type = 'call-alert';
+        else if (msg.includes('reminder') || msg.includes('follow-up appointment is')) type = 'reminder';
+        else if (msg.includes('appointment') && msg.includes('scheduled')) type = 'follow-up';
+
+        return {
+          id:         row.id,
+          patient:    row.patient_name || 'Unknown',
+          patient_id: row.patient_id,
+          contact:    row.contact_number || row.recipient || '',
+          time:       sentDate.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          date:       sentDate.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }),
+          rawDate:    sentDate,
+          type,
+          status:     (row.status || '').toLowerCase() === 'sent' ? 'sent' : 'failed',
+          message:    row.message || '',
+          semaphore_id: row.semaphore_id,
+          error_message: row.error_message,
+        };
+      });
+      setLogs(mapped);
+    } catch (err) {
+      console.error('[SMSLogs] fetch error:', err);
+      setToast('Failed to load SMS history.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchLogs(); }, []);
+
   // Unique patients derived from logs
   const uniquePatients = Object.values(
-    logs.reduce((acc, l) => { acc[l.contact] = acc[l.contact] || { id: l.contact, patient: l.patient, contact: l.contact }; return acc; }, {})
+    logs.reduce((acc, l) => {
+      if (l.patient_id) {
+        acc[l.patient_id] = acc[l.patient_id] || { id: l.patient_id, patient: l.patient, contact: l.contact };
+      }
+      return acc;
+    }, {})
   );
 
 
-  const handleResend = (log) => {
-    setLogs(l => l.map(x => x.id === log.id ? { ...x, status: "sent" } : x));
-    setPreview(null);
-    setToast(`Message resent to ${log.patient}`);
+  const handleResend = async (log) => {
+    try {
+      await smsApi.send({
+        patient_id: log.patient_id,
+        message: log.message,
+        phone: log.contact,
+      });
+      setPreview(null);
+      setToast(`Message resent to ${log.patient}`);
+      fetchLogs(); // Refresh the list
+    } catch (err) {
+      setToast(`Resend failed: ${err.message}`);
+    }
   };
+
+  const handleBulkSend = async (selectedIds, message) => {
+    setBulkOpen(false);
+    let sentCount = 0;
+    for (const patientId of selectedIds) {
+      try {
+        await smsApi.send({ patient_id: patientId, message });
+        sentCount++;
+      } catch { /* skip failed */ }
+    }
+    setToast(`Bulk SMS sent to ${sentCount} recipient${sentCount !== 1 ? 's' : ''}`);
+    fetchLogs();
+  };
+
+  // ── Filtering ───────────────────────────────────────────────────────────────
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const filtered = logs.filter(l => {
     const matchSearch = l.patient.toLowerCase().includes(search.toLowerCase()) || l.contact.includes(search);
     const matchStatus = statusFilter === "all" || l.status === statusFilter;
     const matchType   = typeFilter   === "all" || l.type   === typeFilter;
     const matchDate   = dateFilter   === "all"
-      || (dateFilter === "today"     && l.date === "Mar 1, 2026")
-      || (dateFilter === "yesterday" && l.date === "Feb 28, 2026");
+      || (dateFilter === "today"     && l.date === todayStr)
+      || (dateFilter === "yesterday" && l.date === yesterdayStr);
     return matchSearch && matchStatus && matchType && matchDate;
   });
 
   const sent    = logs.filter(l => l.status === "sent").length;
   const failed  = logs.filter(l => l.status === "failed").length;
-  const pending = logs.filter(l => l.status === "pending").length;
-  const deliveryRate = Math.round((sent / (sent + failed)) * 100);
+  const pending = 0; // Semaphore sends are synchronous — no pending state
+  const deliveryRate = (sent + failed) > 0 ? Math.round((sent / (sent + failed)) * 100) : 100;
 
   return (
     <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -275,20 +337,25 @@ export default function ReceptionistSMSLogs() {
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
       {preview && <MessageModal log={preview} onClose={() => setPreview(null)} onResend={handleResend} />}
-      {bulkOpen && <BulkSMSModal patients={uniquePatients} onClose={() => setBulkOpen(false)} onSend={(sel, msg) => { setBulkOpen(false); setToast(`Bulk SMS sent to ${sel.length} recipient${sel.length !== 1 ? 's' : ''}`); }} />}
+      {bulkOpen && <BulkSMSModal patients={uniquePatients} onClose={() => setBulkOpen(false)} onSend={handleBulkSend} />}
 
       <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
 
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>SMS Logs</h1>
-            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{logs.length} messages · {deliveryRate}% delivery rate</div>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>SMS Logs</h1>
+              <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{logs.length} messages · {deliveryRate}% delivery rate</div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={fetchLogs} style={{ background: "white", color: "#4a5d75", border: "1px solid #dde8e5", borderRadius: 10, padding: "10px 14px", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                <RefreshCw size={14} strokeWidth={2} className={loading ? 'spinning' : ''} /> Refresh
+              </button>
+              <button onClick={() => setBulkOpen(true)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
+                Send Bulk SMS
+              </button>
+            </div>
           </div>
-          <button onClick={() => setBulkOpen(true)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>
-            Send Bulk SMS
-          </button>
-        </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
 

@@ -1,21 +1,5 @@
 const db = require('../config/db');
-
-const SEMAPHORE_URL  = 'https://api.semaphore.co/api/v4/messages';
-const SEMAPHORE_KEY  = process.env.SEMAPHORE_API_KEY;
-const SENDER_NAME    = process.env.SEMAPHORE_SENDER_NAME || 'LikhaHealth';
-
-/**
- * Normalize a Philippine phone number to the 09XXXXXXXXX format
- * that Semaphore expects (it auto-converts to +63).
- */
-function normalizePhone(raw) {
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('63') && digits.length === 12) return '0' + digits.slice(2);
-  if (digits.startsWith('9')  && digits.length === 10) return '0' + digits;
-  if (digits.startsWith('09') && digits.length === 11) return digits;
-  return null; // unrecognizable format
-}
+const { sendSMS, normalizePhone, getPatientPhone } = require('../helpers/smsHelper');
 
 /**
  * Send a real SMS via Semaphore and log the result to the DB.
@@ -29,16 +13,10 @@ exports.send = async (req, res) => {
     return res.status(400).json({ error: 'patient_id and message are required.' });
 
   try {
-    // ── 1. Resolve phone number ────────────────────────────────────────────────
+    // Resolve phone number
     let recipient = normalizePhone(phone);
     if (!recipient) {
-      const [rows] = await db.query(
-        `SELECT value FROM contact_info
-         WHERE patient_id = ? AND type = 'phone' AND is_primary = 1
-         LIMIT 1`,
-        [patient_id]
-      );
-      if (rows.length) recipient = normalizePhone(rows[0].value);
+      recipient = await getPatientPhone(patient_id);
     }
 
     if (!recipient) {
@@ -47,54 +25,25 @@ exports.send = async (req, res) => {
       });
     }
 
-    // ── 2. Call Semaphore API ──────────────────────────────────────────────────
-    let semaphoreId   = null;
-    let smsStatus     = 'Failed';
-    let errorMessage  = null;
-
-    const semRes = await fetch(SEMAPHORE_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apikey:      SEMAPHORE_KEY,
-        number:      recipient,
-        message,
-        sendername:  SENDER_NAME,
-      }),
+    const result = await sendSMS({
+      phone: recipient,
+      message,
+      patient_id,
+      appointment_id,
     });
 
-    const semData = await semRes.json();
-
-    if (semRes.ok && Array.isArray(semData) && semData[0]?.message_id) {
-      semaphoreId = String(semData[0].message_id);
-      smsStatus   = 'Sent';
-    } else {
-      // Semaphore returns error details in the response body
-      errorMessage = JSON.stringify(semData);
-      console.error('[SMS] Semaphore error:', errorMessage);
-    }
-
-    // ── 3. Log to DB ───────────────────────────────────────────────────────────
-    const [result] = await db.query(
-      `INSERT INTO sms_notifications
-         (patient_id, appointment_id, message, recipient, status, semaphore_id, error_message)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [patient_id, appointment_id || null, message, recipient, smsStatus, semaphoreId, errorMessage]
-    );
-
-    if (smsStatus === 'Failed') {
+    if (!result.success) {
       return res.status(502).json({
-        id:    result.insertId,
+        id:    result.id,
         error: 'SMS delivery failed. Check server logs.',
-        details: errorMessage,
       });
     }
 
     res.status(201).json({
-      id:           result.insertId,
-      semaphore_id: semaphoreId,
+      id:           result.id,
+      semaphore_id: result.semaphore_id,
       recipient,
-      status:       smsStatus,
+      status:       'Sent',
       message:      'SMS sent successfully via Semaphore.',
     });
   } catch (err) {
@@ -108,7 +57,7 @@ exports.getHistory = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT
-         sn.id, sn.message, sn.recipient, sn.status,
+         sn.id, sn.patient_id, sn.message, sn.recipient, sn.status,
          sn.semaphore_id, sn.error_message, sn.sent_at,
          CONCAT(p.first_name,' ',p.last_name) AS patient_name,
          ci.value AS contact_number

@@ -1,4 +1,6 @@
 const db = require('../config/db');
+const { sendSMS, getPatientPhone, registrationMessage } = require('../helpers/smsHelper');
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 // Always insert a new address row — never reuse shared rows across patients
@@ -197,7 +199,19 @@ exports.create = async (req, res) => {
 
     await conn.commit();
 
+    // ── Fire registration SMS (async, non-blocking) ──────────────────────────
+    if (send_sms) {
+      const phone = contact_info.find(c => c.type === 'phone')?.value;
+      if (phone) {
+        const smsMsg = registrationMessage(first_name, queue_number);
+        sendSMS({ phone, message: smsMsg, patient_id, appointment_id })
+          .then(r => console.log(`[SMS] Registration SMS to patient ${patient_id}: ${r.success ? 'SENT' : 'FAILED'}`))
+          .catch(err => console.error('[SMS] Registration SMS error:', err.message));
+      }
+    }
+
     res.status(201).json({ patient_id, appointment_id, queue_number, message: 'Patient registered successfully.' });
+
   } catch (err) {
     await conn.rollback();
     console.error('[patientController.create]', err);
@@ -289,7 +303,7 @@ exports.createVisit = async (req, res) => {
       return res.status(409).json({ error: 'This patient already has an active queue entry today.' });
     }
 
-    const { visit_reason, doctor_id, notes, priority, vitals } = req.body;
+    const { visit_reason, doctor_id, notes, priority, vitals, send_sms } = req.body;
     const staff_id = req.user?.staffId || null;
     const { appointment_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id, vitals: vitals || null,
@@ -297,11 +311,25 @@ exports.createVisit = async (req, res) => {
 
     await conn.commit();
     const p = patients[0];
+
+    // ── Fire registration SMS for returning patient (async, non-blocking) ────
+    if (send_sms) {
+      getPatientPhone(patient_id)
+        .then(phone => {
+          if (!phone) return;
+          const smsMsg = registrationMessage(p.first_name, queue_number);
+          return sendSMS({ phone, message: smsMsg, patient_id, appointment_id });
+        })
+        .then(r => { if (r) console.log(`[SMS] Queue SMS to patient ${patient_id}: ${r.success ? 'SENT' : 'FAILED'}`); })
+        .catch(err => console.error('[SMS] Queue SMS error:', err.message));
+    }
+
     res.status(201).json({
       patient_id, appointment_id, queue_number,
       patient_name: `${p.first_name} ${p.last_name}`,
       message: 'Patient added to queue.',
     });
+
   } catch (err) {
     await conn.rollback();
     console.error('[patientController.createVisit]', err);

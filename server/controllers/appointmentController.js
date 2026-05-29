@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { sendSMS, getPatientPhone, appointmentMessage } = require('../helpers/smsHelper');
 
 // GET /api/appointments
 exports.getAll = async (req, res) => {
@@ -120,6 +121,24 @@ exports.create = async (req, res) => {
     }
 
     await conn.commit();
+
+    // ── Fire appointment confirmation SMS (async, non-blocking) ──────────────
+    (async () => {
+      try {
+        const phone = await getPatientPhone(patient_id);
+        if (!phone) return;
+        const [[pat]] = await db.query(
+          'SELECT first_name FROM patients WHERE id = ?', [patient_id]
+        );
+        if (!pat) return;
+        const smsMsg = appointmentMessage(pat.first_name, scheduled_date, queueNumber);
+        const r = await sendSMS({ phone, message: smsMsg, patient_id, appointment_id: appointmentId });
+        console.log(`[SMS] Appointment SMS to patient ${patient_id}: ${r.success ? 'SENT' : 'FAILED'}`);
+      } catch (err) {
+        console.error('[SMS] Appointment SMS error:', err.message);
+      }
+    })();
+
     res.status(201).json({ id: appointmentId, queue_number: queueNumber, message: 'Appointment created.' });
   } catch (err) {
     await conn.rollback();
