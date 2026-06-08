@@ -157,6 +157,7 @@ erDiagram
     PATIENTS {
         int    id                    PK
         varchar first_name
+        varchar middle_name          "nullable"
         varchar last_name
         varchar suffix               "nullable"
         date   date_of_birth
@@ -172,6 +173,42 @@ erDiagram
         int    assigned_staff_id     FK "nullable"
         int    registered_by_staff_id FK
         tinyint is_deleted
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PATIENT_MEDICAL_HISTORY {
+        int    id                    PK
+        int    patient_id            FK "unique"
+        tinyint has_hypertension
+        tinyint has_heart_disease
+        tinyint has_diabetes
+        tinyint has_stroke
+        tinyint has_asthma
+        tinyint has_tuberculosis
+        tinyint has_copd
+        tinyint has_allergies
+        tinyint has_smoking_hx
+        tinyint has_none
+        text   other_conditions      "nullable"
+        tinyint social_smoking
+        tinyint social_alcohol
+        enum   general_survey        "awake_alert, altered_sensorium"
+        int    recorded_by_staff_id  FK "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PATIENT_FEMALE_HEALTH {
+        int    id                    PK
+        int    patient_id            FK "unique"
+        tinyint no_of_children       "nullable"
+        date   lmp                   "nullable"
+        tinyint period_duration_days "nullable"
+        tinyint cycle_length_days    "nullable"
+        varchar fp_method            "nullable"
+        tinyint menopausal_age       "nullable"
+        int    recorded_by_staff_id  FK "nullable"
         timestamp created_at
         timestamp updated_at
     }
@@ -248,6 +285,8 @@ erDiagram
 
     ADDRESSES     ||--o{  PATIENTS         : "address_id"
     PATIENTS      ||--o{  CONTACT_INFO     : "contacts"
+    PATIENTS      ||--o|  PATIENT_MEDICAL_HISTORY : "medical_history"
+    PATIENTS      ||--o|  PATIENT_FEMALE_HEALTH   : "female_health"
     PATIENTS      ||--o{  APPOINTMENTS     : "patient_id"
     PATIENTS      ||--o{  MEDICAL_RECORDS  : "patient_id"
 
@@ -275,7 +314,7 @@ flowchart LR
 
     PT -. "Provides info verbally\nor on paper" .-> HS
 
-    HS -->|"① Patient demographics\n   & contact details"| SYS
+    HS -->|"① Patient demographics,\n   contact details &\n   medical history intake"| SYS
     HS -->|"② Queue & appointment\n   actions (book, update, cancel)"| SYS
     HS -->|"③ Vitals recording\n   & queue status updates"| SYS
     HS -->|"④ Consultation notes\n   diagnosis & treatment"| SYS
@@ -316,6 +355,8 @@ flowchart TD
     D7[("D7 · appointments\n+ appointment_services")]
     D8[("D8 · queue")]
     D9[("D9 · medical_records")]
+    D10[("D10 · patient_medical_history")]
+    D11[("D11 · patient_female_health")]
 
     %% ── P1: Patient Registration ─────────────────────────────────
     subgraph P1["P1 · Patient Registration & Profile Management\n(All staff roles)"]
@@ -324,6 +365,7 @@ flowchart TD
         P1b["Create or reuse\naddress record"]
         P1c["Store contact records\nphone / email"]
         P1d["Suggest cluster\nby surname (read-only)"]
+        P1e["Record medical history\n& female health data"]
     end
 
     %% ── P2: Family Cluster ───────────────────────────────────────
@@ -392,6 +434,8 @@ flowchart TD
     P1 -->|"Write patient record"| D1
     P1 -->|"Write or reuse address"| D3
     P1 -->|"Write contact records"| D4
+    P1 -->|"Write medical history"| D10
+    P1 -->|"Write female health"| D11
     D2 -->|"Cluster suggestions\n(read-only)"| P1
 
     %% ── P2 ↔ Data Stores ─────────────────────────────────────────
@@ -420,7 +464,9 @@ flowchart TD
     P5 -->|"Update queue\nstatus"| D8
 
     %% ── P6 ↔ Data Stores ─────────────────────────────────────────
-    D1 -->|"Read patient profile\n& history"| P6
+    D1 -->|"Read patient profile"| P6
+    D10 -->|"Read medical history"| P6
+    D11 -->|"Read female health"| P6
     D8 -->|"Read queue slot\n(In-Progress)"| P6
     D7 -->|"Read linked appointment\n(optional)"| P6
     P6 -->|"Write medical record\n(diagnosis + treatment)"| D9
