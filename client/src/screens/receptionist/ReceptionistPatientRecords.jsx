@@ -17,7 +17,7 @@ function normalizePatient(p) {
 
   return {
     id:          p.id,
-    name:        `${p.first_name} ${p.last_name}${p.suffix ? ` ${p.suffix}` : ""}`.trim(),
+    name:        [p.first_name, p.middle_name, p.last_name].filter(Boolean).join(' ') + (p.suffix ? ` ${p.suffix}` : ''),
     age,
     gender:      p.sex === "Female" ? "F" : p.sex === "Male" ? "M" : "?",
     dob:         dobStr,

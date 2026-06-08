@@ -2,6 +2,28 @@ import { useState, useEffect, useCallback } from "react";
 import { Building2, Stethoscope, Clock, AlertCircle, SkipForward, Bell, ClipboardList, CalendarDays, FolderOpen, UserRound, User, Download, LayoutDashboard, CheckCircle2, CircleCheckBig, X, TestTubes, Printer, AlertTriangle, Info } from "lucide-react";
 import { consultationsApi } from "../../lib/api/consultations.js";
 import { printConsultationSummary, printQueueReport, downloadQueueCSV } from "../../lib/utils/printUtils.js";
+// -- Utility: map API queue status to UI key (mirrors DoctorQueue)
+const mapStatus = s => {
+  if (!s) return 'waiting';
+  const m = { Waiting: 'waiting', 'In-Progress': 'in-consultation', Done: 'done', Skipped: 'skipped' };
+  return m[s] || s.toLowerCase();
+};
+
+// -- Priority display config
+const priorityConfig = {
+  elderly:   { label: 'Senior Citizen', icon: '👴', color: '#8B5FBF' },
+  pregnant:  { label: 'Pregnant',       icon: '🤰', color: '#d4709a' },
+  pwd:       { label: 'PWD',            icon: '♿', color: '#0047AB' },
+  pediatric: { label: 'Pedia (0-5)',    icon: '👶', color: '#e09040' },
+};
+
+// -- Static notification items (bell dropdown)
+const notifications = [
+  { id: 1, type: 'urgent', text: 'Priority patient waiting - Senior Citizen, Queue #3', time: '5m ago' },
+  { id: 2, type: 'lab',    text: 'Lab results ready for review',                         time: '22m ago' },
+  { id: 3, type: 'info',   text: 'Vitals recorded by nurse for next patient',             time: '30m ago' },
+];
+
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -458,6 +480,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const bannerFade   = useFadeIn(300);
   const queueFade    = useFadeIn(420);
   const apptFade     = useFadeIn(450);
+  const progressFade = useFadeIn(500);
 
   // ── Live queue fetch (same API as DoctorQueue) ──────────────────────────────
   const loadQueue = useCallback(async () => {
@@ -511,6 +534,18 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const allConsultations = inConsult.map(p => ({
     doctor: displayName, room: "Room 1", patient: p.name, queue: p.queue, reason: p.reason,
   }));
+
+  // Build upcoming appointments from waiting queue
+  const appointments = myQueue
+    .filter(p => p.status === "waiting" || p.status === "vitals-done")
+    .slice(0, 3)
+    .map(p => ({
+      time: p.arrived && p.arrived !== '—' ? p.arrived : '12:00 PM',
+      name: p.name,
+      age: p.age,
+      reason: p.reason,
+      type: p.priority ? 'urgent' : 'regular'
+    }));
 
 
   return (
@@ -685,7 +720,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
             </div>
 
             {/* Quick stats pill row */}
-            <div style={{ background: "white", borderRadius: 14, border: "1px solid #D8E4F2", padding: "14px 18px", boxShadow: "0 2px 8px rgba(60,90,140,0.06)", ...useFadeIn(500) }}>
+            <div style={{ background: "white", borderRadius: 14, border: "1px solid #D8E4F2", padding: "14px 18px", boxShadow: "0 2px 8px rgba(60,90,140,0.06)", ...progressFade }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#b0bdd6", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 12 }}>Today's Progress</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[

@@ -54,4 +54,14 @@ export const staffApi = {
     if (!res.ok) throw new Error(data.error || 'Failed to toggle staff status.');
     return data;
   },
+
+  /**
+   * POST /api/staff/:id/reset-password
+   */
+  resetPassword: async (id) => {
+    const res  = await apiFetch(`/staff/${id}/reset-password`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to reset password.');
+    return data;
+  },
 };

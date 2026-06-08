@@ -46,19 +46,31 @@ async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, pri
     `INSERT INTO queue (appointment_id, queue_number, status) VALUES (?, ?, 'Waiting')`,
     [appointment_id, queue_number]
   );
-  // Save vitals if provided during registration
-  if (vitals && (vitals.blood_pressure || vitals.temperature)) {
+  // Save vitals (standard + pediatric) if provided during registration
+  if (vitals && (vitals.blood_pressure || vitals.temperature || vitals.length_cm)) {
     await conn.query(
-      `INSERT INTO vitals (appointment_id, blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm, recorded_by_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO vitals
+         (appointment_id, blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm,
+          length_cm, head_circumference_cm, skinfold_thickness_cm,
+          body_circumference_cm, waist_cm, hip_cm, limbs_cm, muac_cm,
+          recorded_by_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         appointment_id,
-        vitals.blood_pressure || null,
-        vitals.temperature   || null,
-        vitals.heart_rate    || null,
-        vitals.spo2          || null,
-        vitals.weight_kg     || null,
-        vitals.height_cm     || null,
+        vitals.blood_pressure          || null,
+        vitals.temperature             || null,
+        vitals.heart_rate              || null,
+        vitals.spo2                    || null,
+        vitals.weight_kg               || null,
+        vitals.height_cm               || null,
+        vitals.length_cm               || null,
+        vitals.head_circumference_cm   || null,
+        vitals.skinfold_thickness_cm   || null,
+        vitals.body_circumference_cm   || null,
+        vitals.waist_cm                || null,
+        vitals.hip_cm                  || null,
+        vitals.limbs_cm                || null,
+        vitals.muac_cm                 || null,
         staff_id || null,
       ]
     );
@@ -127,28 +139,49 @@ exports.getOne = async (req, res) => {
       'SELECT type, value, is_primary FROM contact_info WHERE patient_id = ?',
       [req.params.id]
     );
-    res.json({ ...rows[0], contacts });
+
+    // Medical history (one row per patient, may not exist yet)
+    const [mhRows] = await db.query(
+      'SELECT * FROM patient_medical_history WHERE patient_id = ? LIMIT 1',
+      [req.params.id]
+    );
+
+    // Female health (only for female patients)
+    const [fhRows] = await db.query(
+      'SELECT * FROM patient_female_health WHERE patient_id = ? LIMIT 1',
+      [req.params.id]
+    );
+
+    res.json({
+      ...rows[0],
+      contacts,
+      medical_history: mhRows[0] || null,
+      female_health:   fhRows[0] || null,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 // POST /api/patients
-// Expected body: { first_name, last_name, suffix?, date_of_birth, sex_name, civil_status_name,
+// Expected body: { first_name, middle_name?, last_name, suffix?, date_of_birth, sex_name, civil_status_name,
 //   blood_type_code?, nationality?, occupation?, philhealth_no?, emergency_contact?,
 //   address: { street?, barangay, municipality, province, region?, zip_code? },
 //   contact_info: [{ type, value, is_primary }],
-//   visit_reason?, send_sms?, priority? }
+//   medical_history?: { has_hypertension, has_diabetes, ... social_smoking, social_alcohol, general_survey },
+//   female_health?: { no_of_children, lmp, period_duration_days, cycle_length_days, fp_method, menopausal_age },
+//   visit_reason?, send_sms?, priority?, vitals? }
 exports.create = async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     const {
-      first_name, last_name, suffix, date_of_birth,
+      first_name, middle_name, last_name, suffix, date_of_birth,
       sex_name, civil_status_name, blood_type_code,
       nationality, occupation, philhealth_no, emergency_contact,
       address = {}, contact_info = [],
+      medical_history, female_health,
     } = req.body;
 
     if (!first_name || !last_name || !date_of_birth || !sex_name || !civil_status_name || !address.barangay)
@@ -167,12 +200,12 @@ exports.create = async (req, res) => {
 
     const [result] = await conn.query(
       `INSERT INTO patients
-        (first_name, last_name, suffix, date_of_birth, sex_id, civil_status_id, blood_type_id,
+        (first_name, middle_name, last_name, suffix, date_of_birth, sex_id, civil_status_id, blood_type_id,
          nationality, occupation, philhealth_no, emergency_contact,
          address_id, registered_by_staff_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        first_name, last_name, suffix || null, date_of_birth,
+        first_name, middle_name || null, last_name, suffix || null, date_of_birth,
         sex_id, civil_status_id, blood_type_id || null,
         nationality || 'Filipino', occupation || null, philhealth_no || null,
         emergency_contact || null, address_id, registered_by_staff_id,
@@ -191,6 +224,80 @@ exports.create = async (req, res) => {
     // Resolve doctor FK if a doctor name was sent
     const { visit_reason, send_sms, priority, notes, doctor_id, vitals } = req.body;
     const staff_id = req.user?.staffId || null;
+
+    // Save medical history (upsert — one row per patient)
+    if (medical_history) {
+      await conn.query(
+        `INSERT INTO patient_medical_history
+           (patient_id, has_hypertension, has_heart_disease, has_diabetes, has_stroke,
+            has_asthma, has_tuberculosis, has_copd, has_allergies, has_smoking_hx,
+            has_none, other_conditions, social_smoking, social_alcohol, general_survey,
+            recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           has_hypertension=VALUES(has_hypertension),
+           has_heart_disease=VALUES(has_heart_disease),
+           has_diabetes=VALUES(has_diabetes),
+           has_stroke=VALUES(has_stroke),
+           has_asthma=VALUES(has_asthma),
+           has_tuberculosis=VALUES(has_tuberculosis),
+           has_copd=VALUES(has_copd),
+           has_allergies=VALUES(has_allergies),
+           has_smoking_hx=VALUES(has_smoking_hx),
+           has_none=VALUES(has_none),
+           other_conditions=VALUES(other_conditions),
+           social_smoking=VALUES(social_smoking),
+           social_alcohol=VALUES(social_alcohol),
+           general_survey=VALUES(general_survey),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          patient_id,
+          medical_history.has_hypertension  ? 1 : 0,
+          medical_history.has_heart_disease  ? 1 : 0,
+          medical_history.has_diabetes       ? 1 : 0,
+          medical_history.has_stroke         ? 1 : 0,
+          medical_history.has_asthma         ? 1 : 0,
+          medical_history.has_tuberculosis   ? 1 : 0,
+          medical_history.has_copd           ? 1 : 0,
+          medical_history.has_allergies      ? 1 : 0,
+          medical_history.has_smoking_hx     ? 1 : 0,
+          medical_history.has_none           ? 1 : 0,
+          medical_history.other_conditions   || null,
+          medical_history.social_smoking     ? 1 : 0,
+          medical_history.social_alcohol     ? 1 : 0,
+          medical_history.general_survey     || null,
+          staff_id,
+        ]
+      );
+    }
+
+    // Save female health data (only for female patients)
+    if (female_health && sex_name === 'Female') {
+      await conn.query(
+        `INSERT INTO patient_female_health
+           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+            fp_method, menopausal_age, recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           no_of_children=VALUES(no_of_children),
+           lmp=VALUES(lmp),
+           period_duration_days=VALUES(period_duration_days),
+           cycle_length_days=VALUES(cycle_length_days),
+           fp_method=VALUES(fp_method),
+           menopausal_age=VALUES(menopausal_age),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          patient_id,
+          female_health.no_of_children        || null,
+          female_health.lmp                   || null,
+          female_health.period_duration_days  || null,
+          female_health.cycle_length_days     || null,
+          female_health.fp_method             || null,
+          female_health.menopausal_age        || null,
+          staff_id,
+        ]
+      );
+    }
 
     const { appointment_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null,
@@ -228,32 +335,89 @@ exports.update = async (req, res) => {
     await conn.beginTransaction();
 
     const {
-      first_name, last_name, suffix, date_of_birth,
+      first_name, middle_name, last_name, suffix, date_of_birth,
       sex_name, civil_status_name, blood_type_code,
       nationality, occupation, philhealth_no, emergency_contact,
       address = {},
+      medical_history, female_health,
     } = req.body;
 
     const sex_id          = await resolveId(conn, 'sex_options', 'label', sex_name);
     const civil_status_id = await resolveId(conn, 'civil_statuses', 'label', civil_status_name);
     const blood_type_id   = await resolveId(conn, 'blood_types', 'code', blood_type_code);
     const address_id = address.barangay ? await insertAddress(address, conn) : undefined;
+    const staff_id = req.user?.staffId || null;
 
     await conn.query(
       `UPDATE patients SET
-        first_name=?, last_name=?, suffix=?, date_of_birth=?,
+        first_name=?, middle_name=?, last_name=?, suffix=?, date_of_birth=?,
         sex_id=?, civil_status_id=?, blood_type_id=?,
         nationality=?, occupation=?, philhealth_no=?, emergency_contact=?
         ${address_id ? ', address_id=?' : ''}
        WHERE id=? AND is_deleted=0`,
       [
-        first_name, last_name, suffix || null, date_of_birth,
+        first_name, middle_name || null, last_name, suffix || null, date_of_birth,
         sex_id, civil_status_id, blood_type_id || null,
         nationality, occupation, philhealth_no, emergency_contact,
         ...(address_id ? [address_id] : []),
         req.params.id,
       ]
     );
+
+    // Update medical history (upsert)
+    if (medical_history) {
+      await conn.query(
+        `INSERT INTO patient_medical_history
+           (patient_id, has_hypertension, has_heart_disease, has_diabetes, has_stroke,
+            has_asthma, has_tuberculosis, has_copd, has_allergies, has_smoking_hx,
+            has_none, other_conditions, social_smoking, social_alcohol, general_survey,
+            recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           has_hypertension=VALUES(has_hypertension), has_heart_disease=VALUES(has_heart_disease),
+           has_diabetes=VALUES(has_diabetes), has_stroke=VALUES(has_stroke),
+           has_asthma=VALUES(has_asthma), has_tuberculosis=VALUES(has_tuberculosis),
+           has_copd=VALUES(has_copd), has_allergies=VALUES(has_allergies),
+           has_smoking_hx=VALUES(has_smoking_hx), has_none=VALUES(has_none),
+           other_conditions=VALUES(other_conditions), social_smoking=VALUES(social_smoking),
+           social_alcohol=VALUES(social_alcohol), general_survey=VALUES(general_survey),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          req.params.id,
+          medical_history.has_hypertension  ? 1 : 0, medical_history.has_heart_disease ? 1 : 0,
+          medical_history.has_diabetes      ? 1 : 0, medical_history.has_stroke        ? 1 : 0,
+          medical_history.has_asthma        ? 1 : 0, medical_history.has_tuberculosis  ? 1 : 0,
+          medical_history.has_copd          ? 1 : 0, medical_history.has_allergies     ? 1 : 0,
+          medical_history.has_smoking_hx    ? 1 : 0, medical_history.has_none          ? 1 : 0,
+          medical_history.other_conditions  || null,
+          medical_history.social_smoking    ? 1 : 0, medical_history.social_alcohol    ? 1 : 0,
+          medical_history.general_survey    || null,
+          staff_id,
+        ]
+      );
+    }
+
+    // Update female health (upsert)
+    if (female_health && sex_name === 'Female') {
+      await conn.query(
+        `INSERT INTO patient_female_health
+           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+            fp_method, menopausal_age, recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           no_of_children=VALUES(no_of_children), lmp=VALUES(lmp),
+           period_duration_days=VALUES(period_duration_days), cycle_length_days=VALUES(cycle_length_days),
+           fp_method=VALUES(fp_method), menopausal_age=VALUES(menopausal_age),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          req.params.id,
+          female_health.no_of_children || null, female_health.lmp || null,
+          female_health.period_duration_days || null, female_health.cycle_length_days || null,
+          female_health.fp_method || null, female_health.menopausal_age || null,
+          staff_id,
+        ]
+      );
+    }
 
     await conn.commit();
     res.json({ message: 'Patient updated.' });
@@ -303,11 +467,66 @@ exports.createVisit = async (req, res) => {
       return res.status(409).json({ error: 'This patient already has an active queue entry today.' });
     }
 
-    const { visit_reason, doctor_id, notes, priority, vitals, send_sms } = req.body;
+    const { visit_reason, doctor_id, notes, priority, vitals, send_sms, medical_history, female_health, sex_name } = req.body;
     const staff_id = req.user?.staffId || null;
     const { appointment_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id, vitals: vitals || null,
     });
+
+    // Update medical history (upsert)
+    if (medical_history) {
+      await conn.query(
+        `INSERT INTO patient_medical_history
+           (patient_id, has_hypertension, has_heart_disease, has_diabetes, has_stroke,
+            has_asthma, has_tuberculosis, has_copd, has_allergies, has_smoking_hx,
+            has_none, other_conditions, social_smoking, social_alcohol, general_survey,
+            recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           has_hypertension=VALUES(has_hypertension), has_heart_disease=VALUES(has_heart_disease),
+           has_diabetes=VALUES(has_diabetes), has_stroke=VALUES(has_stroke),
+           has_asthma=VALUES(has_asthma), has_tuberculosis=VALUES(has_tuberculosis),
+           has_copd=VALUES(has_copd), has_allergies=VALUES(has_allergies),
+           has_smoking_hx=VALUES(has_smoking_hx), has_none=VALUES(has_none),
+           other_conditions=VALUES(other_conditions), social_smoking=VALUES(social_smoking),
+           social_alcohol=VALUES(social_alcohol), general_survey=VALUES(general_survey),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          patient_id,
+          medical_history.has_hypertension  ? 1 : 0, medical_history.has_heart_disease ? 1 : 0,
+          medical_history.has_diabetes      ? 1 : 0, medical_history.has_stroke        ? 1 : 0,
+          medical_history.has_asthma        ? 1 : 0, medical_history.has_tuberculosis  ? 1 : 0,
+          medical_history.has_copd          ? 1 : 0, medical_history.has_allergies     ? 1 : 0,
+          medical_history.has_smoking_hx    ? 1 : 0, medical_history.has_none          ? 1 : 0,
+          medical_history.other_conditions  || null,
+          medical_history.social_smoking    ? 1 : 0, medical_history.social_alcohol    ? 1 : 0,
+          medical_history.general_survey    || null,
+          staff_id,
+        ]
+      );
+    }
+
+    // Update female health (upsert)
+    if (female_health && sex_name === 'Female') {
+      await conn.query(
+        `INSERT INTO patient_female_health
+           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+            fp_method, menopausal_age, recorded_by_staff_id)
+         VALUES (?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE
+           no_of_children=VALUES(no_of_children), lmp=VALUES(lmp),
+           period_duration_days=VALUES(period_duration_days), cycle_length_days=VALUES(cycle_length_days),
+           fp_method=VALUES(fp_method), menopausal_age=VALUES(menopausal_age),
+           recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
+        [
+          patient_id,
+          female_health.no_of_children || null, female_health.lmp || null,
+          female_health.period_duration_days || null, female_health.cycle_length_days || null,
+          female_health.fp_method || null, female_health.menopausal_age || null,
+          staff_id,
+        ]
+      );
+    }
 
     await conn.commit();
     const p = patients[0];
@@ -359,6 +578,14 @@ exports.getVisits = async (req, res) => {
          v.spo2,
          v.weight_kg,
          v.height_cm,
+         v.length_cm,
+         v.head_circumference_cm,
+         v.skinfold_thickness_cm,
+         v.body_circumference_cm,
+         v.waist_cm,
+         v.hip_cm,
+         v.limbs_cm,
+         v.muac_cm,
          v.recorded_at      AS vitals_recorded_at,
          -- medical record (may be null if no consultation yet)
          mr.id              AS record_id,

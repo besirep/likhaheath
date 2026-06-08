@@ -4,6 +4,7 @@ import { useAuth } from "./lib/api/useAuth.js";
 
 // Auth
 import Login from "./screens/auth/Login.jsx";
+import ChangePasswordModal from "./components/ChangePasswordModal.jsx";
 
 // Receptionist screens
 import ClinicDashboard            from "./screens/receptionist/ClinicDashboard.jsx";
@@ -21,8 +22,16 @@ import DoctorDashboard     from "./screens/doctor/DoctorDashboard.jsx";
 import DoctorPatientRecords from "./screens/doctor/DoctorPatientRecords.jsx";
 import DoctorQueue         from "./screens/doctor/DoctorQueue.jsx";
 
+// Admin screens
+import AdminStaffManagement from "./screens/admin/AdminStaffManagement.jsx";
+
 // ── Role-based screen config ──────────────────────────────────────────────────
 const SCREEN_MAP = {
+  admin: [
+    { id: "admin-dashboard", label: "Dashboard",        Icon: LayoutDashboard, Component: ClinicDashboard },
+    { id: "admin-staff",     label: "Staff Management", Icon: UserPlus,        Component: AdminStaffManagement },
+    { id: "admin-reports",   label: "Reports",          Icon: BarChart3,       Component: ReceptionistReports },
+  ],
   receptionist: [
     { id: "dashboard", label: "Dashboard",        Icon: LayoutDashboard, Component: ClinicDashboard },
     { id: "register",  label: "Register Patient", Icon: UserPlus,        Component: PatientRegistration },
@@ -43,7 +52,8 @@ const SCREEN_MAP = {
 };
 
 const ROLE_META = {
-  receptionist: { label: "Medical Staff", color: "#2a9d8f", accent: "#52c4b8",   badge: "RECEPTIONIST", badgeBg: "rgba(42,157,143,0.18)",  badgeColor: "#52c4b8" },
+  admin:        { label: "Administrator", color: "#6b21a8", accent: "#9333ea",   badge: "ADMIN",        badgeBg: "rgba(107,33,168,0.18)", badgeColor: "#9333ea" },
+  receptionist: { label: "Medical Staff", color: "#2a9d8f", accent: "#52c4b8",   badge: "RECEPTIONIST", badgeBg: "rgba(42,157,143,0.18)", badgeColor: "#52c4b8" },
   doctor:       { label: "Doctor",        color: "#0047AB", accent: "#1565D8",   badge: "PHYSICIAN",    badgeBg: "rgba(0,71,171,0.18)",   badgeColor: "#1565D8" },
 };
 
@@ -91,6 +101,7 @@ class ScreenErrorBoundary extends React.Component {
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
   const meta = ROLE_META[user.role];
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   return (
     <div style={{
@@ -170,6 +181,7 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
 
       {/* User + Logout */}
       <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg, ${meta.color}88, ${meta.accent})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white", flexShrink: 0 }}>
             {user.initials}
@@ -179,21 +191,38 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>{user.title}</div>
           </div>
         </div>
-        <button
-          onClick={onLogout}
-          style={{
-            width: "100%", padding: "8px 12px", borderRadius: 9,
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600,
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(220,80,60,0.15)"; e.currentTarget.style.borderColor = "rgba(220,80,60,0.3)"; e.currentTarget.style.color = "#f08080"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-        >
-          <LogOut size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> Sign Out
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <button
+            onClick={() => setShowChangePassword(true)}
+            style={{
+              width: "100%", padding: "8px 12px", borderRadius: 9,
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600,
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+          >
+            Change Password
+          </button>
+          <button
+            onClick={onLogout}
+            style={{
+              width: "100%", padding: "8px 12px", borderRadius: 9,
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600,
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(220,80,60,0.15)"; e.currentTarget.style.borderColor = "rgba(220,80,60,0.3)"; e.currentTarget.style.color = "#f08080"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+          >
+            <LogOut size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> Sign Out
+          </button>
+        </div>
       </div>
     </div>
   );

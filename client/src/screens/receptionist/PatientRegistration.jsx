@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Check, ClipboardList, Smartphone, Heart, Thermometer, Activity, Wind, Scale, Ruler, UserRound, Baby } from "lucide-react";
+import { Check, ClipboardList, Smartphone, Heart, Thermometer, Activity, Wind, Scale, Ruler, UserRound, Baby, FileText } from "lucide-react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { staffApi } from "../../lib/api/staff.js";
-import { getAge, validateStep0, validateStep1, validateStep2, validateStep3 } from "../../lib/validation/patientValidation.js";
+import { queueApi } from "../../lib/api/queue.js";
+import { getAge, validateStep0, validateStep1, validateStep2, validateStep3, validateStep5 } from "../../lib/validation/patientValidation.js";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const SUFFIX_OPTIONS = ["", "II", "Jr", "Sr", "III", "IV", "V", "2nd", "3rd"];
@@ -121,25 +122,25 @@ function SuccessModal({ data, onClose, onAnother }) {
 }
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepBar({ step }) {
-  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Vitals", "Priority & SMS"];
+  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Vitals", "Medical History", "Priority & SMS"];
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28, flexWrap: "wrap", rowGap: 8 }}>
       {steps.map((s, i) => {
         const isActive = i === step, isComplete = i < step;
         return (
           <div key={s} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : "none" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{
-                width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+                width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
                 background: isComplete ? "#2a9d8f" : isActive ? "linear-gradient(135deg,#2a9d8f,#52c4b8)" : "#e8edf7",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, fontWeight: 700, color: isComplete || isActive ? "white" : "#8a9bb0",
+                fontSize: 12, fontWeight: 700, color: isComplete || isActive ? "white" : "#8a9bb0",
                 boxShadow: isActive ? "0 3px 12px rgba(42,157,143,0.35)" : "none", transition: "all 0.3s",
-              }}>{isComplete ? <Check size={16} strokeWidth={3} /> : i + 1}</div>
-              <span style={{ fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? "#1e2d40" : "#8a9bb0", whiteSpace: "nowrap" }}>{s}</span>
+              }}>{isComplete ? <Check size={14} strokeWidth={3} /> : i + 1}</div>
+              <span style={{ fontSize: 12, fontWeight: isActive ? 700 : 400, color: isActive ? "#1e2d40" : "#8a9bb0", whiteSpace: "nowrap" }}>{s}</span>
             </div>
             {i < steps.length - 1 && (
-              <div style={{ flex: 1, height: 2, background: i < step ? "#2a9d8f" : "#e8edf7", margin: "0 10px", transition: "background 0.3s" }} />
+              <div style={{ flex: 1, height: 2, background: i < step ? "#2a9d8f" : "#e8edf7", margin: "0 6px", transition: "background 0.3s", minWidth: 10 }} />
             )}
           </div>
         );
@@ -150,13 +151,29 @@ function StepBar({ step }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 const emptyForm = {
   existingPatientId: null,          // null = new patient, number = returning
-  firstName: "", lastName: "", suffix: "", dob: "", sex: "",
+  firstName: "", middleName: "", lastName: "", suffix: "", dob: "", sex: "",
   civilStatus: "", bloodType: "", nationality: "Filipino", occupation: "",
   philhealthNo: "", emergencyContact: "",
   street: "", barangay: "", municipality: "Angono", province: "Rizal",
   phone: "", email: "",
   reasons: [], doctor: "", reasonOther: "",
   vitals: { bp: "", temp: "", hr: "", spo2: "", weight: "", height: "" },
+  // Step 4 — Medical & Social History (all optional)
+  medical_history: {
+    has_hypertension: false, has_heart_disease: false, has_diabetes: false,
+    has_stroke: false, has_asthma: false, has_tuberculosis: false,
+    has_copd: false, has_allergies: false, has_smoking_hx: false,
+    has_none: false, other_conditions: "",
+    social_smoking: null, social_alcohol: null, general_survey: "",
+  },
+  female_health: {
+    no_of_children: "", lmp: "", period_duration_days: "",
+    cycle_length_days: "", fp_method: "", menopausal_age: "",
+  },
+  pediatric_vitals: {
+    length_cm: "", head_circ: "", skinfold: "",
+    body_circ: "", waist_cm: "", hip_cm: "", limbs_cm: "", muac_cm: "",
+  },
   priority: null, sendSms: true, notes: "",
 };
 
@@ -174,6 +191,17 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const [searchQuery, setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching]       = useState(false);
+  const [queueCounter, setQueueCounter] = useState(0);
+
+  // Fetch the latest queue number
+  useEffect(() => {
+    queueApi.getToday()
+      .then(data => {
+        const maxQ = data.reduce((max, item) => Math.max(max, item.queue_number || 0), 0);
+        setQueueCounter(maxQ);
+      })
+      .catch(console.error);
+  }, []);
 
   // Persist draft whenever step or form changes
   useEffect(() => {
@@ -182,7 +210,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
 
   useEffect(() => {
     setDoctorsLoading(true);
-    staffApi.getAll({ position: "Doctor" })
+    staffApi.getAll({ position: "Doctor", active: true })
       .then(data => { setDoctors(Array.isArray(data) ? data : []); setDoctorsLoading(false); })
       .catch(() => { setDoctors([]); setDoctorsLoading(false); });
   }, []);
@@ -190,7 +218,6 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const update = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: undefined })); };
   const age = getAge(form.dob);
   const fullName = `${form.firstName} ${form.lastName}`.trim();
-  const queueCounter = 7;
   const isReturning = !!form.existingPatientId;
 
   // Live patient search for the pre-step
@@ -206,19 +233,74 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   };
 
   // MHW picks an existing patient: pre-fill and jump to visit details (step 2)
-  const selectReturningPatient = (p) => {
-    setForm(f => ({
-      ...emptyForm,
-      existingPatientId: p.id,
-      firstName: p.first_name || "",
-      lastName:  p.last_name  || "",
-      barangay:  p.barangay   || "",
-      municipality: p.municipality || "Angono",
-      province: "Rizal",
-      phone: p.primary_contact || "",
-    }));
-    setStep(2);   // jump straight to Visit Details
-    setErrors({});
+  const selectReturningPatient = async (p) => {
+    setSearching(true);
+    try {
+      const full = await patientsApi.getOne(p.id);
+      
+      // Convert dates to YYYY-MM-DD for inputs if present
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const d = new Date(dateString);
+        return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+      };
+
+      setForm(f => ({
+        ...emptyForm,
+        existingPatientId: full.id,
+        firstName: full.first_name || "",
+        middleName: full.middle_name || "",
+        lastName:  full.last_name  || "",
+        sex: full.sex || "",
+        barangay:  full.barangay   || "",
+        municipality: full.municipality || "Angono",
+        province: "Rizal",
+        phone: full.contacts?.find(c => c.is_primary)?.value || full.contacts?.[0]?.value || "",
+        medical_history: full.medical_history ? {
+          has_hypertension: !!full.medical_history.has_hypertension,
+          has_heart_disease: !!full.medical_history.has_heart_disease,
+          has_diabetes: !!full.medical_history.has_diabetes,
+          has_stroke: !!full.medical_history.has_stroke,
+          has_asthma: !!full.medical_history.has_asthma,
+          has_tuberculosis: !!full.medical_history.has_tuberculosis,
+          has_copd: !!full.medical_history.has_copd,
+          has_allergies: !!full.medical_history.has_allergies,
+          has_smoking_hx: !!full.medical_history.has_smoking_hx,
+          has_none: !!full.medical_history.has_none,
+          other_conditions: full.medical_history.other_conditions || "",
+          social_smoking: full.medical_history.social_smoking,
+          social_alcohol: full.medical_history.social_alcohol,
+          general_survey: full.medical_history.general_survey || "",
+        } : emptyForm.medical_history,
+        female_health: full.female_health ? {
+          no_of_children: full.female_health.no_of_children || "",
+          lmp: formatDate(full.female_health.lmp),
+          period_duration_days: full.female_health.period_duration_days || "",
+          cycle_length_days: full.female_health.cycle_length_days || "",
+          fp_method: full.female_health.fp_method || "",
+          menopausal_age: full.female_health.menopausal_age || "",
+        } : emptyForm.female_health,
+      }));
+      setStep(2);   // jump straight to Visit Details
+      setErrors({});
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setForm(f => ({
+        ...emptyForm,
+        existingPatientId: p.id,
+        firstName: p.first_name || "",
+        lastName:  p.last_name  || "",
+        barangay:  p.barangay   || "",
+        municipality: p.municipality || "Angono",
+        province: "Rizal",
+        phone: p.primary_contact || "",
+      }));
+      setStep(2);
+      setErrors({});
+    } finally {
+      setSearching(false);
+    }
   };
 
   const tryAdvance = () => {
@@ -227,11 +309,10 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     else if (step === 1) errs = validateStep1(form);
     else if (step === 2) errs = validateStep2(form);
     else if (step === 3) errs = validateStep3(form);
+    else if (step === 4) errs = validateStep5(form);  // medical history step (all optional)
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      // Returning patients: skip address/contact step (step 1) and jump to visit details, then vitals, then priority
-      if (isReturning && step === 2) setStep(3);
-      else setStep(s => s + 1);
+      setStep(s => s + 1);
     }
   };
 
@@ -257,13 +338,38 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         height_cm: form.vitals.height ? Number(form.vitals.height) : null,
       };
 
+      // Build medical/female/pediatric payloads if user entered something
+      const mh = form.medical_history;
+      const hasMH = mh && (mh.has_hypertension || mh.has_heart_disease || mh.has_diabetes ||
+        mh.has_stroke || mh.has_asthma || mh.has_tuberculosis || mh.has_copd ||
+        mh.has_allergies || mh.has_smoking_hx || mh.has_none || mh.other_conditions?.trim() ||
+        mh.social_smoking != null || mh.social_alcohol != null || mh.general_survey);
+      const fh = form.female_health;
+      const hasFH = form.sex === 'Female' && fh && (
+        fh.no_of_children || fh.lmp || fh.period_duration_days ||
+        fh.cycle_length_days || fh.fp_method || fh.menopausal_age);
+      const pv = form.pediatric_vitals;
+      const pvPayload = Object.values(pv || {}).some(Boolean) ? {
+        length_cm:             pv.length_cm  ? Number(pv.length_cm)  : null,
+        head_circumference_cm: pv.head_circ  ? Number(pv.head_circ)  : null,
+        skinfold_thickness_cm: pv.skinfold   ? Number(pv.skinfold)   : null,
+        body_circumference_cm: pv.body_circ  ? Number(pv.body_circ)  : null,
+        waist_cm:              pv.waist_cm   ? Number(pv.waist_cm)   : null,
+        hip_cm:                pv.hip_cm     ? Number(pv.hip_cm)     : null,
+        limbs_cm:              pv.limbs_cm   ? Number(pv.limbs_cm)   : null,
+        muac_cm:               pv.muac_cm    ? Number(pv.muac_cm)    : null,
+      } : null;
+
       const visitPayload = {
         visit_reason,
         doctor_id: form.doctor ? doctors.find(d => `Dr. ${d.last_name}` === form.doctor)?.id || null : null,
         notes: form.notes || null,
         priority: form.priority,
         send_sms: form.sendSms,
-        vitals: vitalsPayload,
+        vitals: { ...vitalsPayload, ...(pvPayload || {}) },
+        medical_history: hasMH ? mh : null,
+        female_health: hasFH ? fh : null,
+        sex_name: form.sex,
       };
 
       let queue_number;
@@ -271,7 +377,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         ({ queue_number } = await patientsApi.createVisit(form.existingPatientId, visitPayload));
       } else {
         const payload = {
-          first_name: form.firstName, last_name: form.lastName, suffix: form.suffix || null,
+          first_name: form.firstName, middle_name: form.middleName || null,
+          last_name: form.lastName, suffix: form.suffix || null,
           date_of_birth: form.dob, sex_name: form.sex, civil_status_name: form.civilStatus,
           blood_type_code: form.bloodType || null, nationality: form.nationality,
           occupation: form.occupation || null, philhealth_no: form.philhealthNo || null,
@@ -281,7 +388,10 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
             ...(form.phone ? [{ type: "phone", value: form.phone, is_primary: 1 }] : []),
             ...(form.email ? [{ type: "email", value: form.email, is_primary: 0 }] : []),
           ],
+          ...(hasMH ? { medical_history: mh } : {}),
+          ...(hasFH ? { female_health: fh } : {}),
           ...visitPayload,
+          vitals: { ...vitalsPayload, ...(pvPayload || {}) },
         };
         ({ queue_number } = await patientsApi.create(payload));
       }
@@ -319,7 +429,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
             <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
               {step === -1 ? "Search for an existing patient or register a new one" :
                isReturning ? `Returning patient · Adding to today's queue` :
-               "New patient registration · 4-step form"}
+               "New patient registration · 6-step form"}
             </div>
           </div>
           <div style={{ background: "#e8f7f5", borderRadius: 10, padding: "8px 16px", textAlign: "center" }}>
@@ -401,8 +511,9 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
 {step === 0 && (
   <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
     <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Patient Information</div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 14 }}>
-      <Input label="First Name" placeholder="Given name" value={form.firstName} onChange={v => update("firstName", v)} required error={errors.firstName} />
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 80px", gap: 14 }}>
+      <Input label="First Name" placeholder="Given Name" value={form.firstName} onChange={v => update("firstName", v)} required error={errors.firstName} />
+      <Input label="Middle Name" placeholder="Middle Name" value={form.middleName} onChange={v => update("middleName", v)} error={errors.middleName} />
       <Input label="Last Name" placeholder="Surname" value={form.lastName} onChange={v => update("lastName", v)} required error={errors.lastName} />
       <Select label="Suffix" value={form.suffix} onChange={v => update("suffix", v)} options={["II", "Jr", "Sr", "III", "IV", "V", "2nd", "3rd"]} error={errors.suffix} />
     </div>
@@ -433,8 +544,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     {fullName && (
       <div style={{ background: "linear-gradient(135deg,#e8f7f5,#d4ede9)", borderRadius: 14, padding: "14px 18px", border: "1px solid #c0e0dc", display: "flex", alignItems: "center", gap: 14 }}>
         <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#2a9d8f", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "white" }}>{form.firstName?.[0]}{form.lastName?.[0]}</div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>{fullName}{form.suffix ? ` ${form.suffix}` : ""}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#1e2d40" }}>{form.firstName}{form.middleName ? ` ${form.middleName}` : ""} {form.lastName}{form.suffix ? ` ${form.suffix}` : ""}</div>
           <div style={{ fontSize: 14, color: "#5a8f80" }}>{age !== null ? `${age} yrs` : ""}{form.sex ? ` · ${form.sex}` : ""}{form.civilStatus ? ` · ${form.civilStatus}` : ""}</div>
         </div>
       </div>
@@ -491,8 +602,9 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button onClick={() => update("doctor", "")} style={btnStyle(!form.doctor)}>Unassigned</button>
         {doctors.map(d => {
-          const name = `Dr. ${d.last_name}`;
-          return <button key={d.id} onClick={() => update("doctor", name)} style={btnStyle(form.doctor === name)}>{name}</button>;
+          const suffixPart = d.suffix ? ` ${d.suffix}` : "";
+          const name = `${d.first_name} ${d.last_name}${suffixPart}`.toUpperCase();
+          return <button key={d.id} type="button" onClick={() => update("doctor", name)} style={btnStyle(form.doctor === name)}>{name}</button>;
         })}
         {doctorsLoading && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>Loading doctors...</span>}
         {!doctorsLoading && doctors.length === 0 && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>No active doctors found.</span>}
@@ -558,8 +670,146 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     </div>
   );
 })()}
-{/* Step 4 — Priority & SMS */}
-{step === 4 && (
+{/* Step 4 — Medical & Social History */}
+{step === 4 && (() => {
+  const mh = form.medical_history;
+  const fh = form.female_health;
+  const pv = form.pediatric_vitals;
+  const isFemale = form.sex === 'Female';
+  const isPediatric = age !== null && age <= 2;
+  const updateMH = (k, v) => setForm(f => ({ ...f, medical_history: { ...f.medical_history, [k]: v } }));
+  const updateFH = (k, v) => setForm(f => ({ ...f, female_health:   { ...f.female_health,   [k]: v } }));
+  const updatePV = (k, v) => setForm(f => ({ ...f, pediatric_vitals:{ ...f.pediatric_vitals,[k]: v } }));
+  const CHK = (active) => ({
+    display:"flex", alignItems:"center", gap:10, padding:"9px 12px",
+    border:`1.5px solid ${active?"#0047AB":"#e0e7ef"}`,
+    borderRadius:10, background:active?"#EBF0FA":"white",
+    cursor:"pointer", transition:"all 0.15s", userSelect:"none",
+  });
+  const SecTitle = ({ icon, title, sub }) => (
+    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14, paddingBottom:10, borderBottom:"1.5px solid #edf1f7" }}>
+      <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#1a2540,#243560)", display:"flex", alignItems:"center", justifyContent:"center", color:"white", flexShrink:0 }}>{icon}</div>
+      <div><div style={{ fontSize:15, fontWeight:700, color:"#1e2d40" }}>{title}</div>{sub&&<div style={{ fontSize:13, color:"#8a9bb0" }}>{sub}</div>}</div>
+    </div>
+  );
+  const pvField = (key, lbl) => (
+    <div>
+      <label style={labelStyle}>{lbl}</label>
+      <div style={{ position:"relative" }}>
+        <input value={pv[key]||""} onChange={e=>updatePV(key,e.target.value)} type="number" step="0.1" placeholder="cm"
+          style={{ width:"100%", padding:"9px 40px 9px 12px", border:`1.5px solid ${errors[`pv.${key}`]?"#CC0000":"#e0e7ef"}`, borderRadius:10, fontSize:14, color:"#1e2d40", outline:"none", boxSizing:"border-box" }}
+          onFocus={e=>e.target.style.borderColor="#0047AB"} onBlur={e=>e.target.style.borderColor=errors[`pv.${key}`]?"#CC0000":"#e0e7ef"} />
+        <span style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", fontSize:12, color:"#8a9bb0" }}>cm</span>
+      </div>
+      {errors[`pv.${key}`]&&<div style={errStyle}>{errors[`pv.${key}`]}</div>}
+    </div>
+  );
+  const PMH=[
+    {key:"has_hypertension",label:"Hypertension"},{key:"has_heart_disease",label:"Heart Disease"},
+    {key:"has_diabetes",label:"Diabetes"},{key:"has_stroke",label:"Stroke"},
+    {key:"has_asthma",label:"Bronchial Asthma"},{key:"has_tuberculosis",label:"Tuberculosis"},
+    {key:"has_copd",label:"COPD / Emphysema"},{key:"has_allergies",label:"Allergies"},
+    {key:"has_smoking_hx",label:"Smoking History"},{key:"has_none",label:"NONE"},
+  ];
+  return (
+    <div style={{ animation:"fadeUp 0.25s ease", display:"flex", flexDirection:"column", gap:20 }}>
+      <div>
+        <div style={{ fontSize:18, fontWeight:700, color:"#1e2d40", marginBottom:2, display:"flex", alignItems:"center", gap:10 }}>
+          <FileText size={20} strokeWidth={2}/> Medical &amp; Social History
+        </div>
+        <div style={{ fontSize:14, color:"#7a8fb0" }}>Optional — can be filled in later from Patient Records.</div>
+      </div>
+
+      {/* Past Medical History */}
+      <div style={{ background:"white", borderRadius:14, border:"1px solid #e0e7ef", padding:"16px 18px" }}>
+        <SecTitle icon={<Heart size={16} strokeWidth={2}/>} title="Past Medical History" sub="Check all that apply"/>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+          {PMH.map(({key,label})=>(
+            <label key={key} style={CHK(!!mh[key])}>
+              <div style={{ width:18,height:18,borderRadius:5,border:`2px solid ${mh[key]?"#0047AB":"#c0cfe0"}`,background:mh[key]?"#0047AB":"white",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                {mh[key]&&<Check size={12} strokeWidth={3} color="white"/>}
+              </div>
+              <input type="checkbox" checked={!!mh[key]} onChange={e=>updateMH(key,e.target.checked)} style={{ display:"none" }}/>
+              <span style={{ fontSize:14, color:mh[key]?"#0047AB":"#4a5d75", fontWeight:mh[key]?600:400 }}>{label}</span>
+            </label>
+          ))}
+        </div>
+        {!mh.has_none&&(
+          <div style={{ marginTop:12 }}>
+            <label style={labelStyle}>Others (please specify)</label>
+            <input value={mh.other_conditions||""} onChange={e=>updateMH("other_conditions",e.target.value)}
+              placeholder="e.g. Kidney disease, Cancer..."
+              style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #e0e7ef",borderRadius:10,fontSize:14,color:"#1e2d40",outline:"none",boxSizing:"border-box" }}
+              onFocus={e=>e.target.style.borderColor="#0047AB"} onBlur={e=>e.target.style.borderColor="#e0e7ef"}/>
+          </div>
+        )}
+      </div>
+
+      {/* Personal / Social History */}
+      <div style={{ background:"white", borderRadius:14, border:"1px solid #e0e7ef", padding:"16px 18px" }}>
+        <SecTitle icon={<Activity size={16} strokeWidth={2}/>} title="Personal / Social History"/>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+          {[{key:"social_smoking",label:"Smoking",icon:"🚬"},{key:"social_alcohol",label:"Alcohol Intake",icon:"🍺"}].map(({key,label,icon})=>(
+            <div key={key}>
+              <label style={labelStyle}>{icon} {label}</label>
+              <div style={{ display:"flex", gap:8 }}>
+                {[{v:true,l:"Yes"},{v:false,l:"No"}].map(({v,l})=>(
+                  <button key={l} onClick={()=>updateMH(key,v)} style={btnStyle(mh[key]===v)}>{l}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* General Survey */}
+      <div style={{ background:"white", borderRadius:14, border:"1px solid #e0e7ef", padding:"16px 18px" }}>
+        <SecTitle icon={<ClipboardList size={16} strokeWidth={2}/>} title="General Survey"/>
+        <div style={{ display:"flex", gap:10 }}>
+          {[{v:"awake_alert",l:"☀️ Awake and Alert"},{v:"altered_sensorium",l:"⚠️ Altered Sensorium"}].map(({v,l})=>(
+            <button key={v} onClick={()=>updateMH("general_survey",mh.general_survey===v?"":v)}
+              style={{...btnStyle(mh.general_survey===v),flex:1,padding:"11px 14px"}}>{l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Female Health — conditional on sex = Female */}
+      {isFemale&&(
+        <div style={{ background:"white", borderRadius:14, border:"1.5px solid #f5d0e8", padding:"16px 18px" }}>
+          <SecTitle icon={<span style={{ fontSize:15 }}>♀️</span>} title="For Females Only" sub="LMP, FP method, reproductive history"/>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <Input label="No. of Children" placeholder="e.g. 2" value={fh.no_of_children} onChange={v=>updateFH("no_of_children",v)} type="number" error={errors["fh.no_of_children"]}/>
+            <Input label="LMP (Last Menstrual Period)" value={fh.lmp} onChange={v=>updateFH("lmp",v)} type="date" error={errors["fh.lmp"]}/>
+            <Input label="Period Duration (days)" placeholder="e.g. 5" value={fh.period_duration_days} onChange={v=>updateFH("period_duration_days",v)} type="number"/>
+            <Input label="Cycle Length (days)" placeholder="e.g. 28" value={fh.cycle_length_days} onChange={v=>updateFH("cycle_length_days",v)} type="number"/>
+            <Input label="FP Method" placeholder="e.g. Pills, IUD, None" value={fh.fp_method} onChange={v=>updateFH("fp_method",v)}/>
+            <Input label="Menopausal Age" placeholder="if applicable" value={fh.menopausal_age} onChange={v=>updateFH("menopausal_age",v)} type="number"/>
+          </div>
+        </div>
+      )}
+
+      {/* Pediatric Measurements — conditional on age ≤ 24 months */}
+      {isPediatric&&(
+        <div style={{ background:"white", borderRadius:14, border:"1.5px solid #fde8c8", padding:"16px 18px" }}>
+          <SecTitle icon={<Baby size={16} strokeWidth={2}/>} title="Pediatric Measurements" sub="For clients aged 0–24 months"/>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            {pvField("length_cm","Length")}
+            {pvField("head_circ","Head Circumference")}
+            {pvField("skinfold","Skinfold Thickness")}
+            {pvField("body_circ","Body Circumference")}
+            {pvField("waist_cm","Waist")}
+            {pvField("hip_cm","Hip")}
+            {pvField("limbs_cm","Limbs")}
+            {pvField("muac_cm","MUAC")}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+})()}
+{/* Step 5 — Priority & SMS */}
+{step === 5 && (
   <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 20 }}>
     <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Priority & Notifications</div>
     <div>
@@ -625,15 +875,15 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
 {/* Nav buttons — hidden on search pre-step */}
 {step >= 0 && (
 <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-  <button onClick={() => setStep(s => s === 0 ? -1 : isReturning && s === 3 ? 2 : s - 1)}
+  <button onClick={() => setStep(s => s === 0 ? -1 : isReturning && s === 2 ? -1 : s - 1)}
     style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px 22px", fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
     ← Back
   </button>
-  {step < 4 ? (
+  {step < 5 ? (
     <button onClick={tryAdvance} style={{
       flex: 1, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px",
       fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)", transition: "all 0.2s",
-    }}>{step === 3 ? "Continue to Priority →" : "Continue →"}</button>
+    }}>{step === 4 ? "Continue to Priority →" : step === 3 ? "Continue to Medical History →" : "Continue →"}</button>
   ) : (
     <button onClick={handleSubmit} disabled={submitting} style={{
       flex: 1, background: submitting ? "#d0dbe8" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",

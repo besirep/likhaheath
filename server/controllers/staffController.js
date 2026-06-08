@@ -43,21 +43,26 @@ exports.getOne = async (req, res) => {
   } catch (err) { internalError(res, err); }
 };
 
+const bcrypt = require('bcryptjs');
+
 // ── POST /api/staff ───────────────────────────────────────────────────────────
-// Required body: { first_name, last_name, position, health_center_id }
+// Required body: { first_name, last_name, position, health_center_id, role }
 // Optional:      { suffix, prc_license_number, prc_expiry_date, employment_status }
 exports.create = async (req, res) => {
   const {
     first_name, last_name, suffix,
     position, prc_license_number, prc_expiry_date,
-    employment_status, health_center_id,
+    employment_status, health_center_id, role
   } = req.body;
 
-  if (!first_name || !last_name || !position || !health_center_id)
-    return res.status(400).json({ error: 'first_name, last_name, position, and health_center_id are required.' });
+  if (!first_name || !last_name || !position || !health_center_id || !role)
+    return res.status(400).json({ error: 'first_name, last_name, position, health_center_id, and role are required.' });
 
+  const conn = await db.getConnection();
   try {
-    const [result] = await db.query(
+    await conn.beginTransaction();
+
+    const [staffResult] = await conn.query(
       `INSERT INTO staff
          (health_center_id, first_name, last_name, suffix, position,
           prc_license_number, prc_expiry_date, employment_status)
@@ -71,8 +76,38 @@ exports.create = async (req, res) => {
         employment_status  || 'Regular',
       ]
     );
-    res.status(201).json({ id: result.insertId, message: 'Staff registered successfully.' });
-  } catch (err) { internalError(res, err); }
+
+    const staffId = staffResult.insertId;
+
+    // Generate username (e.g. juan.delacruz)
+    const baseUsername = `${first_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.${last_name.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    let username = baseUsername;
+    let counter = 1;
+    
+    // Check if username exists
+    while (true) {
+      const [existing] = await conn.query('SELECT id FROM users WHERE username = ?', [username]);
+      if (existing.length === 0) break;
+      username = `${baseUsername}${counter++}`;
+    }
+
+    const defaultPass = 'LikhaHealth2025!';
+    const password_hash = await bcrypt.hash(defaultPass, 10);
+
+    await conn.query(
+      `INSERT INTO users (username, password_hash, role, staff_id)
+       VALUES (?, ?, ?, ?)`,
+      [username, password_hash, role, staffId]
+    );
+
+    await conn.commit();
+    res.status(201).json({ id: staffId, username, message: 'Staff and user account registered successfully.' });
+  } catch (err) {
+    await conn.rollback();
+    internalError(res, err);
+  } finally {
+    conn.release();
+  }
 };
 
 // ── PUT /api/staff/:id ────────────────────────────────────────────────────────
@@ -102,8 +137,36 @@ exports.update = async (req, res) => {
 
 // ── PATCH /api/staff/:id/status ───────────────────────────────────────────────
 exports.toggleStatus = async (req, res) => {
+  const conn = await db.getConnection();
   try {
-    await db.query('UPDATE staff SET is_active = NOT is_active WHERE id = ?', [req.params.id]);
-    res.json({ message: 'Staff status updated.' });
+    const [rows] = await conn.query('SELECT is_active FROM staff WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Staff not found.' });
+    
+    const newStatus = rows[0].is_active ? 0 : 1;
+    await conn.query('UPDATE staff SET is_active = ? WHERE id = ?', [newStatus, req.params.id]);
+    await conn.query('UPDATE users SET is_active = ? WHERE staff_id = ?', [newStatus, req.params.id]);
+    
+    res.json({ message: 'Status updated.', is_active: newStatus });
   } catch (err) { internalError(res, err); }
+  finally { conn.release(); }
+};
+
+// ── POST /api/staff/:id/reset-password ─────────────────────────────────────────
+exports.resetPassword = async (req, res) => {
+  const conn = await db.getConnection();
+  try {
+    const [userRows] = await conn.query('SELECT id, username FROM users WHERE staff_id = ?', [req.params.id]);
+    if (!userRows.length) return res.status(404).json({ error: 'User account not found for this staff member.' });
+
+    const defaultPass = 'LikhaHealth2025!';
+    const password_hash = await bcrypt.hash(defaultPass, 10);
+
+    await conn.query('UPDATE users SET password_hash = ? WHERE staff_id = ?', [password_hash, req.params.id]);
+
+    res.json({ username: userRows[0].username, password: defaultPass, message: 'Password reset successfully.' });
+  } catch (err) {
+    internalError(res, err);
+  } finally {
+    conn.release();
+  }
 };

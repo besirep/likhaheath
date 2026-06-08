@@ -17,6 +17,19 @@ export const authApi = {
     if (!res.ok) throw new Error(data.error || 'Login failed.');
     return data;
   },
+  changePassword: async (currentPassword, newPassword) => {
+    const res = await fetch(`${BASE}/auth/change-password`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenStore.get()}`
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Password change failed.');
+    return data;
+  },
 };
 
 // ── Token helpers ──────────────────────────────────────────────────────────────

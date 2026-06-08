@@ -240,7 +240,10 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate, on
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorQueue({ onNavigate, onStartConsult }) {
+export default function DoctorQueue({ onNavigate, onStartConsult, user }) {
+  // Build display name from user prop
+  const lastName   = user?.name?.split(' ').slice(-1)[0] ?? 'Doctor';
+  const displayName = `Dr. ${lastName}`;
   const [queue, setQueue]             = useState([]);
   const [filter, setFilter]           = useState("all");
   const [vitalsModal, setVitalsModal] = useState(null);
@@ -373,7 +376,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
         <div style={{ background: "#EBF0FA", borderBottom: "1px solid #CCDAF0", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1a2540" }}>Queue Management</h1>
-            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>Room 1 · Dr. Reyes · {new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</div>
+            <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>Room 1 · {displayName} · {new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</div>
           </div>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -400,7 +403,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult }) {
 
             {/* Export buttons */}
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => printQueueReport({ queue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: "Dr. Reyes" })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}><Printer size={15} strokeWidth={2} /> Print</button>
+              <button onClick={() => printQueueReport({ queue, stats: { serving: nowServing, waiting, completed, skipped, priority }, staffName: displayName })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}><Printer size={15} strokeWidth={2} /> Print</button>
               <button onClick={() => downloadQueueCSV({ queue })} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "#0047AB", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}><Download size={15} strokeWidth={2} /> CSV</button>
             </div>
 

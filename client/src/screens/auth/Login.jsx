@@ -3,6 +3,16 @@ import { UserCog, Stethoscope, User, Lock, Eye, EyeOff, AlertTriangle, KeyRound 
 
 const ROLES = [
   {
+    key: "admin",
+    label: "Administrator",
+    subtitle: "Municipal Health Officer",
+    icon: UserCog,
+    color: "#6b21a8",
+    bg: "#f3e8ff",
+    border: "#d8b4fe",
+    access: ["Dashboard", "Staff Management", "Reports"],
+  },
+  {
     key: "receptionist",
     label: "Medical Staff",
     subtitle: "Receptionist / Front Desk",
@@ -10,8 +20,6 @@ const ROLES = [
     color: "#2a9d8f",
     bg: "#e8f7f5",
     border: "#b8e4de",
-    demo: "ana.bautista",
-    demoPass: "LikhaHealth2025!",
     access: ["Queue", "Patient Registration", "Records", "Appointments", "SMS", "Reports"],
   },
   {
@@ -22,8 +30,6 @@ const ROLES = [
     color: "#0047AB",
     bg: "#EBF0FA",
     border: "#b8d0f5",
-    demo: "ramon.delacruz",
-    demoPass: "LikhaHealth2025!",
     access: ["Queue", "Consultations", "Patient Records", "Appointments"],
   },
 ];
@@ -79,13 +85,6 @@ export default function Login({ onLogin }) {
 
   const roleConfig = ROLES.find(r => r.key === selectedRole);
 
-  const fillDemo = () => {
-    if (!roleConfig) return;
-    setUsername(roleConfig.demo);
-    setPassword(roleConfig.demoPass);
-    setError("");
-  };
-
   const handleSubmit = async e => {
     e.preventDefault();
     setError("");
@@ -137,38 +136,12 @@ export default function Login({ onLogin }) {
 
         {/* Hero content */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", animation: "fadeUp 0.6s ease both" }}>
-          <div style={{ marginBottom: 32 }}>
-            <img
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              width={88}
-              height={70}
-              style={{ opacity: 0.85, filter: "drop-shadow(0 12px 32px rgba(0,71,171,0.5)) drop-shadow(0 4px 12px rgba(204,0,0,0.3))" }}
-            />
-          </div>
-
-          <h1 style={{ fontSize: 40, fontWeight: 700, color: "white", margin: "0 0 16px", lineHeight: 1.15, letterSpacing: -0.5 }}>
+          <h1 style={{ fontSize: 52, fontWeight: 700, color: "white", margin: "0 0 24px", lineHeight: 1.1, letterSpacing: -1 }}>
             Better care starts<br />with better tools.
           </h1>
-          <p style={{ fontSize: 15, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, margin: "0 0 40px", maxWidth: 340 }}>
+          <p style={{ fontSize: 18, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: "0", maxWidth: 380 }}>
             The integrated patient management system for Angono Municipal Health Center.
           </p>
-
-          {/* Access level cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {ROLES.map(r => (
-              <div key={r.key} style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 16px" }}>
-                <span style={{ display: "flex", alignItems: "center" }}><r.icon size={20} strokeWidth={1.8} color={r.color} /></span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "white" }}>{r.label}</div>
-                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
-                    {r.access.join(" · ")}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Footer */}
@@ -193,28 +166,38 @@ export default function Login({ onLogin }) {
           {/* ── Step 1: Role selection ── */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#7a8fb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>I am a</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {ROLES.map(r => {
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {ROLES.filter(r => !selectedRole || selectedRole === r.key).map(r => {
                 const isSelected = selectedRole === r.key;
                 return (
                   <button
                     key={r.key}
-                    onClick={() => { setSelectedRole(r.key); setUsername(""); setPassword(""); setError(""); }}
+                    onClick={() => { 
+                      setSelectedRole(isSelected ? null : r.key); 
+                      setUsername(""); setPassword(""); setError(""); 
+                    }}
                     style={{
-                      padding: "16px 14px",
+                      padding: "16px 20px",
                       border: `2px solid ${isSelected ? r.color : "#e0e7ef"}`,
                       borderRadius: 14,
                       background: isSelected ? r.bg : "white",
                       cursor: "pointer",
                       textAlign: "left",
-                      transition: "all 0.18s",
+                      transition: "all 0.3s ease",
                       boxShadow: isSelected ? `0 4px 16px ${r.color}22` : "none",
                       outline: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16
                     }}
                   >
-                    <div style={{ marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><r.icon size={28} strokeWidth={1.6} color={isSelected ? r.color : "#8a9bb0"} /></div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: isSelected ? r.color : "#1e2d40" }}>{r.label}</div>
-                    <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>{r.subtitle}</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: isSelected ? r.color : "#f4f7fb", flexShrink: 0 }}>
+                      <r.icon size={24} strokeWidth={2} color={isSelected ? "white" : "#8a9bb0"} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: isSelected ? r.color : "#1e2d40" }}>{r.label}</div>
+                      <div style={{ fontSize: 13, color: "#8a9bb0", marginTop: 2 }}>{r.subtitle}</div>
+                    </div>
                   </button>
                 );
               })}
@@ -230,12 +213,6 @@ export default function Login({ onLogin }) {
                   <span style={{ display: "flex", alignItems: "center" }}><roleConfig.icon size={16} strokeWidth={2} color={roleConfig.color} /></span>
                   <span style={{ fontSize: 14, fontWeight: 600, color: roleConfig.color }}>Signing in as {roleConfig.label}</span>
                 </div>
-                <button
-                  onClick={fillDemo}
-                  style={{ fontSize: 14, fontWeight: 600, color: roleConfig.color, background: "none", border: `1px solid ${roleConfig.border}`, borderRadius: 7, padding: "3px 10px", cursor: "pointer" }}
-                >
-                  Use Demo
-                </button>
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -295,18 +272,6 @@ export default function Login({ onLogin }) {
                 </button>
               </form>
 
-              {/* Demo hint */}
-              <div style={{ background: "white", border: "1px solid #edf1f7", borderRadius: 12, padding: "12px 16px" }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}><KeyRound size={14} strokeWidth={2} /> Demo Credentials</div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#4a5d75" }}>
-                  <span style={{ color: "#8a9bb0" }}>Username</span>
-                  <span style={{ fontWeight: 600, fontFamily: "monospace" }}>{roleConfig.demo}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#4a5d75", marginTop: 4 }}>
-                  <span style={{ color: "#8a9bb0" }}>Password</span>
-                  <span style={{ fontWeight: 600, fontFamily: "monospace" }}>{roleConfig.demoPass}</span>
-                </div>
-              </div>
             </div>
           )}
 

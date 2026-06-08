@@ -25,10 +25,11 @@ function decodePayload(token) {
 // ── Map backend role → frontend role key ──
 const ROLE_MAP = {
   Doctor:  'doctor',
-  Admin:   'receptionist',
+  Admin:   'admin',
   Nurse:   'receptionist',
   Midwife: 'receptionist',
   BHW:     'receptionist',
+  Receptionist: 'receptionist',
 };
 
 export function buildUserObject(apiUser, token) {

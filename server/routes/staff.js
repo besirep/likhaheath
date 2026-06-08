@@ -7,5 +7,6 @@ router.post('/',   verify, ctrl.create);
 router.get('/:id', verify, ctrl.getOne);
 router.put('/:id', verify, ctrl.update);
 router.patch('/:id/status', verify, ctrl.toggleStatus);
+router.post('/:id/reset-password', verify, ctrl.resetPassword);
 
 module.exports = router;
