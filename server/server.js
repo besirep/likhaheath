@@ -49,6 +49,7 @@ app.use('/api/auth',            authLimiter, require('./routes/auth'));
 app.use('/api/patients',        require('./routes/patients'));
 app.use('/api/staff',           require('./routes/staff'));
 app.use('/api/doctors',         require('./routes/doctors'));      // FIX: was never mounted
+app.use('/api/clusters',        require('./routes/clusters'));
 app.use('/api/appointments',    require('./routes/appointments'));
 app.use('/api/queue',           require('./routes/queue'));
 app.use('/api/medical-records', require('./routes/medicalRecords'));
