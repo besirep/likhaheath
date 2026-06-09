@@ -197,18 +197,19 @@ exports.create = async (req, res) => {
     if (!civil_status_id) throw new Error(`Unknown civil status: ${civil_status_name}`);
 
     const registered_by_staff_id = req.user?.staffId || null;
+    const { assigned_staff_id } = req.body;
 
     const [result] = await conn.query(
       `INSERT INTO patients
         (first_name, middle_name, last_name, suffix, date_of_birth, sex_id, civil_status_id, blood_type_id,
          nationality, occupation, philhealth_no, emergency_contact,
-         address_id, registered_by_staff_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         address_id, registered_by_staff_id, assigned_staff_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         first_name, middle_name || null, last_name, suffix || null, date_of_birth,
         sex_id, civil_status_id, blood_type_id || null,
         nationality || 'Filipino', occupation || null, philhealth_no || null,
-        emergency_contact || null, address_id, registered_by_staff_id,
+        emergency_contact || null, address_id, registered_by_staff_id, assigned_staff_id || null,
       ]
     );
     const patient_id = result.insertId;

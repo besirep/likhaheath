@@ -25,13 +25,7 @@ const visitReasons = [
   "Lab results review", "Follow-up consultation", "Wound care / dressing", "Other",
 ];
 
-const recentlyRegistered = [
-  { queue: "A-007", name: "Ana Lim",   time: "9:40 AM", status: "Waiting" },
-  { queue: "A-006", name: "Carlos M.", time: "9:35 AM", status: "Waiting" },
-  { queue: "A-005", name: "Ramon V.",  time: "9:30 AM", status: "Waiting" },
-  { queue: "A-004", name: "Luisa R.",  time: "9:20 AM", status: "Priority" },
-  { queue: "A-003", name: "Elena C.",  time: "9:10 AM", status: "Priority" },
-];
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const labelStyle = { fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 };
@@ -187,20 +181,29 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const [apiError, setApiError]     = useState(null);
   const [doctors, setDoctors]       = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [assignedStaffList, setAssignedStaffList] = useState([]);
+
   // Search pre-step state
   const [searchQuery, setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching]       = useState(false);
   const [queueCounter, setQueueCounter] = useState(0);
+  const [queueItems, setQueueItems]     = useState([]);
 
-  // Fetch the latest queue number
-  useEffect(() => {
+  // Fetch the latest queue number and items
+  const fetchQueue = () => {
     queueApi.getToday()
       .then(data => {
         const maxQ = data.reduce((max, item) => Math.max(max, item.queue_number || 0), 0);
         setQueueCounter(maxQ);
+        setQueueItems(data);
       })
       .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchQueue();
+    // Optional: Refresh periodically or simply depend on success actions
   }, []);
 
   // Persist draft whenever step or form changes
@@ -213,6 +216,14 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     staffApi.getAll({ position: "Doctor", active: true })
       .then(data => { setDoctors(Array.isArray(data) ? data : []); setDoctorsLoading(false); })
       .catch(() => { setDoctors([]); setDoctorsLoading(false); });
+
+    staffApi.getAll({ active: true })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAssignedStaffList(data.filter(s => s.position === "BHW" || s.position === "Midwife"));
+        }
+      })
+      .catch(console.error);
   }, []);
 
   const update = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: undefined })); };
@@ -383,6 +394,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
           blood_type_code: form.bloodType || null, nationality: form.nationality,
           occupation: form.occupation || null, philhealth_no: form.philhealthNo || null,
           emergency_contact: form.emergencyContact || null,
+          assigned_staff_id: form.assignedStaffId || null,
           address: { street: form.street || null, barangay: form.barangay, municipality: form.municipality, province: form.province },
           contact_info: [
             ...(form.phone ? [{ type: "phone", value: form.phone, is_primary: 1 }] : []),
@@ -399,6 +411,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       const queue = `A-${String(queue_number).padStart(3, "0")}`;
       setSuccess({ queue, name: fullName, doctor: form.doctor, reason: visit_reason, contact: form.phone, sendSms: form.sendSms, priority: form.priority, isReturning });
       if (onDraftClear) onDraftClear();
+      fetchQueue(); // refresh sidebar stats
     } catch (err) { setApiError(err.message); }
     finally { setSubmitting(false); }
   };
@@ -568,6 +581,20 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       <Input label="Email" placeholder="patient@email.com" value={form.email} onChange={v => update("email", v)} type="email" error={errors.email} />
     </div>
     <Input label="Emergency Contact" placeholder="Name – 09XXXXXXXXX" value={form.emergencyContact} onChange={v => update("emergencyContact", v)} />
+    <div style={{ height: 1, background: "#edf1f7", margin: "4px 0" }} />
+    <div>
+      <label style={labelStyle}>Assigned BHW / Midwife (Optional)</label>
+      <select 
+        value={form.assignedStaffId || ""} 
+        onChange={e => update("assignedStaffId", e.target.value)}
+        style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #dde8e5", borderRadius: 11, fontSize: 15, color: "#1e2d40", background: "white", outline: "none", boxSizing: "border-box", appearance: "none" }}
+      >
+        <option value="">-- No Assignment --</option>
+        {assignedStaffList.map(s => (
+          <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.position})</option>
+        ))}
+      </select>
+    </div>
   </div>
 )}
 {/* Step 2 — Visit Details */}
@@ -598,17 +625,15 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       <Input label="Specify Other Reason" placeholder="Describe the specific visit reason" value={form.reasonOther} onChange={v => update("reasonOther", v)} error={errors.reasonOther} />
     )}
     <div>
-      <label style={labelStyle}>Assign Doctor (optional)</label>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button onClick={() => update("doctor", "")} style={btnStyle(!form.doctor)}>Unassigned</button>
-        {doctors.map(d => {
-          const suffixPart = d.suffix ? ` ${d.suffix}` : "";
-          const name = `${d.first_name} ${d.last_name}${suffixPart}`.toUpperCase();
-          return <button key={d.id} type="button" onClick={() => update("doctor", name)} style={btnStyle(form.doctor === name)}>{name}</button>;
-        })}
-        {doctorsLoading && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>Loading doctors...</span>}
-        {!doctorsLoading && doctors.length === 0 && <span style={{ fontSize: 13, color: "#8a9bb0", alignSelf: "center" }}>No active doctors found.</span>}
-      </div>
+      <label style={labelStyle}>Preferred Doctor (Optional)</label>
+      {doctorsLoading ? <div style={{ fontSize: 14, color: "#8a9bb0" }}>Loading doctors...</div> : (
+        <select value={form.doctor} onChange={e => update("doctor", e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #dde8e5", borderRadius: 11, fontSize: 15, color: "#1e2d40", background: "white", outline: "none", boxSizing: "border-box" }}>
+          <option value="">Any available doctor</option>
+          {doctors.map(d => (
+            <option key={d.id} value={`Dr. ${d.last_name}`}>Dr. {d.first_name} {d.last_name} — {d.employment_status}</option>
+          ))}
+        </select>
+      )}
     </div>
     <div>
       <label style={labelStyle}>Additional Notes</label>
@@ -619,57 +644,29 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   </div>
 )}
 {/* Step 3 — Vitals */}
-{step === 3 && (() => {
-  const v = form.vitals || {};
-  const bmi = v.weight && v.height ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1) : null;
-  const vField = (key, label, placeholder, unit, icon) => (
-    <div key={key}>
-      <label style={labelStyle}>{icon} {label} <span style={{ color: "#CC0000" }}>*</span></label>
-      <div style={{ position: "relative" }}>
-        <input value={v[key] || ""} onChange={e => updateVitals(key, e.target.value)}
-          placeholder={placeholder} type={key === "bp" ? "text" : "number"} step="0.1"
-          style={{ width: "100%", padding: "10px 14px", paddingRight: 52, border: `1.5px solid ${errors[`vitals.${key}`] ? "#CC0000" : "#e0e7ef"}`, borderRadius: 11, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
-          onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-          onBlur={e => e.target.style.borderColor = errors[`vitals.${key}`] ? "#CC0000" : "#e0e7ef"}
-        />
-        <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#8a9bb0" }}>{unit}</span>
-      </div>
-      {errors[`vitals.${key}`] && <div style={errStyle}>⚠ {errors[`vitals.${key}`]}</div>}
-    </div>
-  );
-  return (
-    <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
-      <div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 2 }}>Vitals <span style={{ fontSize: 13, fontWeight: 600, color: "#CC0000", background: "#fff0ee", borderRadius: 6, padding: "2px 8px", marginLeft: 6 }}>All Required</span></div>
-        <div style={{ fontSize: 14, color: "#7a8fb0" }}>Record the patient's current vitals before proceeding.</div>
-      </div>
-      {vField("bp", "Blood Pressure", "e.g. 120/80", "mmHg", <Heart size={16} strokeWidth={2} />)}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        {vField("temp", "Temperature", "e.g. 36.5", "°C", <Thermometer size={16} strokeWidth={2} />)}
-        {vField("hr", "Heart Rate", "e.g. 78", "bpm", <Activity size={16} strokeWidth={2} />)}
-        {vField("spo2", "SpO₂", "e.g. 98", "%", <Wind size={16} strokeWidth={2} />)}
-        {vField("weight", "Weight", "e.g. 65", "kg", <Scale size={16} strokeWidth={2} />)}
-        {vField("height", "Height", "e.g. 160", "cm", <Ruler size={16} strokeWidth={2} />)}
-        <div />
-      </div>
-      {bmi && (
-        <div style={{ background: "linear-gradient(135deg,#e8f7f5,#d4f0eb)", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #b8e4de" }}>
-          <div>
-            <div style={{ fontSize: 13, color: "#2a9d8f", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>📐 BMI (auto-calculated)</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: "#1e2d40", lineHeight: 1.1, marginTop: 2 }}>{bmi}</div>
-          </div>
-          <div style={{ fontSize: 14, color: "#4a7d70", fontWeight: 500, textAlign: "right" }}>
-            {Number(bmi) < 18.5 ? "Underweight" : Number(bmi) < 25 ? "Normal weight" : Number(bmi) < 30 ? "Overweight" : "Obese"}
-            <div style={{ fontSize: 12, color: "#8a9bb0", marginTop: 2 }}>kg/m²</div>
+{step === 3 && (
+  <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Vitals</div>
+    <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: -12, marginBottom: 8 }}>Optional — can be taken later by the nurse station.</div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      {[{ k: "bp", l: "Blood Pressure", u: "mmHg", t: "text", p: "120/80" },
+        { k: "temp", l: "Temperature", u: "°C", t: "number", p: "36.5" },
+        { k: "hr", l: "Heart Rate", u: "bpm", t: "number", p: "80" },
+        { k: "spo2", l: "SpO2", u: "%", t: "number", p: "98" },
+        { k: "weight", l: "Weight", u: "kg", t: "number", p: "65" },
+        { k: "height", l: "Height", u: "cm", t: "number", p: "165" },
+      ].map(f => (
+        <div key={f.k}>
+          <label style={labelStyle}>{f.l}</label>
+          <div style={{ position: "relative" }}>
+            <input value={form.vitals[f.k] || ""} onChange={e => setForm(fm => ({ ...fm, vitals: { ...fm.vitals, [f.k]: e.target.value } }))} type={f.t} step="0.1" placeholder={f.p} style={{ width: "100%", padding: "9px 40px 9px 12px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box" }} onFocus={e => e.target.style.borderColor = "#0047AB"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+            <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "#8a9bb0" }}>{f.u}</span>
           </div>
         </div>
-      )}
-      <div style={{ background: "#fff8e8", borderRadius: 11, padding: "10px 14px", border: "1px solid #f5dfa0", fontSize: 14, color: "#7a5c00", display: "flex", gap: 8, alignItems: "center" }}>
-        <span><ClipboardList size={16} strokeWidth={2} /></span> All vitals must be recorded before proceeding to the next step.
-      </div>
+      ))}
     </div>
-  );
-})()}
+  </div>
+)}
 {/* Step 4 — Medical & Social History */}
 {step === 4 && (() => {
   const mh = form.medical_history;
@@ -907,7 +904,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>~20 min estimated wait</div>
   </div>
   <div style={{ display: "flex", gap: 8 }}>
-    {[{ label: "In Queue", value: 7, color: "#e09040", bg: "#fdf3e8" }, { label: "Done", value: 2, color: "#7a8fb0", bg: "#f0f4fa" }].map(s => (
+    {[{ label: "In Queue", value: inQueueCount, color: "#e09040", bg: "#fdf3e8" }, { label: "Done", value: doneCount, color: "#7a8fb0", bg: "#f0f4fa" }].map(s => (
       <div key={s.label} style={{ flex: 1, background: s.bg, borderRadius: 10, padding: "10px", textAlign: "center" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
         <div style={{ fontSize: 14, color: s.color, opacity: 0.8, marginTop: 2 }}>{s.label}</div>
@@ -917,7 +914,9 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   <div>
     <div style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 10 }}>Recently Registered</div>
     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-      {recentlyRegistered.map((r, i) => (
+      {recentList.length === 0 ? (
+        <div style={{ fontSize: 13, color: "#8a9bb0", textAlign: "center", padding: "12px 0" }}>No patients registered yet today.</div>
+      ) : recentList.map((r, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 11, background: "#f7f9fd", border: "1px solid #edf1f7" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "#2a9d8f", minWidth: 44 }}>{r.queue}</div>
           <div style={{ flex: 1 }}>
