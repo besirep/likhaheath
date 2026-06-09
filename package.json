@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "install:all": "npm install --workspaces",
-    "client": "npm run dev --workspace=client",
+    "client": "npm run dev --workspace=client -- --host",
     "server": "npm run dev --workspace=server",
     "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run server\" \"npm run client\"",
     "start": "npm run dev"

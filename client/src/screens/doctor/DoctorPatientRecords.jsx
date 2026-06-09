@@ -382,7 +382,7 @@ function ProfilePanel({ patient, visits, visitsLoading, onVisitSelect, selectedV
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function DoctorPatientRecords({ onNavigate }) {
+export default function DoctorPatientRecords({ onNavigate, navState }) {
   const [patients, setPatients]             = useState([]);
   const [loading, setLoading]               = useState(true);
   const [selected, setSelected]             = useState(null);
@@ -400,17 +400,35 @@ export default function DoctorPatientRecords({ onNavigate }) {
     setLoading(true);
     try {
       const resp = await patientsApi.getAll({ search, limit: 100 });
-      const list = (resp.data || []).map(normalizePatient);
+      let list = (resp.data || []).map(normalizePatient);
+      
+      // Handle direct navigation to a specific patient
+      if (navState?.patientId && !search) {
+        if (!list.find(p => p.id === navState.patientId)) {
+          try {
+            const single = await patientsApi.getOne(navState.patientId);
+            list = [normalizePatient(single), ...list];
+          } catch(e) { console.error("Failed to fetch initial patient:", e); }
+        }
+      }
+
       setPatients(list);
-      if (list.length > 0 && !selected) {
-        setSelected(list[0]);
+      
+      if (!selected) {
+        if (navState?.patientId) {
+          const found = list.find(p => p.id === navState.patientId);
+          if (found) setSelected(found);
+          else if (list.length > 0) setSelected(list[0]);
+        } else if (list.length > 0) {
+          setSelected(list[0]);
+        }
       }
     } catch (e) {
       console.error("[DoctorPatientRecords] loadPatients error:", e);
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, navState?.patientId]);
 
   useEffect(() => {
     const debounce = setTimeout(() => loadPatients(), 300);

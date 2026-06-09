@@ -447,7 +447,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const [notifOpen, setNotifOpen]   = useState(false);
   const [myQueue, setMyQueue]       = useState([]);
 
-  // Shared consultation start: updates queue status → sets active patient in App → navigates to Consultations
+  // Shared consultation start: updates queue status → sets active patient in App
   const handleStartConsult = async (patient) => {
     try {
       await consultationsApi.updateQueueStatus(patient.id, "In-Progress");
@@ -465,7 +465,6 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
           vitals:        patient.vitals,
         });
       }
-      if (onNavigate) onNavigate("dr-consult");
     } catch (e) {
       console.error("[DoctorDashboard] Failed to start consultation:", e);
     }

@@ -41,9 +41,12 @@ function Input({ label, placeholder, value, onChange, type = "text", required, e
   const [focused, setFocused] = useState(false);
   return (
     <div>
-      <label style={labelStyle}>{label}{required && <span style={{ color: "#CC0000", marginLeft: 2 }}>*</span>}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={inputBase(focused, !!error)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
+      <label style={labelStyle}>{label}{required && <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span>}</label>
+      <div style={{ position: "relative" }}>
+        <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          style={inputBase(focused, !!error)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
+        {required && <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 10, pointerEvents: "none" }} />}
+      </div>
       {error && <div style={errStyle}>{error}</div>}
     </div>
   );
@@ -53,13 +56,16 @@ function Select({ label, value, onChange, options, required, error, placeholder 
   const [focused, setFocused] = useState(false);
   return (
     <div>
-      <label style={labelStyle}>{label}{required && <span style={{ color: "#CC0000", marginLeft: 2 }}>*</span>}</label>
-      <select value={value} onChange={e => onChange(e.target.value)}
-        style={{ ...inputBase(focused, !!error), color: value ? "#1e2d40" : "#8a9bb0", appearance: "none", cursor: "pointer" }}
-        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
-        <option value="">{placeholder}</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <label style={labelStyle}>{label}{required && <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span>}</label>
+      <div style={{ position: "relative" }}>
+        <select value={value} onChange={e => onChange(e.target.value)}
+          style={{ ...inputBase(focused, !!error), color: value ? "#1e2d40" : "#8a9bb0", appearance: "none", cursor: "pointer", paddingRight: required ? 24 : 14 }}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
+          <option value="">{placeholder}</option>
+          {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        {required && <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 10, pointerEvents: "none" }} />}
+      </div>
       {error && <div style={errStyle}>{error}</div>}
     </div>
   );
@@ -116,7 +122,7 @@ function SuccessModal({ data, onClose, onAnother }) {
 }
 // ── Step indicator ────────────────────────────────────────────────────────────
 function StepBar({ step }) {
-  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Vitals", "Medical History", "Priority & SMS"];
+  const steps = ["Personal Info", "Address & Contact", "Visit Details", "Medical History", "Vitals", "Priority & SMS"];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28, flexWrap: "wrap", rowGap: 8 }}>
       {steps.map((s, i) => {
@@ -319,8 +325,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     if (step === 0) errs = validateStep0(form);
     else if (step === 1) errs = validateStep1(form);
     else if (step === 2) errs = validateStep2(form);
-    else if (step === 3) errs = validateStep3(form);
-    else if (step === 4) errs = validateStep5(form);  // medical history step (all optional)
+    else if (step === 3) errs = validateStep5(form);  // medical history step (all optional)
+    else if (step === 4) errs = validateStep3(form);  // vitals step (required)
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
       setStep(s => s + 1);
@@ -415,7 +421,16 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     } catch (err) { setApiError(err.message); }
     finally { setSubmitting(false); }
   };
-
+  const inQueueCount = queueItems.filter(q => q.status === "waiting" || q.status === "vitals-done" || q.status === "in-consultation").length;
+  const doneCount = queueItems.filter(q => q.status === "done").length;
+  const recentList = [...queueItems].reverse().slice(0, 5).map(q => ({
+    queue: `A-${String(q.queue_number).padStart(3, "0")}`,
+    name: q.patient_name || "Unknown Patient",
+    time: new Date(q.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    status: q.priority_tag === "Emergency" || q.priority_tag === "High" ? "Emergency" : "Waiting",
+    color: q.priority_tag === "Emergency" || q.priority_tag === "High" ? "#e63946" : "#2a9d8f",
+    bg: q.priority_tag === "Emergency" || q.priority_tag === "High" ? "#fdf3f4" : "#e8f7f5"
+  }));
 
   const handleAnother = () => {
     setForm(emptyForm); setStep(-1); setSuccess(null); setErrors({});
@@ -643,11 +658,23 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     </div>
   </div>
 )}
-{/* Step 3 — Vitals */}
-{step === 3 && (
+{/* Step 4 — Vitals */}
+{step === 4 && (() => {
+  const wt = parseFloat(form.vitals.weight);
+  const ht = parseFloat(form.vitals.height) / 100;
+  const bmi = (wt && ht) ? (wt / (ht * ht)).toFixed(1) : null;
+  let bmiCategory = "";
+  let bmiColor = "#8a9bb0";
+  if (bmi) {
+    if (bmi < 18.5) { bmiCategory = "Underweight"; bmiColor = "#e09040"; }
+    else if (bmi < 25) { bmiCategory = "Normal weight"; bmiColor = "#2a9d8f"; }
+    else if (bmi < 30) { bmiCategory = "Overweight"; bmiColor = "#e09040"; }
+    else { bmiCategory = "Obese"; bmiColor = "#CC0000"; }
+  }
+
+  return (
   <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
     <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Vitals</div>
-    <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: -12, marginBottom: 8 }}>Optional — can be taken later by the nurse station.</div>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
       {[{ k: "bp", l: "Blood Pressure", u: "mmHg", t: "text", p: "120/80" },
         { k: "temp", l: "Temperature", u: "°C", t: "number", p: "36.5" },
@@ -657,18 +684,30 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         { k: "height", l: "Height", u: "cm", t: "number", p: "165" },
       ].map(f => (
         <div key={f.k}>
-          <label style={labelStyle}>{f.l}</label>
+          <label style={labelStyle}>{f.l} <span style={{ color: "#CC0000", marginLeft: 2 }}>*</span></label>
           <div style={{ position: "relative" }}>
             <input value={form.vitals[f.k] || ""} onChange={e => setForm(fm => ({ ...fm, vitals: { ...fm.vitals, [f.k]: e.target.value } }))} type={f.t} step="0.1" placeholder={f.p} style={{ width: "100%", padding: "9px 40px 9px 12px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box" }} onFocus={e => e.target.style.borderColor = "#0047AB"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
             <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "#8a9bb0" }}>{f.u}</span>
+            <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
           </div>
         </div>
       ))}
+      <div style={{ gridColumn: "span 2", background: "#f7f9fd", borderRadius: 10, padding: "12px 14px", border: "1px solid #edf1f7", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5 }}>Body Mass Index (BMI)</div>
+          <div style={{ fontSize: 13, color: "#5a6f90", marginTop: 2 }}>Calculated automatically</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: bmi ? bmiColor : "#b0beca", lineHeight: 1 }}>{bmi || "—"}</div>
+          {bmi && <div style={{ fontSize: 12, fontWeight: 700, color: bmiColor, marginTop: 4 }}>{bmiCategory}</div>}
+        </div>
+      </div>
     </div>
   </div>
-)}
-{/* Step 4 — Medical & Social History */}
-{step === 4 && (() => {
+  );
+})()}
+{/* Step 3 — Medical & Social History */}
+{step === 3 && (() => {
   const mh = form.medical_history;
   const fh = form.female_health;
   const pv = form.pediatric_vitals;

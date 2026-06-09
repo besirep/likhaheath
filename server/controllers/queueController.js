@@ -135,3 +135,18 @@ exports.updateStatus = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// PATCH /api/queue/:id/doctor
+exports.updateDoctor = async (req, res) => {
+  const { doctor_id } = req.body;
+  try {
+    const [q] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [req.params.id]);
+    if (!q.length) return res.status(404).json({ error: 'Queue item not found.' });
+    
+    await db.query('UPDATE appointments SET doctor_id=? WHERE id=?', [doctor_id || null, q[0].appointment_id]);
+    res.json({ message: 'Doctor assigned successfully.' });
+  } catch (err) {
+    console.error('[Queue] updateDoctor error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+};

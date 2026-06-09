@@ -25,7 +25,21 @@ app.use(cors({
   origin: (origin, cb) => {
     // Allow requests with no Origin header (same-machine Postman, curl, etc.)
     if (!origin) return cb(null, true);
+    
+    // Allow localhost explicitly
+    if (origin.startsWith('http://localhost:')) return cb(null, true);
+    
+    // Auto-allow local network IP addresses
+    if (
+      origin.startsWith('http://192.168.') || 
+      origin.startsWith('http://10.') || 
+      origin.startsWith('http://172.')
+    ) {
+      return cb(null, true);
+    }
+
     if (allowedOrigins.has(origin)) return cb(null, true);
+    
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,

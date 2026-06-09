@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react";
 import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, CalendarDays, MessageSquare, BarChart3, Stethoscope, LogOut, Users } from "lucide-react";
 import { useAuth } from "./lib/api/useAuth.js";
+import { consultationsApi } from "./lib/api/consultations.js";
 
 // Auth
 import Login from "./screens/auth/Login.jsx";
 import ChangePasswordModal from "./components/ChangePasswordModal.jsx";
+import ActiveConsultationScreen from "./screens/doctor/ActiveConsultationScreen.jsx";
 
 // Receptionist screens
 import ClinicDashboard            from "./screens/receptionist/ClinicDashboard.jsx";
@@ -239,6 +241,13 @@ export default function App() {
   // useAuth hydrates from localStorage on mount — no flash of login screen on refresh
   const { user, login, logout } = useAuth();
   const [activeId, setActiveId] = useState(null);
+  const [navState, setNavState] = useState(null);
+  const [savingConsultation, setSavingConsultation] = useState(false);
+
+  const handleNavigate = useCallback((id, state = null) => {
+    setActiveId(id);
+    setNavState(state);
+  }, []);
 
   // ── Registration session: persists form draft across tab switches ─────────
   const [registrationDraft, setRegistrationDraft] = useState(null);
@@ -258,6 +267,19 @@ export default function App() {
     else sessionStorage.removeItem('lh_active_patient');
   }, []);
   const clearActivePatient = useCallback(() => setActivePatient(null), [setActivePatient]);
+
+  const handleSaveConsultation = async (data) => {
+    setSavingConsultation(true);
+    try {
+      await consultationsApi.saveConsultation(data);
+      clearActivePatient();
+    } catch (e) {
+      console.error("Failed to save consultation:", e);
+      alert("Failed to save consultation. Please try again.");
+    } finally {
+      setSavingConsultation(false);
+    }
+  };
 
   // Called by Login after a successful API login
   const handleLogin = (role) => async (username, password) => {
@@ -328,7 +350,7 @@ export default function App() {
            activeScreen?.id === 'register'
             ? <PatientRegistration
                 key="register-persistent"
-                onNavigate={setActiveId}
+                onNavigate={handleNavigate}
                 user={user}
                 draft={registrationDraft}
                 onDraftChange={setRegistrationDraft}
@@ -337,14 +359,14 @@ export default function App() {
             : activeScreen?.id === 'dr-dashboard'
             ? <DoctorDashboard
                 key="dr-dashboard"
-                onNavigate={setActiveId}
+                onNavigate={handleNavigate}
                 onStartConsult={setActivePatient}
                 user={user}
               />
             : activeScreen?.id === 'dr-queue'
             ? <DoctorQueue
                 key="dr-queue"
-                onNavigate={setActiveId}
+                onNavigate={handleNavigate}
                 onStartConsult={setActivePatient}
                 user={user}
               />
@@ -353,13 +375,25 @@ export default function App() {
                 key="dr-consult-persistent"
                 activePatient={activePatient}
                 onConsultComplete={clearActivePatient}
-                onNavigate={setActiveId}
+                onCancelConsult={clearActivePatient}
+                onNavigate={handleNavigate}
                 user={user}
               />
-            : <Screen key={resolvedActiveId} onNavigate={setActiveId} user={user} />
+            : <Screen key={resolvedActiveId} onNavigate={handleNavigate} navState={navState} user={user} />
         )}
         </ScreenErrorBoundary>
       </div>
+
+      {/* Global Active Consultation Overlay */}
+      {activePatient && (
+        <ActiveConsultationScreen
+          patient={activePatient}
+          onSave={handleSaveConsultation}
+          onCancel={clearActivePatient}
+          saving={savingConsultation}
+          onNavigate={handleNavigate}
+        />
+      )}
     </div>
   );
 }

@@ -248,12 +248,18 @@ export default function AdminStaffManagement() {
             <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
                 <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>First Name <span style={{ color: "red" }}>*</span></label>
-                  <input required value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>First Name <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                  <div style={{ position: "relative" }}>
+                    <input required value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                    <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+                  </div>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Last Name <span style={{ color: "red" }}>*</span></label>
-                  <input required value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Last Name <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                  <div style={{ position: "relative" }}>
+                    <input required value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                    <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+                  </div>
                 </div>
               </div>
               
@@ -263,16 +269,22 @@ export default function AdminStaffManagement() {
                   <input placeholder="e.g. Jr., MD" value={form.suffix} onChange={e => setForm({...form, suffix: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Position <span style={{ color: "red" }}>*</span></label>
-                  <input required placeholder="e.g. Head Doctor" value={form.position} onChange={e => setForm({...form, position: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Position <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                  <div style={{ position: "relative" }}>
+                    <input required placeholder="e.g. Head Doctor" value={form.position} onChange={e => setForm({...form, position: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                    <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+                  </div>
                 </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>System Role (Access Level) <span style={{ color: "red" }}>*</span></label>
-                <select required value={form.role} onChange={e => setForm({...form, role: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
-                  {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                </select>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>System Role (Access Level) <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                <div style={{ position: "relative" }}>
+                  <select required value={form.role} onChange={e => setForm({...form, role: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box", appearance: "none" }}>
+                    {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                  <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>

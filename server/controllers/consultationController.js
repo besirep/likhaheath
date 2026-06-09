@@ -274,4 +274,36 @@ const getConsultationHistory = async (req, res) => {
   }
 };
 
-module.exports = { getDoctorQueue, updateQueueStatus, saveConsultation, getConsultationHistory };
+/**
+ * PUT /api/consultations/:id
+ * Updates an existing medical record for the doctor.
+ */
+const updateConsultation = async (req, res) => {
+  const { id } = req.params;
+  const { diagnosis, treatment, notes } = req.body;
+  const doctorId = req.user.staffId;
+
+  if (!diagnosis || !treatment) {
+    return res.status(400).json({ message: 'Diagnosis and treatment are required.' });
+  }
+
+  try {
+    const [result] = await db.query(
+      `UPDATE medical_records 
+       SET diagnosis = ?, treatment = ?, notes = ? 
+       WHERE id = ? AND doctor_id = ?`,
+      [diagnosis, treatment, notes || null, id, doctorId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Consultation record not found or you are not authorized to edit it.' });
+    }
+
+    res.json({ message: 'Consultation updated successfully.' });
+  } catch (err) {
+    console.error('updateConsultation error:', err);
+    res.status(500).json({ message: 'Failed to update consultation.' });
+  }
+};
+
+module.exports = { getDoctorQueue, updateQueueStatus, saveConsultation, getConsultationHistory, updateConsultation };

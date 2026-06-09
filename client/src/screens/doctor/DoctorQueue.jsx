@@ -216,7 +216,7 @@ function DetailPanel({ selected, onMarkDone, onRequeue, onVitals, onNavigate, on
           </button>
         )}
         {selected.status === "waiting" && (
-          <button onClick={() => onNavigate && onNavigate("dr-records")} style={{ background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #B0C8E8", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <button onClick={() => onNavigate && onNavigate("dr-records", { patientId: selected.patientId })} style={{ background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #B0C8E8", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <ClipboardList size={16} strokeWidth={2} /> View Patient Record
           </button>
         )}
@@ -344,7 +344,6 @@ export default function DoctorQueue({ onNavigate, onStartConsult, user }) {
           vitals:        patient.vitals,
         });
       }
-      if (onNavigate) onNavigate("dr-consult");
     } catch { }
   };
 

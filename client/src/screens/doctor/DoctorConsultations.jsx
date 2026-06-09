@@ -66,157 +66,19 @@ function VitalCard({ icon, label, value, unit, flag = "normal" }) {
   );
 }
 
-// ── Consultation Form (Active Consult) ────────────────────────────────────────
-function ConsultationForm({ patient, onSave, onCancel, saving }) {
-  const [form, setForm] = useState({
-    diagnosis: "",
-    treatment: "",
-    notes:     "",
-    followUpDate: "",
-  });
-
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.diagnosis.trim() || !form.treatment.trim()) return;
-    onSave({
-      appointmentId: patient.appointmentId,
-      patientId:     patient.patientId,
-      ...form,
-    });
-  };
-
-  const v = patient?.vitals;
-  const bmi = v?.weight && v?.height && v.weight !== "null" && v.height !== "null"
-    ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1)
-    : null;
-
-  const inputStyle = {
-    width: "100%", padding: "10px 14px", border: "1.5px solid #e8edf7",
-    borderRadius: 10, fontSize: 14, boxSizing: "border-box",
-    fontFamily: "inherit", background: "#fafbff", outline: "none",
-    transition: "border-color 0.2s",
-  };
-  const labelStyle = { fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, display: "block", marginBottom: 6 };
-
-  return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", background: "#f7f9fd" }}>
-      {/* Patient Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-        <Avatar name={patient.name} size={52} />
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#1a2540" }}>{patient.name}</div>
-          <div style={{ fontSize: 14, color: "#7a8fb0" }}>{patient.age} yrs · {patient.sex} · Queue #{patient.queueNumber}</div>
-          <div style={{ fontSize: 13, color: "#9aabc0", marginTop: 3 }}>Chief Complaint: {patient.visitReason || "—"}</div>
-        </div>
-        <div style={{ marginLeft: "auto" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#EBF0FA", border: "1px solid #B0C8E8", borderRadius: 9, padding: "6px 14px" }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#0047AB", animation: "pulse 1.4s infinite" }} />
-            <span style={{ fontSize: 13, color: "#0047AB", fontWeight: 600 }}>Active Consult</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Vitals Strip */}
-      {v ? (
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Vitals from Nurse</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
-            <VitalCard icon={<Heart size={16} strokeWidth={2} />} label="Blood Pressure" value={v.bp} unit="mmHg" flag={bpFlag(v.bp)} />
-            <VitalCard icon={<Thermometer size={16} strokeWidth={2} />} label="Temperature"    value={v.temp} unit="°C" flag={tempFlag(v.temp)} />
-            <VitalCard icon={<Activity size={16} strokeWidth={2} />} label="Heart Rate"     value={v.hr}   unit="bpm" />
-            <VitalCard icon={<Wind size={16} strokeWidth={2} />} label="SpO₂"           value={v.spo2} unit="%"   flag={spo2Flag(v.spo2)} />
-            {bmi && <VitalCard icon={<Scale size={16} strokeWidth={2} />} label="BMI" value={bmi} unit="kg/m²" flag={Number(bmi) > 25 ? "high" : "normal"} />}
-          </div>
-        </div>
-      ) : (
-        <div style={{ background: "#fff8e8", border: "1px solid #f0d080", borderRadius: 12, padding: "12px 16px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
-          <span>⏳</span>
-          <span style={{ fontSize: 14, color: "#a07820" }}>Vitals not yet recorded by nurse. You can proceed with the consultation.</span>
-        </div>
-      )}
-
-      {/* Consultation Form */}
-      <form onSubmit={handleSubmit}>
-        <div style={{ background: "white", borderRadius: 16, padding: "20px 22px", border: "1px solid #e8edf7", marginBottom: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#1a2540", marginBottom: 16 }}>📋 Consultation Findings</div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Diagnosis *</label>
-            <input
-              style={inputStyle}
-              value={form.diagnosis}
-              onChange={e => set("diagnosis", e.target.value)}
-              placeholder="e.g. Essential Hypertension (I10)"
-              required
-              onFocus={e => e.target.style.borderColor = "#0047AB"}
-              onBlur={e => e.target.style.borderColor = "#e8edf7"}
-            />
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Treatment Plan *</label>
-            <textarea
-              style={{ ...inputStyle, height: 90, resize: "vertical" }}
-              value={form.treatment}
-              onChange={e => set("treatment", e.target.value)}
-              placeholder="Medications, dosage, lifestyle modifications..."
-              required
-              onFocus={e => e.target.style.borderColor = "#0047AB"}
-              onBlur={e => e.target.style.borderColor = "#e8edf7"}
-            />
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Clinical Notes</label>
-            <textarea
-              style={{ ...inputStyle, height: 100, resize: "vertical" }}
-              value={form.notes}
-              onChange={e => set("notes", e.target.value)}
-              placeholder="History of present illness, physical examination findings..."
-              onFocus={e => e.target.style.borderColor = "#0047AB"}
-              onBlur={e => e.target.style.borderColor = "#e8edf7"}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>📅 Follow-up Date (optional)</label>
-            <input
-              type="date"
-              style={{ ...inputStyle, width: "220px" }}
-              value={form.followUpDate}
-              onChange={e => set("followUpDate", e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              onFocus={e => e.target.style.borderColor = "#0047AB"}
-              onBlur={e => e.target.style.borderColor = "#e8edf7"}
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button type="button" onClick={onCancel}
-            style={{ flex: 1, background: "white", border: "1.5px solid #e0e7ef", borderRadius: 11, padding: "12px", fontSize: 14, color: "#7a8fb0", cursor: "pointer", fontWeight: 600 }}>
-            Cancel
-          </button>
-          <button type="submit" disabled={saving || !form.diagnosis.trim() || !form.treatment.trim()}
-            style={{
-              flex: 3, borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "wait" : "pointer", border: "none",
-              background: saving ? "#7a8fb0" : "linear-gradient(135deg,#0047AB,#1565D8)",
-              color: "white", boxShadow: saving ? "none" : "0 4px 16px rgba(0,71,171,0.3)",
-              transition: "all 0.2s",
-            }}>
-            {saving ? "Saving..." : "✓ Complete & Save Consultation"}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
 // ── History Detail Panel ───────────────────────────────────────────────────────
-function HistoryDetail({ record, onSchedule }) {
+function HistoryDetail({ record, onUpdate }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ diagnosis: '', treatment: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (record) {
+      setEditForm({ diagnosis: record.diagnosis || '', treatment: record.treatment || '', notes: record.notes || '' });
+      setIsEditing(false);
+    }
+  }, [record]);
+
   if (!record) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#9aabc0", flexDirection: "column", gap: 10, background: "#f7f9fd" }}>
       <div style={{ fontSize: 48 }}>🩺</div>
@@ -224,6 +86,19 @@ function HistoryDetail({ record, onSchedule }) {
       <div style={{ fontSize: 14 }}>Click any record to view details</div>
     </div>
   );
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await consultationsApi.updateConsultation(record.id, editForm);
+      if (onUpdate) onUpdate(editForm);
+      setIsEditing(false);
+    } catch (e) {
+      alert("Failed to update consultation.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const v = record.vitals;
   const bmi = v?.weight && v?.height && v.weight !== "null" && v.height !== "null"
@@ -238,31 +113,110 @@ function HistoryDetail({ record, onSchedule }) {
           <div style={{ fontSize: 20, fontWeight: 700, color: "#1a2540" }}>{record.patient.name}</div>
           <div style={{ fontSize: 14, color: "#7a8fb0" }}>{record.patient.age} yrs · {record.patient.sex}</div>
         </div>
-        <button onClick={() => {
-          const win = window.open("", "_blank");
-          win.document.write(`<html><body style="font-family:sans-serif;padding:24px"><h2>Consultation Record — ${record.patient.name}</h2><p><b>Date:</b> ${new Date(record.date).toLocaleDateString()}</p><hr/><p><b>Diagnosis:</b> ${record.diagnosis}</p><p><b>Treatment:</b><br/>${record.treatment}</p><p><b>Notes:</b><br/>${record.notes || "—"}</p><p style="margin-top:32px;color:#888">Printed on ${new Date().toLocaleString()}</p></body></html>`);
-          win.print(); win.close();
-        }} style={{ marginLeft: "auto", background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>
-          🖨 Print
-        </button>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          {!isEditing ? (
+            <>
+              <button onClick={() => setIsEditing(true)} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 14, color: "#1a2540", cursor: "pointer", fontWeight: 600 }}>
+                ✏️ Edit
+              </button>
+              <button onClick={() => {
+                const win = window.open("", "_blank");
+                win.document.write(`<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h4 style="margin:0;font-weight:normal">REPUBLIC OF THE PHILIPPINES<br/>PROVINCE OF RIZAL<br/>MUNICIPALITY OF ANGONO</h4>
+        <h3 style="margin:10px 0 0 0;">MUNICIPAL HEALTH OFFICE</h3>
+      </div>
+      <h2 style="text-align:center; font-style: italic; margin-bottom: 30px;">Consultation Record</h2>
+      
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+        <div>Date: <span style="border-bottom: 1px solid black; display: inline-block; width: 150px; text-align:center;">${new Date(record.date).toLocaleDateString()}</span></div>
+      </div>
+      
+      <div style="margin-bottom: 10px;">
+        NAME: <span style="border-bottom: 1px solid black; display: inline-block; width: 400px; padding-left: 10px;">${record.patient.name}</span>
+      </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 30px;">
+        <div style="flex:1">ADD: <span style="border-bottom: 1px solid black; display: inline-block; width: 80%;">—</span></div>
+        <div>Age: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${record.patient.age}</span></div>
+        <div>Sex: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${record.patient.sex}</span></div>
       </div>
 
-      <div style={{ background: "linear-gradient(135deg,#EBF0FA,#e4ecfb)", borderRadius: 14, padding: "16px 20px", marginBottom: 14, border: "1px solid #C0D4F0" }}>
-        <div style={{ fontSize: 12, color: "#7a8fb0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 5 }}>Diagnosis</div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#1a2540" }}>{record.diagnosis}</div>
-        <div style={{ fontSize: 14, color: "#5a6f90", marginTop: 3 }}>Chief complaint: {record.visitReason || "—"}</div>
+      <div style="margin-bottom: 20px;">
+        <div style="font-weight:bold; margin-bottom:5px;">HPI / Chief Complaint:</div>
+        <div style="padding-left:10px; min-height: 40px;">${record.visitReason || "—"}</div>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <div style="font-weight:bold; margin-bottom:5px;">Diagnosis:</div>
+        <div style="padding-left:10px;">${record.diagnosis || "—"}</div>
+      </div>
+      <div style="margin-bottom: 40px;">
+        <div style="font-weight:bold; margin-bottom:5px;">Doctor's Notes & Treatment:</div>
+        <div style="padding-left:10px; white-space: pre-wrap;">${(record.treatment || "") + (record.notes ? "\\n\\n" + record.notes : "")}</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-        <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e8edf7" }}>
-          <div style={{ fontSize: 12, color: "#9aabc0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 9 }}>📝 Clinical Notes</div>
-          <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75 }}>{record.notes || "No notes recorded."}</div>
-        </div>
-        <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #C0D4F0" }}>
-          <div style={{ fontSize: 12, color: "#0047AB", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 9 }}>📋 Treatment Plan</div>
-          <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75 }}>{record.treatment}</div>
+      <div style="margin-top: 80px; text-align: right;">
+        <div style="display: inline-block; text-align: center;">
+          <div style="border-bottom: 1px solid black; width: 250px; margin-bottom: 5px;"></div>
+          <div>RODOLFO S. NARCISO JR., MD</div>
+          <div>MUNICIPAL HEALTH OFFICER</div>
+          <div>LIC. NO. 0101763</div>
         </div>
       </div>
+    </body></html>`);
+                win.document.close();
+          setTimeout(() => { win.focus(); win.print(); }, 400);
+              }} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>
+                🖨 Print
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setIsEditing(false)} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 14px", fontSize: 14, color: "#7a8fb0", cursor: "pointer", fontWeight: 600 }}>
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={saving} style={{ background: "#0047AB", border: "none", borderRadius: 9, padding: "7px 14px", fontSize: 14, color: "white", cursor: "pointer", fontWeight: 600 }}>
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {isEditing ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 12, color: "#7a8fb0", fontWeight: 700, textTransform: "uppercase", marginBottom: 5 }}>Diagnosis</div>
+            <input value={editForm.diagnosis} onChange={e => setEditForm({ ...editForm, diagnosis: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: 8, border: "1px solid #C0D4F0", fontSize: 15, fontFamily: "inherit" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#0047AB", fontWeight: 700, textTransform: "uppercase", marginBottom: 5 }}>Treatment Plan</div>
+            <textarea value={editForm.treatment} onChange={e => setEditForm({ ...editForm, treatment: e.target.value })} rows={4} style={{ width: "100%", padding: "10px", borderRadius: 8, border: "1px solid #C0D4F0", fontSize: 14, resize: "vertical", fontFamily: "inherit" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#9aabc0", fontWeight: 700, textTransform: "uppercase", marginBottom: 5 }}>Clinical Notes</div>
+            <textarea value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} rows={4} style={{ width: "100%", padding: "10px", borderRadius: 8, border: "1px solid #C0D4F0", fontSize: 14, resize: "vertical", fontFamily: "inherit" }} />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{ background: "linear-gradient(135deg,#EBF0FA,#e4ecfb)", borderRadius: 14, padding: "16px 20px", marginBottom: 14, border: "1px solid #C0D4F0" }}>
+            <div style={{ fontSize: 12, color: "#7a8fb0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 5 }}>Diagnosis</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#1a2540" }}>{record.diagnosis}</div>
+            <div style={{ fontSize: 14, color: "#5a6f90", marginTop: 3 }}>Chief complaint: {record.visitReason || "—"}</div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e8edf7" }}>
+              <div style={{ fontSize: 12, color: "#9aabc0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 9 }}>📝 Clinical Notes</div>
+              <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.notes || "No notes recorded."}</div>
+            </div>
+            <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #C0D4F0" }}>
+              <div style={{ fontSize: 12, color: "#0047AB", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 9 }}>📋 Treatment Plan</div>
+              <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.treatment}</div>
+            </div>
+          </div>
+        </>
+      )}
 
       {v && (
         <div>
@@ -281,13 +235,11 @@ function HistoryDetail({ record, onSchedule }) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-export default function DoctorConsultations({ activePatient, onConsultComplete }) {
-  const [mode, setMode]             = useState("history"); // "history" | "active"
+export default function DoctorConsultations({ activePatient, onConsultComplete, onCancelConsult, onNavigate }) {
   const [history, setHistory]       = useState([]);
   const [selectedRecord, setRecord] = useState(null);
   const [search, setSearch]         = useState("");
   const [loading, setLoading]       = useState(false);
-  const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState(null);
   const [toast, setToast]           = useState(null);
 
@@ -313,26 +265,6 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
   }, []);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
-
-  // If a patient is passed in as "active", switch to active consult mode
-  useEffect(() => {
-    if (activePatient) setMode("active");
-  }, [activePatient]);
-
-  const handleSave = async (data) => {
-    setSaving(true);
-    try {
-      await consultationsApi.saveConsultation(data);
-      showToast(`✓ Consultation saved for ${activePatient?.name || "patient"}`);
-      setMode("history");
-      await loadHistory();
-      if (onConsultComplete) onConsultComplete();
-    } catch (e) {
-      showToast("Failed to save consultation. Please try again.", "error");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const safeHistory = Array.isArray(history) ? history : [];
 
@@ -380,18 +312,13 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
         <div style={{ background: "#EBF0FA", borderBottom: "1px solid #CCDAF0", padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1a2540" }}>
-              {mode === "active" && activePatient ? `🩺 Consulting — ${activePatient.name}` : "Consultations"}
+              Consultations
             </h1>
             <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 2 }}>
-              {mode === "active" ? "Fill in findings and save to complete the visit." : `${todayCount} today · ${completedCount} total records`}
+              {todayCount} today · {completedCount} total records
             </div>
           </div>
           <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
-            {mode === "active" && (
-              <button onClick={() => setMode("history")} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 9, padding: "7px 16px", fontSize: 13, color: "#7a8fb0", cursor: "pointer", fontWeight: 600 }}>
-                ← Back to History
-              </button>
-            )}
             {[
               { label: "Today",     value: todayCount,     color: "#0047AB", bg: "#EBF0FA" },
               { label: "Completed", value: completedCount, color: "#2a7d5f", bg: "#e8f7f1" },
@@ -430,7 +357,7 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
                   {items.map((r, i) => {
                     const isSel = selectedRecord?.id === r.id;
                     return (
-                      <div key={r.id} onClick={() => { setRecord(r); setMode("history"); }}
+                      <div key={r.id} onClick={() => { setRecord(r); }}
                         style={{ padding: "11px 12px", borderRadius: 12, marginBottom: 4, cursor: "pointer", background: isSel ? "#EBF0FA" : "transparent", border: `1.5px solid ${isSel ? "#B0C8E8" : "transparent"}`, transition: "all 0.15s", animation: `fadeIn 0.3s ease ${i * 0.04}s both` }}
                         onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = "#f7f9fd"; }}
                         onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = "transparent"; }}
@@ -459,19 +386,18 @@ export default function DoctorConsultations({ activePatient, onConsultComplete }
             </div>
           </div>
 
-          {/* Right — Detail or Active Form */}
-          <div style={{ display: "flex", overflow: "hidden" }}>
+          {/* Right — Detail */}
+          <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
             <ErrorBoundary>
-              {mode === "active" && activePatient ? (
-                <ConsultationForm
-                  patient={activePatient}
-                  onSave={handleSave}
-                  onCancel={() => setMode("history")}
-                  saving={saving}
-                />
-              ) : (
-                <HistoryDetail record={selectedRecord} />
-              )}
+              <HistoryDetail 
+                record={selectedRecord} 
+                onUpdate={(newVals) => {
+                  loadHistory();
+                  showToast("Record updated successfully");
+                  // Update selectedRecord instantly in memory so the detail view shows the new text
+                  setRecord(prev => prev ? { ...prev, ...newVals } : prev); 
+                }} 
+              />
             </ErrorBoundary>
           </div>
         </div>

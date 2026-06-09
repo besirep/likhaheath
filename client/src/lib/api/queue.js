@@ -101,6 +101,17 @@ export const queueApi = {
     return data;
   },
 
+  /** PATCH /api/queue/:id/doctor */
+  assignDoctor: async (queueId, doctorId) => {
+    const res = await apiFetch(`/queue/${queueId}/doctor`, {
+      method: 'PATCH',
+      body: JSON.stringify({ doctor_id: doctorId || null }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to assign doctor.');
+    return data;
+  },
+
   /** GET /api/queue/next */
   getNext: async () => {
     const res  = await apiFetch('/queue/next');

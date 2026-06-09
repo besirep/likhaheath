@@ -53,18 +53,27 @@ export default function ChangePasswordModal({ onClose }) {
             {error && <div style={{ background: "#fef2f2", color: "#b91c1c", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
             
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Current Password</label>
-              <input type="password" required value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Current Password <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+              <div style={{ position: "relative" }}>
+                <input type="password" required value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+              </div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>New Password</label>
-              <input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>New Password <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+              <div style={{ position: "relative" }}>
+                <input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+              </div>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Confirm New Password</label>
-              <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Confirm New Password <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+              <div style={{ position: "relative" }}>
+                <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+              </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>

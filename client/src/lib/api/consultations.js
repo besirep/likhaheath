@@ -38,13 +38,23 @@ export const consultationsApi = {
     return res.json();
   },
 
-  /**
-   * Fetch the doctor's past consultation history.
-   * @returns {Promise<Array>} List of past medical records.
-   */
   getHistory: async () => {
     const res = await apiFetch('/consultations/history');
     if (!res.ok) throw new Error('Failed to fetch consultation history.');
+    return res.json();
+  },
+
+  /**
+   * Update an existing consultation.
+   * @param {number} id - The medical record ID.
+   * @param {{ diagnosis, treatment, notes }} data
+   */
+  updateConsultation: async (id, data) => {
+    const res = await apiFetch(`/consultations/${id}`, {
+      method: 'PUT',
+      body:   JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update consultation.');
     return res.json();
   },
 };

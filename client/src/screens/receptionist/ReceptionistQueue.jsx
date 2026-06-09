@@ -3,6 +3,7 @@ import { queueApi } from "../../lib/api/queue.js";
 import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
 import { dashboardApi } from "../../lib/api/dashboard.js";
+import { staffApi } from "../../lib/api/staff.js";
 import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X, Check } from "lucide-react";
 
 const statusConfig = {
@@ -51,7 +52,7 @@ function Toast({ msg, onDone }) {
 
 
 // ── Patient Detail Drawer ─────────────────────────────────────────────────────
-function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
+function PatientDrawer({ patient, onClose, onAction, onNavigate, availableDoctors, onAssignDoctor }) {
   if (!patient) return null;
   const sc = statusConfig[patient.status];
   const pc = patient.priority ? priorityConfig[patient.priority] : null;
@@ -93,7 +94,6 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
               { label: "Chief Complaint",  value: patient.reason },
               { label: "Arrived",          value: patient.arrived },
               { label: "Wait Time",        value: patient.wait },
-              { label: "Assigned Doctor",  value: patient.doctor || "Not yet assigned" },
               { label: "Contact",          value: patient.contact },
             ].map(r => (
               <div key={r.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #eef1f8" }}>
@@ -101,6 +101,23 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate }) {
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", textAlign: "right", maxWidth: 200 }}>{r.value}</span>
               </div>
             ))}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #eef1f8", alignItems: "center" }}>
+              <span style={{ fontSize: 14, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.4 }}>Assigned Doctor</span>
+              <div style={{ textAlign: "right" }}>
+                {availableDoctors?.length > 0 ? (
+                  <select 
+                    value={availableDoctors.find(d => `${d.first_name} ${d.last_name}` === patient.doctor)?.id || ""}
+                    onChange={e => onAssignDoctor(patient, e.target.value ? Number(e.target.value) : null)}
+                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #dde8e5", fontSize: 14, color: patient.doctor ? "#2a9d8f" : "#c07030", outline: "none", background: patient.doctor ? "#e8f7f5" : "#fdf3e8", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    <option value="">-- No Doctor Assigned --</option>
+                    {availableDoctors.map(d => <option key={d.id} value={d.id}>Dr. {d.last_name}</option>)}
+                  </select>
+                ) : (
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40", maxWidth: 200 }}>{patient.doctor || "Not yet assigned"}</span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Vitals */}
@@ -226,6 +243,7 @@ export default function ReceptionistQueue({ onNavigate }) {
   const [toast, setToast]         = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [summaryStats, setSummaryStats] = useState({ avg_wait: 0, sms_sent: 0 });
+  const [availableDoctors, setAvailableDoctors] = useState([]);
 
   const showToast = msg => setToast(msg);
 
@@ -247,6 +265,7 @@ export default function ReceptionistQueue({ onNavigate }) {
   useEffect(() => {
     fetchQueue();
     dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {});
+    staffApi.getAll().then(res => setAvailableDoctors(res.filter(s => s.role === 'Doctor'))).catch(() => {});
     const interval = setInterval(() => { fetchQueue(true); dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {}); }, 30_000);
     return () => clearInterval(interval);
   }, [fetchQueue]);
@@ -301,6 +320,19 @@ export default function ReceptionistQueue({ onNavigate }) {
     }
   };
 
+  const handleAssignDoctor = async (patient, doctorId) => {
+    const doc = availableDoctors.find(d => d.id === doctorId);
+    const doctorName = doc ? `${doc.first_name} ${doc.last_name}` : null;
+    try {
+      await queueApi.assignDoctor(patient.queueDbId, doctorId);
+      setQueue(q => q.map(p => p.id === patient.id ? { ...p, doctor: doctorName } : p));
+      if (selected?.id === patient.id) setSelected(prev => prev ? { ...prev, doctor: doctorName } : null);
+      showToast(`Doctor updated successfully`);
+    } catch (err) {
+      showToast(`Doctor assignment failed: ${err.message}`);
+    }
+  };
+
   const callNext = () => {
     const next = queue.find(p => p.status === "waiting");
     if (next) setSelected(next);
@@ -347,7 +379,7 @@ export default function ReceptionistQueue({ onNavigate }) {
 
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
-      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onNavigate={onNavigate} />
+      <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onNavigate={onNavigate} availableDoctors={availableDoctors} onAssignDoctor={handleAssignDoctor} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}

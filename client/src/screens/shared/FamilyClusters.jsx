@@ -136,8 +136,11 @@ function FamilyClusters() {
             </div>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Family Name *</label>
-                <input name="label" required placeholder="e.g. Dela Cruz Family" style={{ width: "100%", padding: "10px", border: "1px solid #d1d5db", borderRadius: 6 }} />
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Family Name <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                <div style={{ position: "relative" }}>
+                  <input name="label" required placeholder="e.g. Dela Cruz Family" style={{ width: "100%", padding: "10px", border: "1px solid #d1d5db", borderRadius: 6 }} />
+                  <div style={{ position: "absolute", top: 1, right: 1, width: 10, height: 10, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 5, pointerEvents: "none" }} />
+                </div>
               </div>
               <div style={{ marginBottom: 24 }}>
                 <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4 }}>Notes</label>
