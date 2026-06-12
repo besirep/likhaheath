@@ -218,6 +218,7 @@ const getConsultationHistory = async (req, res) => {
          mr.treatment,
          mr.notes,
          mr.record_date,
+         mr.lab_results,
          p.id          AS patient_id,
          p.first_name,
          p.last_name,
@@ -253,18 +254,19 @@ const getConsultationHistory = async (req, res) => {
       queueNumber: r.queue_number,
       patient: {
         id:   r.patient_id,
-        name: `${r.first_name} ${r.last_name}`,
+        name: `${r.last_name}, ${r.first_name}`,
         age:  r.age,
         sex:  r.sex,
       },
       vitals: r.blood_pressure ? {
         bp:     r.blood_pressure,
-        temp:   r.temperature,
-        hr:     r.heart_rate,
-        spo2:   r.spo2,
-        weight: r.weight_kg,
-        height: r.height_cm,
+        temp:   r.temperature   != null ? String(r.temperature)   : null,
+        hr:     r.heart_rate    != null ? String(r.heart_rate)    : null,
+        spo2:   r.spo2          != null ? String(r.spo2)          : null,
+        weight: r.weight_kg     != null ? String(r.weight_kg)     : null,
+        height: r.height_cm     != null ? String(r.height_cm)     : null,
       } : null,
+      labs: r.lab_results ? (typeof r.lab_results === 'string' ? JSON.parse(r.lab_results) : r.lab_results) : [],
     }));
 
     res.json(formatted);
@@ -280,7 +282,7 @@ const getConsultationHistory = async (req, res) => {
  */
 const updateConsultation = async (req, res) => {
   const { id } = req.params;
-  const { diagnosis, treatment, notes } = req.body;
+  const { diagnosis, treatment, notes, labs } = req.body;
   const doctorId = req.user.staffId;
 
   if (!diagnosis || !treatment) {
@@ -290,9 +292,9 @@ const updateConsultation = async (req, res) => {
   try {
     const [result] = await db.query(
       `UPDATE medical_records 
-       SET diagnosis = ?, treatment = ?, notes = ? 
+       SET diagnosis = ?, treatment = ?, notes = ?, lab_results = ?
        WHERE id = ? AND doctor_id = ?`,
-      [diagnosis, treatment, notes || null, id, doctorId]
+      [diagnosis, treatment, notes || null, labs ? JSON.stringify(labs) : null, id, doctorId]
     );
 
     if (result.affectedRows === 0) {
