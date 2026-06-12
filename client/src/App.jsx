@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, CalendarDays, MessageSquare, BarChart3, Stethoscope, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, MessageSquare, BarChart3, Stethoscope, LogOut, Users } from "lucide-react";
 import { useAuth } from "./lib/api/useAuth.js";
 import { consultationsApi } from "./lib/api/consultations.js";
 
@@ -11,14 +11,12 @@ import ActiveConsultationScreen from "./screens/doctor/ActiveConsultationScreen.
 // Receptionist screens
 import ClinicDashboard            from "./screens/receptionist/ClinicDashboard.jsx";
 import PatientRegistration        from "./screens/receptionist/PatientRegistration.jsx";
-import ReceptionistAppointments   from "./screens/receptionist/ReceptionistAppointments.jsx";
 import ReceptionistPatientRecords from "./screens/receptionist/ReceptionistPatientRecords.jsx";
 import ReceptionistQueue          from "./screens/receptionist/ReceptionistQueue.jsx";
 import ReceptionistReports        from "./screens/receptionist/ReceptionistReports.jsx";
 import ReceptionistSMSLogs        from "./screens/receptionist/ReceptionistSMSLogs.jsx";
 
 // Doctor screens
-import DoctorAppointments  from "./screens/doctor/DoctorAppointments.jsx";
 import DoctorConsultations from "./screens/doctor/DoctorConsultations.jsx";
 import DoctorDashboard     from "./screens/doctor/DoctorDashboard.jsx";
 import DoctorPatientRecords from "./screens/doctor/DoctorPatientRecords.jsx";
@@ -36,6 +34,7 @@ const SCREEN_MAP = {
     { id: "admin-dashboard", label: "Dashboard",        Icon: LayoutDashboard, Component: ClinicDashboard },
     { id: "admin-staff",     label: "Staff Management", Icon: UserPlus,        Component: AdminStaffManagement },
     { id: "clusters",        label: "Family Clusters",  Icon: Users,           Component: FamilyClusters },
+    { id: "admin-sms",       label: "SMS Logs",         Icon: MessageSquare,   Component: ReceptionistSMSLogs },
     { id: "admin-reports",   label: "Reports",          Icon: BarChart3,       Component: ReceptionistReports },
   ],
   receptionist: [
@@ -44,8 +43,6 @@ const SCREEN_MAP = {
     { id: "queue",     label: "Queue",            Icon: ClipboardList,   Component: ReceptionistQueue },
     { id: "records",   label: "Patient Records",  Icon: FolderOpen,      Component: ReceptionistPatientRecords },
     { id: "clusters",  label: "Family Clusters",  Icon: Users,           Component: FamilyClusters },
-    { id: "appts",     label: "Appointments",     Icon: CalendarDays,    Component: ReceptionistAppointments },
-    { id: "sms",       label: "SMS Logs",         Icon: MessageSquare,   Component: ReceptionistSMSLogs },
     { id: "reports",   label: "Reports",          Icon: BarChart3,       Component: ReceptionistReports },
   ],
   doctor: [
@@ -54,7 +51,6 @@ const SCREEN_MAP = {
     { id: "dr-consult",   label: "Consultations",   Icon: Stethoscope,     Component: DoctorConsultations },
     { id: "dr-records",   label: "Patient Records", Icon: FolderOpen,      Component: DoctorPatientRecords },
     { id: "clusters",     label: "Family Clusters", Icon: Users,           Component: FamilyClusters },
-    { id: "dr-appts",     label: "Appointments",    Icon: CalendarDays,    Component: DoctorAppointments },
     { id: "dr-reports",   label: "Reports",         Icon: BarChart3,       Component: ReceptionistReports },
   ],
 };

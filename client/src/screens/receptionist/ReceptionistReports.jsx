@@ -250,7 +250,7 @@ export default function Reports() {
           <div style={{ animation: "fadeUp 0.25s ease" }}>
             <SectionHeader title={`${periodLabel[period]} at a Glance`} subtitle={`${todayStr} · Live data from database`} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-              <StatCard icon={<Users size={22} strokeWidth={2} />} label="Total Appointments" value={loading ? "..." : totalAppts} sub={`${periodLabel[period]}`} color="#1e2d40" />
+              <StatCard icon={<Users size={22} strokeWidth={2} />} label="Total Patients Seen" value={loading ? "..." : totalAppts} sub={`${periodLabel[period]}`} color="#1e2d40" />
               <StatCard icon={<CheckCircle size={22} strokeWidth={2} />} label="Completed" value={loading ? "..." : completedAppts} sub={totalAppts > 0 ? `${Math.round(completedAppts / totalAppts * 100)}% completion rate` : "—"} color="#2a9d8f" bg="#e8f7f5" />
               <StatCard icon={<Clock size={22} strokeWidth={2} />} label="Avg. Wait Time" value={loading ? "..." : `${avgWait}m`} sub="Target: under 30 min" color="#e09040" bg="#fdf3e8" />
               <StatCard icon={<SkipForward size={22} strokeWidth={2} />} label="Skipped" value={loading ? "..." : skippedCount} sub="Called, no response" color="#c05080" bg="#fce8f0" />

@@ -688,7 +688,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
             <div style={{ background: "white", borderRadius: 16, border: "1px solid #D8E4F2", overflow: "hidden", boxShadow: "0 2px 10px rgba(60,90,140,0.07)", ...apptFade }}>
               <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0f3fa" }}>
                 <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a2540" }}>This Afternoon</h2>
-                <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>Scheduled appointments</div>
+                <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>Upcoming follow-ups</div>
               </div>
               <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
                 {appointments.map((a, i) => (
