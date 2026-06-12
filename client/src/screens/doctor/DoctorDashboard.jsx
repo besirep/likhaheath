@@ -47,19 +47,7 @@ function useFadeIn(delay = 0) {
   return { opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.4s ease, transform 0.4s ease" };
 }
 
-// ── Mini-Modals (Add to Record, Lab Request, Schedule Follow-up) ──────────────
-function MiniModal({ title, icon, children, onClose }) {
-  return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(3px)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: 440, boxShadow: "0 24px 64px rgba(20,40,70,0.22)", overflow: "hidden", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
-        <div style={{ background: "linear-gradient(135deg,#1a2540,#243560)", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{icon} {title}</div>
-          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", fontSize: 15, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
-        </div>
-        <div style={{ padding: "22px 24px" }}>{children}</div>
-      </div>
-    </div>
-  );
+
 // ── Consultation Modal ─────────────────────────────────────────────────────────
 function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndConsult }) {
   const [notes, setNotes] = useState("");
