@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Filter, ShieldAlert, Lock, ArrowRight } from "lucide-react";
+import { Search, Filter, ShieldAlert, Lock, ArrowRight, RefreshCw } from "lucide-react";
 import { apiFetch } from "../../lib/api/apiFetch";
 
 export default function AdminAuditLogs() {
@@ -14,6 +14,8 @@ export default function AdminAuditLogs() {
   useEffect(() => {
     if (isUnlocked) {
       fetchLogs();
+      const interval = setInterval(() => fetchLogs(), 5 * 60 * 1000); // refresh every 5 mins
+      return () => clearInterval(interval);
     }
   }, [isUnlocked]);
 
@@ -121,6 +123,10 @@ export default function AdminAuditLogs() {
               style={{ width: "100%", padding: "12px 16px 12px 44px", borderRadius: 10, border: "1px solid #e0e7ef", fontSize: 14, outline: "none" }}
             />
           </div>
+          <button onClick={fetchLogs} style={{ background: "#f0f4fa", border: "1px solid #e0e7ef", borderRadius: 10, padding: "0 16px", display: "flex", alignItems: "center", gap: 8, color: "#4a5b78", fontWeight: 600, cursor: "pointer" }}>
+            <RefreshCw size={18} className={loading ? "spin" : ""} /> Refresh
+            <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          </button>
           <button style={{ background: "#f0f4fa", border: "1px solid #e0e7ef", borderRadius: 10, padding: "0 16px", display: "flex", alignItems: "center", gap: 8, color: "#4a5b78", fontWeight: 600, cursor: "pointer" }}>
             <Filter size={18} /> Filter
           </button>
