@@ -91,6 +91,7 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndCons
   };
 
   const handleEndConsult = async () => {
+    if (!window.confirm("Are you sure you want to end and save this consultation?")) return;
     try {
       // 1. Save the consultation record (diagnosis + notes) so it appears in history
       if (diagnosis.trim() || notes.trim()) {

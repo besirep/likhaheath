@@ -95,3 +95,23 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// POST /api/auth/reset-password
+exports.resetPassword = async (req, res) => {
+  const { username, newPassword } = req.body;
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: 'Username and new password are required.' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, rows[0].id]);
+
+    res.json({ message: 'Password reset successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -82,6 +82,9 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
       alert("Diagnosis and Doctor's Notes are required.");
       return;
     }
+    
+    if (!window.confirm("Are you sure you want to end and save this consultation?")) return;
+
     // Combine HPI into notes if it was changed
     let finalNotes = form.treatment;
     if (form.hpi.trim()) {

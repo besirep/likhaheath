@@ -520,6 +520,7 @@ export default function ReceptionistAppointments({ onNavigate }) {
   const handleSelect = (a) => setSelectedAppt(prev => prev?.id === a.id ? null : a);
 
   const handleCheckin = async (a) => {
+    if (!window.confirm("Are you sure you want to check in this patient?")) return;
     try {
       await appointmentsApi.update(a.id, { status: "Completed" });
       setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "checked-in" } : x));
@@ -528,6 +529,7 @@ export default function ReceptionistAppointments({ onNavigate }) {
   };
 
   const handleCancel = async (a) => {
+    if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
     try {
       await appointmentsApi.cancel(a.id);
       setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "cancelled" } : x));
@@ -536,6 +538,7 @@ export default function ReceptionistAppointments({ onNavigate }) {
   };
 
   const handleNoShow = async (a) => {
+    if (!window.confirm("Are you sure you want to mark this patient as a no-show?")) return;
     try {
       await appointmentsApi.update(a.id, { status: "No-show" });
       setAppts(q => q.map(x => x.id === a.id ? { ...x, status: "no-show" } : x));

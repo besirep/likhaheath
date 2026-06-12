@@ -13,6 +13,7 @@ export default function ChangePasswordModal({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    if (!window.confirm("Are you sure you want to change your password?")) return;
     if (newPassword !== confirmPassword) {
       return setError("New passwords do not match.");
     }

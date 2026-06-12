@@ -83,6 +83,41 @@ export default function Login({ onLogin }) {
   const [loading,     setLoading]     = useState(false);
   const [showPass,    setShowPass]    = useState(false);
 
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotUsername, setForgotUsername] = useState("");
+  const [forgotPassword, setForgotPassword] = useState("");
+  const [showForgotPass, setShowForgotPass] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (!window.confirm("Are you sure you want to reset the password for this account?")) return;
+    
+    setForgotError("");
+    setForgotSuccess(false);
+    setForgotLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: forgotUsername, newPassword: forgotPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to reset password.");
+      }
+      setForgotSuccess(true);
+      setForgotUsername("");
+      setForgotPassword("");
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   const roleConfig = ROLES.find(r => r.key === selectedRole);
 
   const handleSubmit = async e => {
@@ -164,56 +199,50 @@ export default function Login({ onLogin }) {
           </div>
 
           {/* ── Step 1: Role selection ── */}
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#7a8fb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>I am a</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {ROLES.filter(r => !selectedRole || selectedRole === r.key).map(r => {
-                const isSelected = selectedRole === r.key;
-                return (
-                  <button
-                    key={r.key}
-                    onClick={() => { 
-                      setSelectedRole(isSelected ? null : r.key); 
-                      setUsername(""); setPassword(""); setError(""); 
-                    }}
-                    style={{
-                      padding: "16px 20px",
-                      border: `2px solid ${isSelected ? r.color : "#e0e7ef"}`,
-                      borderRadius: 14,
-                      background: isSelected ? r.bg : "white",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "all 0.3s ease",
-                      boxShadow: isSelected ? `0 4px 16px ${r.color}22` : "none",
-                      outline: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 16
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: isSelected ? r.color : "#f4f7fb", flexShrink: 0 }}>
-                      <r.icon size={24} strokeWidth={2} color={isSelected ? "white" : "#8a9bb0"} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: isSelected ? r.color : "#1e2d40" }}>{r.label}</div>
-                      <div style={{ fontSize: 13, color: "#8a9bb0", marginTop: 2 }}>{r.subtitle}</div>
-                    </div>
-                  </button>
-                );
-              })}
+          {!selectedRole && (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#7a8fb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>I am a</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {ROLES.map(r => {
+                  return (
+                    <button
+                      key={r.key}
+                      onClick={() => { 
+                        setSelectedRole(r.key); 
+                        setUsername(""); setPassword(""); setError(""); 
+                      }}
+                      style={{
+                        padding: "16px 20px",
+                        border: "2px solid #e0e7ef",
+                        borderRadius: 14,
+                        background: "white",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 16
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: "#f4f7fb", flexShrink: 0 }}>
+                        <r.icon size={24} strokeWidth={2} color="#8a9bb0" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>{r.label}</div>
+                        <div style={{ fontSize: 13, color: "#8a9bb0", marginTop: 2 }}>{r.subtitle}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ── Step 2: Credentials (shown after role selected) ── */}
           {selectedRole && (
             <div style={{ animation: "fadeUp 0.25s ease both" }}>
-              {/* Role badge */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: roleConfig.bg, border: `1px solid ${roleConfig.border}`, borderRadius: 10, padding: "9px 14px", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ display: "flex", alignItems: "center" }}><roleConfig.icon size={16} strokeWidth={2} color={roleConfig.color} /></span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: roleConfig.color }}>Signing in as {roleConfig.label}</span>
-                </div>
-              </div>
+              {/* Role badge removed per request */}
 
               <form onSubmit={handleSubmit}>
                 <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={username} onChange={setUsername} placeholder={`e.g. ${roleConfig.demo}`} />
@@ -270,8 +299,97 @@ export default function Login({ onLogin }) {
                     <>Sign In →</>
                   )}
                 </button>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedRole(null); setUsername(""); setPassword(""); setError(""); }}
+                    style={{ background: "none", border: "none", color: "#8a9bb0", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0 }}
+                  >
+                    ← Back to roles
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    style={{ background: "none", border: "none", color: roleConfig.color, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0 }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </form>
 
+            </div>
+          )}
+
+          {/* ── Step 3: Forgot Password Modal ── */}
+          {showForgotPassword && (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+            }}>
+              <div style={{
+                background: "white", borderRadius: 16, padding: 32, width: "100%", maxWidth: 400,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.1)", animation: "fadeUp 0.3s ease"
+              }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px", color: "#1e2d40" }}>Reset Password</h3>
+                <p style={{ fontSize: 14, color: "#7a8fb0", marginBottom: 24, lineHeight: 1.5 }}>
+                  Enter your username and your new password to reset it.
+                </p>
+
+                {forgotError && (
+                  <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                    <AlertTriangle size={16} strokeWidth={2} color="#c0392b" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 14, color: "#c0392b", fontWeight: 500 }}>{forgotError}</span>
+                  </div>
+                )}
+                
+                {forgotSuccess && (
+                  <div style={{ background: "#e8f7f5", border: "1px solid #b8e4de", borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 14, color: "#2a9d8f", fontWeight: 500 }}>Password reset successful! You can now log in.</span>
+                  </div>
+                )}
+
+                <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={forgotUsername} onChange={setForgotUsername} placeholder="Enter your username" />
+                <div style={{ position: "relative" }}>
+                  <Field label="New Password" icon={<Lock size={16} strokeWidth={2} color="#8a9bb0" />} type={showForgotPass ? "text" : "password"} value={forgotPassword} onChange={setForgotPassword} placeholder="Enter new password" />
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPass(s => !s)}
+                    style={{ position: "absolute", right: 14, top: 36, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#8a9bb0" }}
+                  >
+                    {showForgotPass ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+                  <button
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotUsername("");
+                      setForgotPassword("");
+                      setForgotError("");
+                      setForgotSuccess(false);
+                    }}
+                    style={{
+                      flex: 1, padding: "12px", background: "white", color: "#7a8fb0", border: "1.5px solid #e0e7ef",
+                      borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleForgotPassword}
+                    disabled={forgotLoading || !forgotUsername || !forgotPassword}
+                    style={{
+                      flex: 1, padding: "12px", background: roleConfig ? roleConfig.color : "#0047AB", color: "white", border: "none",
+                      borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: (forgotLoading || !forgotUsername || !forgotPassword) ? "not-allowed" : "pointer",
+                      opacity: (forgotLoading || !forgotUsername || !forgotPassword) ? 0.7 : 1
+                    }}
+                  >
+                    {forgotLoading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

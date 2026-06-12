@@ -339,6 +339,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   };
 
   const handleSubmit = async () => {
+    if (!window.confirm("Are you sure you want to submit this patient registration?")) return;
     setSubmitting(true); setApiError(null);
     try {
       const reasonList = form.reasons.includes('Other')

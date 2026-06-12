@@ -88,6 +88,7 @@ function HistoryDetail({ record, onUpdate }) {
   );
 
   const handleSave = async () => {
+    if (!window.confirm("Are you sure you want to save these changes to the consultation record?")) return;
     setSaving(true);
     try {
       await consultationsApi.updateConsultation(record.id, editForm);

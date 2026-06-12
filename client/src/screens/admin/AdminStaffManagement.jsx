@@ -44,7 +44,10 @@ export default function AdminStaffManagement() {
     loadStaff();
   }, [search]);
 
-  const handleToggle = async (id) => {
+  const handleToggle = async (id, currentStatus) => {
+    const action = currentStatus ? "deactivate" : "activate";
+    if (!window.confirm(`Are you sure you want to ${action} this staff account?`)) return;
+    
     try {
       await staffApi.toggleStatus(id);
       loadStaff();
@@ -218,7 +221,7 @@ export default function AdminStaffManagement() {
                         Reset Credentials
                       </button>
                       <button 
-                        onClick={() => handleToggle(s.id)}
+                        onClick={() => handleToggle(s.id, s.is_active)}
                         style={{ background: "none", border: `1px solid ${s.is_active ? "#f5c6c0" : "#b8e4de"}`, borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: s.is_active ? "#c0392b" : "#2a9d8f", cursor: "pointer" }}
                       >
                         {s.is_active ? "Deactivate" : "Activate"}
