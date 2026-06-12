@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const db     = require('../config/db');
+const { logAudit } = require('../helpers/auditLogger');
 
 // POST /api/auth/login
 exports.login = async (req, res) => {
@@ -48,6 +49,16 @@ exports.login = async (req, res) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '8h',
     });
+
+    // Log the login event
+    if (user.staff_id) {
+      await logAudit(
+        user.staff_id, 
+        'LOGIN', 
+        { username: user.username, role: user.role, ip: req.ip }, 
+        req.ip
+      );
+    }
 
     res.json({ token, user: payload });
   } catch (err) {
@@ -111,6 +122,26 @@ exports.resetPassword = async (req, res) => {
     await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, rows[0].id]);
 
     res.json({ message: 'Password reset successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /api/auth/verify-password
+exports.verifyPassword = async (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required.' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+
+    const valid = await bcrypt.compare(password, rows[0].password_hash);
+    if (!valid) return res.status(401).json({ error: 'Incorrect password.' });
+
+    res.json({ success: true, message: 'Password verified.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

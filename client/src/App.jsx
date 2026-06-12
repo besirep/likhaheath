@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, MessageSquare, BarChart3, Stethoscope, LogOut } from "lucide-react";
+import { LayoutDashboard, UserPlus, ClipboardList, FolderOpen, MessageSquare, BarChart3, Stethoscope, LogOut, ShieldAlert } from "lucide-react";
 import { useAuth } from "./lib/api/useAuth.js";
 import { consultationsApi } from "./lib/api/consultations.js";
 
@@ -24,6 +24,7 @@ import DoctorQueue         from "./screens/doctor/DoctorQueue.jsx";
 
 // Admin screens
 import AdminStaffManagement from "./screens/admin/AdminStaffManagement.jsx";
+import AdminAuditLogs from "./screens/admin/AdminAuditLogs.jsx";
 
 
 // ── Role-based screen config ──────────────────────────────────────────────────
@@ -31,6 +32,7 @@ const SCREEN_MAP = {
   admin: [
     { id: "admin-dashboard", label: "Dashboard",        Icon: LayoutDashboard, Component: ClinicDashboard },
     { id: "admin-staff",     label: "Staff Management", Icon: UserPlus,        Component: AdminStaffManagement },
+    { id: "admin-audit",     label: "Audit Logs",       Icon: ShieldAlert,     Component: AdminAuditLogs },
     { id: "admin-sms",       label: "SMS Logs",         Icon: MessageSquare,   Component: ReceptionistSMSLogs },
     { id: "admin-reports",   label: "Reports",          Icon: BarChart3,       Component: ReceptionistReports },
   ],
@@ -264,6 +266,7 @@ export default function App() {
     try {
       await consultationsApi.saveConsultation(data);
       clearActivePatient();
+      window.dispatchEvent(new Event('consultationSaved'));
     } catch (e) {
       console.error("Failed to save consultation:", e);
       alert("Failed to save consultation. Please try again.");

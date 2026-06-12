@@ -83,10 +83,10 @@ exports.create = async (req, res) => {
     await conn.beginTransaction();
 
     // Get next queue number for the given day — use FOR UPDATE to prevent race conditions
+    // Get next queue number for the given day — use FOR UPDATE to prevent race conditions
     const [[{ max_q }]] = await conn.query(
-      `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
-       FROM queue q
-       JOIN appointments a ON a.id = q.appointment_id
+      `SELECT COALESCE(MAX(a.queue_number), 0) AS max_q
+       FROM appointments a
        WHERE DATE(a.scheduled_date) = DATE(?)
        FOR UPDATE`,
       [scheduled_date]
@@ -100,11 +100,15 @@ exports.create = async (req, res) => {
     );
     const appointmentId = result.insertId;
 
-    // Create queue entry
-    await conn.query(
-      `INSERT INTO queue (appointment_id, queue_number) VALUES (?, ?)`,
-      [appointmentId, queueNumber]
-    );
+    // Create queue entry ONLY if the appointment is for today
+    // For future appointments, they will be checked in manually on the day of the appointment
+    const isToday = new Date(scheduled_date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+    if (isToday) {
+      await conn.query(
+        `INSERT INTO queue (appointment_id, queue_number) VALUES (?, ?)`,
+        [appointmentId, queueNumber]
+      );
+    }
 
     // Add services if provided
     if (services && services.length > 0) {

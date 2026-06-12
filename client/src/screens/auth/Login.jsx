@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { UserCog, Stethoscope, User, Lock, Eye, EyeOff, AlertTriangle, KeyRound } from "lucide-react";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const ROLES = [
   {
@@ -92,8 +93,10 @@ export default function Login({ onLogin }) {
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const handleForgotPassword = async () => {
-    if (!window.confirm("Are you sure you want to reset the password for this account?")) return;
+  const [showForgotConfirm, setShowForgotConfirm] = useState(false);
+
+  const executeForgotPassword = async () => {
+    setShowForgotConfirm(false);
     
     setForgotError("");
     setForgotSuccess(false);
@@ -116,6 +119,11 @@ export default function Login({ onLogin }) {
     } finally {
       setForgotLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    setForgotError("");
+    setShowForgotConfirm(true);
   };
 
   const roleConfig = ROLES.find(r => r.key === selectedRole);
@@ -242,10 +250,17 @@ export default function Login({ onLogin }) {
           {/* ── Step 2: Credentials (shown after role selected) ── */}
           {selectedRole && (
             <div style={{ animation: "fadeUp 0.25s ease both" }}>
-              {/* Role badge removed per request */}
+              
+              <button
+                type="button"
+                onClick={() => { setSelectedRole(null); setUsername(""); setPassword(""); setError(""); }}
+                style={{ background: "none", border: "none", color: "#8a9bb0", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0, marginBottom: 20, display: "flex", alignItems: "center", gap: 6 }}
+              >
+                ← Back to Role Selection
+              </button>
 
               <form onSubmit={handleSubmit}>
-                <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={username} onChange={setUsername} placeholder={`e.g. ${roleConfig.demo}`} />
+                <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={username} onChange={setUsername} placeholder={`e.g. ${roleConfig.demo || "admin"}`} />
                 <div style={{ position: "relative" }}>
                   <Field label="Password" icon={<Lock size={16} strokeWidth={2} color="#8a9bb0" />} type={showPass ? "text" : "password"} value={password} onChange={setPassword} placeholder="Enter your password" />
                   <button
@@ -300,14 +315,7 @@ export default function Login({ onLogin }) {
                   )}
                 </button>
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRole(null); setUsername(""); setPassword(""); setError(""); }}
-                    style={{ background: "none", border: "none", color: "#8a9bb0", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0 }}
-                  >
-                    ← Back to roles
-                  </button>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
@@ -391,6 +399,18 @@ export default function Login({ onLogin }) {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ── Step 4: Forgot Password Confirmation Modal ── */}
+          {showForgotConfirm && (
+            <ConfirmationModal
+              title="Reset Password"
+              message={`Are you sure you want to reset the password for username "${forgotUsername}"?`}
+              onConfirm={executeForgotPassword}
+              onCancel={() => setShowForgotConfirm(false)}
+              confirmText="Reset Password"
+              confirmColor="#6b21a8"
+            />
           )}
 
           <style>{`

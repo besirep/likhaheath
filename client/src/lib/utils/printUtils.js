@@ -78,7 +78,16 @@ function tableHTML(headers, rows) {
 
 // ── PDF via Print ────────────────────────────────────────────────────────────
 function openPrintWindow(html) {
-  const win = window.open('', '_blank');
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  const win = iframe.contentWindow;
   win.document.write(`<!DOCTYPE html>
 <html>
 <head>
@@ -97,8 +106,13 @@ function openPrintWindow(html) {
 <body>${html}</body>
 </html>`);
   win.document.close();
+
   // Brief delay for fonts to load
-  setTimeout(() => { win.focus(); win.print(); }, 400);
+  setTimeout(() => { 
+    win.focus(); 
+    win.print(); 
+    setTimeout(() => { document.body.removeChild(iframe); }, 1000);
+  }, 400);
 }
 
 // ── Consultation Summary ─────────────────────────────────────────────────────

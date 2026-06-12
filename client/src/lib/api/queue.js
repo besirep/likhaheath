@@ -4,6 +4,7 @@ import { apiFetch } from './apiFetch.js';
 export const STATUS_FROM_DB = {
   'Waiting':     'waiting',
   'In-Progress': 'in-consultation',
+  'Vitals-Done': 'vitals-done',
   'Done':        'done',
   'Skipped':     'skipped',
 };
@@ -12,6 +13,7 @@ export const STATUS_FROM_DB = {
 export const STATUS_TO_DB = {
   'waiting':         'Waiting',
   'in-consultation': 'In-Progress',
+  'vitals-done':     'Vitals-Done',
   'done':            'Done',
   'skipped':         'Skipped',
 };
@@ -117,6 +119,17 @@ export const queueApi = {
     const res  = await apiFetch('/queue/next');
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to get next patient.');
+    return data;
+  },
+
+  /** PATCH /api/queue/:id/vitals — nurse records vitals */
+  recordVitals: async (queueId, vitals) => {
+    const res  = await apiFetch(`/queue/${queueId}/vitals`, {
+      method: 'PATCH',
+      body:   JSON.stringify(vitals),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to record vitals.');
     return data;
   },
 };

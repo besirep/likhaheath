@@ -10,6 +10,10 @@ router.put('/:id',        verify,                        ctrl.update);
 router.delete('/:id',     verify,                        ctrl.remove);
 router.post('/:id/visit', verify, requireNotDoctor,      ctrl.createVisit);  // Doctors blocked
 router.get('/:id/visits', verify,                        ctrl.getVisits);    // all visit history
+router.patch('/:id/medical-history', verify,             ctrl.updateMedicalHistory);
+
+router.patch('/:id/visits/:queueId', verify, requireNotDoctor, ctrl.updateVisit); // update visit details post-queue
 
 module.exports = router;
+
 

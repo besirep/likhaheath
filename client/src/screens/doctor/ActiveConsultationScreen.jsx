@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Clock, Printer, X, ClipboardList, Thermometer, Heart, Activity, Wind, Scale, Check, Plus, Calendar } from "lucide-react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { queueApi } from "../../lib/api/queue.js";
+import DoctorPatientRecords from "./DoctorPatientRecords.jsx";
 
 // -- Static Maps
 const bpFlag   = bp => { if (!bp || bp === "null") return "normal"; const s = Number(String(bp).split("/")[0]); return s >= 140 ? "high" : s < 90 ? "low" : "normal"; };
@@ -38,20 +39,33 @@ const LAB_TESTS = [
 export default function ActiveConsultationScreen({ patient, onSave, onCancel, saving, onNavigate }) {
   const [timer, setTimer] = useState(0);
   const [visits, setVisits] = useState([]);
-  const [upNext, setUpNext] = useState([]);
+  const [patientData, setPatientData] = useState(null);
+  const [showFullRecord, setShowFullRecord] = useState(false);
   
   const [form, setForm] = useState({
     hpi: patient?.visitReason || "",
     diagnosis: "",
     treatment: "",
+    labResults: "",
     followUpDate: "",
+  });
+
+  const [editVitalsMode, setEditVitalsMode] = useState(false);
+  const [vitalsForm, setVitalsForm] = useState({
+    bp: patient?.vitals?.bp || "",
+    temp: patient?.vitals?.temp || "",
+    hr: patient?.vitals?.hr || "",
+    spo2: patient?.vitals?.spo2 || "",
+    weight: patient?.vitals?.weight || "",
+    height: patient?.vitals?.height || ""
   });
 
   const [showLabModal, setShowLabModal] = useState(false);
   const [labTests, setLabTests] = useState([]);
-  const [labOthers, setLabOthers] = useState("");
 
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = msg => { setToast(msg); setTimeout(() => setToast(null), 2500); };
 
   // Timer
   useEffect(() => {
@@ -67,43 +81,50 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
     }).catch(console.error);
   }, [patient?.patientId]);
 
-  // Fetch Up Next
+  // Fetch Full Patient Data for Medical History
   useEffect(() => {
-    queueApi.getToday().then(res => {
-      const waiting = (res.data || []).filter(q => q.status === "waiting");
-      setUpNext(waiting);
+    if (!patient?.patientId) return;
+    patientsApi.getOne(patient.patientId).then(res => {
+      setPatientData(res.data || null);
     }).catch(console.error);
-  }, []);
+  }, [patient?.patientId]);
 
   const setF = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleSubmit = () => {
-    if (!form.diagnosis.trim() || !form.treatment.trim()) {
-      alert("Diagnosis and Doctor's Notes are required.");
+    if (!form.treatment.trim()) {
+      alert("Assessment, Diagnosis & Notes are required.");
       return;
     }
     
     if (!window.confirm("Are you sure you want to end and save this consultation?")) return;
 
-    // Combine HPI into notes if it was changed
+    // Extract first line as a summary for the diagnosis column in DB
+    const firstLine = form.treatment.trim().split('\n')[0] || "See Notes";
+
+    // Combine HPI and Lab Results into notes if they were changed
     let finalNotes = form.treatment;
-    if (form.hpi.trim()) {
-      finalNotes = `HPI / Chief Complaint:\n${form.hpi}\n\nClinical Notes & Treatment:\n${form.treatment}`;
+    if (form.hpi.trim() || form.labResults.trim()) {
+      finalNotes = `HPI / Chief Complaint:\n${form.hpi || "—"}\n\nLaboratory Results:\n${form.labResults || "—"}\n\nClinical Notes & Treatment:\n${form.treatment}`;
     }
+
+    // Build the labs array
+    const requestedLabs = labTests.map(name => ({ name, results: {} }));
 
     onSave({
       appointmentId: patient.appointmentId,
       patientId:     patient.patientId,
-      diagnosis:     form.diagnosis,
+      diagnosis:     firstLine,
       treatment:     finalNotes,
       notes:         "", // Storing everything in treatment for now as per previous schema
+      labs:          requestedLabs,
+      vitals:        vitalsForm,
       followUpDate:  form.followUpDate,
     });
   };
 
   const handlePrintConsultation = () => {
-    const win = window.open("", "_blank");
-    win.document.write(`<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
+    const html = `<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h4 style="margin:0;font-weight:normal">REPUBLIC OF THE PHILIPPINES<br/>PROVINCE OF RIZAL<br/>MUNICIPALITY OF ANGONO</h4>
         <h3 style="margin:10px 0 0 0;">MUNICIPAL HEALTH OFFICE</h3>
@@ -128,11 +149,11 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
         <div style="padding-left:10px; min-height: 40px;">${form.hpi || "—"}</div>
       </div>
       <div style="margin-bottom: 20px;">
-        <div style="font-weight:bold; margin-bottom:5px;">Diagnosis:</div>
-        <div style="padding-left:10px;">${form.diagnosis || "—"}</div>
+        <div style="font-weight:bold; margin-bottom:5px;">Laboratory Results:</div>
+        <div style="padding-left:10px; white-space: pre-wrap;">${form.labResults || "—"}</div>
       </div>
       <div style="margin-bottom: 40px;">
-        <div style="font-weight:bold; margin-bottom:5px;">Doctor's Notes & Treatment:</div>
+        <div style="font-weight:bold; margin-bottom:5px;">Assessment, Diagnosis & Treatment:</div>
         <div style="padding-left:10px; white-space: pre-wrap;">${form.treatment || "—"}</div>
       </div>
 
@@ -144,17 +165,28 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           <div>LIC. NO. 0101763</div>
         </div>
       </div>
-    </body></html>`);
+    </body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    const win = iframe.contentWindow;
+    win.document.write(html);
     win.document.close();
     setTimeout(() => {
       win.focus();
       win.print();
+      setTimeout(() => { document.body.removeChild(iframe); }, 1000);
     }, 400);
   };
 
   const handlePrintLab = () => {
-    const win = window.open("", "_blank");
-    
     // Create the HTML for the lab checkboxes
     let checkboxesHtml = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">`;
     LAB_TESTS.forEach(test => {
@@ -168,18 +200,9 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
         </div>
       `;
     });
-    // Add others
-    checkboxesHtml += `
-        <div style="display: flex; alignItems: center; gap: 8px;">
-          <div style="width: 14px; height: 14px; border: 1px solid black; display: inline-block; text-align: center; line-height: 14px;">
-            ${labOthers.trim() ? "✔" : ""}
-          </div>
-          <span>Others: <span style="border-bottom: 1px solid black; display: inline-block; width: 100px;">${labOthers}</span></span>
-        </div>
-    `;
     checkboxesHtml += `</div>`;
 
-    win.document.write(`<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
+    const html = `<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h4 style="margin:0;font-weight:normal">REPUBLIC OF THE PHILIPPINES<br/>PROVINCE OF RIZAL<br/>MUNICIPALITY OF ANGONO</h4>
         <h3 style="margin:10px 0 0 0;">MUNICIPAL HEALTH OFFICE</h3>
@@ -208,24 +231,77 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           <div>LIC. NO. 0101763</div>
         </div>
       </div>
-    </body></html>`);
-    win.document.close();
+    </body></html>`;
     
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    const win = iframe.contentWindow;
+    win.document.write(html);
+    win.document.close();
+
     // Give it time to render the DOM before calling print
     setTimeout(() => {
       win.focus();
       win.print();
       setShowLabModal(false);
+
+      // Auto-populate labResults text area for easy editing
+      let newLabText = form.labResults ? form.labResults + "\n" : "";
+      if (labTests.length > 0) {
+        newLabText += "--- Pending Lab Results ---\n";
+        labTests.forEach(t => newLabText += `${t}:\n`);
+      }
+      setF("labResults", newLabText);
+      
+      setTimeout(() => { document.body.removeChild(iframe); }, 1000);
     }, 400);
   };
 
-  const v = patient?.vitals;
+  const v = vitalsForm;
   const bmi = v?.weight && v?.height && v.weight !== "null" && v.height !== "null"
     ? (Number(v.weight) / Math.pow(Number(v.height) / 100, 2)).toFixed(1)
     : null;
 
+  const renderVitalInput = (value, onChange, placeholder, unit, type="text", step) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <input 
+        className="vital-input"
+        type={type} step={step} value={value} onChange={onChange} placeholder={placeholder}
+        style={{ 
+          width: 80, 
+          padding: "6px 8px", 
+          borderRadius: 8, 
+          border: "1.5px solid #c0d4f0", 
+          textAlign: "right", 
+          fontSize: 14, 
+          fontWeight: 700, 
+          outline: "none", 
+          color: "#0047AB", 
+          background: "white",
+          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.03)",
+          transition: "border-color 0.2s"
+        }} 
+        onFocus={e => e.target.style.borderColor = "#0047AB"}
+        onBlur={e => e.target.style.borderColor = "#c0d4f0"}
+      />
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#8a9bb0", width: 38 }}>{unit}</span>
+    </div>
+  );
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#f4f7fb", display: "flex", flexDirection: "column", animation: "fadeIn 0.2s ease" }}>
+      <style>{`
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        .vital-input::placeholder { color: #cbd5e1; font-weight: 500; }
+      `}</style>
+      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1a2540", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 10001, boxShadow: "0 8px 24px rgba(20,40,90,0.28)", animation: "fadeUp 0.3s ease" }}>{toast}</div>}
       
       {/* Top Header */}
       <div style={{ background: "white", padding: "12px 24px", borderBottom: "1px solid #e0e7ef", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -272,27 +348,53 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           </div>
 
           <div style={{ padding: "20px 24px", borderBottom: "1px solid #f0f4fa" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16 }}>Vitals</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8 }}>Vitals</div>
+              <button 
+                onClick={() => setEditVitalsMode(true)} 
+                style={{ 
+                  background: "#EBF0FA", 
+                  border: "none", 
+                  color: "#0047AB", 
+                  fontSize: 12, 
+                  fontWeight: 700, 
+                  cursor: "pointer",
+                  padding: "6px 14px",
+                  borderRadius: 14,
+                  transition: "all 0.2s ease"
+                }}>
+                Edit
+              </button>
+            </div>
+            
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Heart size={14} /> BLOOD PRESSURE</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[bpFlag(v?.bp)] }}>{v?.bp || "—"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[bpFlag(v?.bp)] }}>{v?.bp || "—"} {v?.bp && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>mmHg</span>}</div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Thermometer size={14} /> TEMPERATURE</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[tempFlag(v?.temp)] }}>{v?.temp || "—"} {v?.temp && "°C"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[tempFlag(v?.temp)] }}>{v?.temp || "—"} {v?.temp && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>°C</span>}</div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Activity size={14} /> HEART RATE</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#1a2540" }}>{v?.hr || "—"} {v?.hr && "bpm"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#1a2540" }}>{v?.hr || "—"} {v?.hr && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>bpm</span>}</div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Wind size={14} /> SPO2</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[spo2Flag(v?.spo2)] }}>{v?.spo2 || "—"} {v?.spo2 && "%"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: flagColor[spo2Flag(v?.spo2)] }}>{v?.spo2 || "—"} {v?.spo2 && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>%</span>}</div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Scale size={14} /> WEIGHT</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#1a2540" }}>{v?.weight || "—"} {v?.weight && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>kg</span>}</div>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Scale size={14} /> HEIGHT</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#1a2540" }}>{v?.height || "—"} {v?.height && <span style={{ fontSize: 12, color: "#9aabc0", fontWeight: 600 }}>cm</span>}</div>
               </div>
               {bmi && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}><Scale size={14} /> BMI</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4, paddingTop: 10, borderTop: "1px dashed #e0e7ef" }}>
+                  <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", alignItems: "center", gap: 6 }}>BMI</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: Number(bmi) > 25 ? "#CC0000" : "#1a2540" }}>{bmi}</div>
                 </div>
               )}
@@ -309,7 +411,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
             ))}
             {visits.length === 0 && <div style={{ fontSize: 13, color: "#9aabc0", fontStyle: "italic" }}>No previous visits</div>}
             
-            <button onClick={() => onNavigate && onNavigate("dr-records", { patientId: patient.patientId })} style={{ width: "100%", background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 10 }}>
+            <button onClick={() => setShowFullRecord(true)} style={{ width: "100%", background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 10 }}>
               View Full Record →
             </button>
           </div>
@@ -331,23 +433,23 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           </div>
 
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 }}>ASSESSMENT / DIAGNOSIS</div>
-            <input
-              value={form.diagnosis}
-              onChange={e => setF("diagnosis", e.target.value)}
-              placeholder="Enter diagnosis or ICD-10 code..."
-              style={{ width: "100%", background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "14px", fontSize: 14, color: "#1a2540", outline: "none", fontFamily: "inherit" }}
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 }}>LABORATORY RESULTS</div>
+            <textarea
+              value={form.labResults}
+              onChange={e => setF("labResults", e.target.value)}
+              placeholder="Record laboratory results here... (Auto-populated when requesting labs)"
+              style={{ width: "100%", background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "14px", fontSize: 14, color: "#1a2540", outline: "none", resize: "vertical", minHeight: 80, fontFamily: "inherit" }}
               onFocus={e => e.target.style.borderColor = "#0047AB"}
               onBlur={e => e.target.style.borderColor = "#e0e7ef"}
             />
           </div>
 
           <div style={{ marginBottom: 24, flex: 1, display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 }}>DOCTOR'S NOTES & TREATMENT</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 }}>ASSESSMENT, DIAGNOSIS & TREATMENT NOTES</div>
             <textarea
               value={form.treatment}
               onChange={e => setF("treatment", e.target.value)}
-              placeholder="Record findings, observations, and treatment plan..."
+              placeholder="Record assessment, diagnosis, findings, and treatment plan..."
               style={{ width: "100%", flex: 1, background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "14px", fontSize: 14, color: "#1a2540", outline: "none", resize: "none", fontFamily: "inherit" }}
               onFocus={e => e.target.style.borderColor = "#0047AB"}
               onBlur={e => e.target.style.borderColor = "#e0e7ef"}
@@ -361,32 +463,120 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
             <button onClick={() => setShowLabModal(true)} style={{ flex: 1, background: "white", color: "#2a7d5f", border: "1px solid #bce6d6", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
               <Plus size={16} /> Request Lab
             </button>
-            <button onClick={() => setShowFollowUpModal(true)} style={{ flex: 1, background: "white", color: "#8B5FBF", border: "1px solid #dfcff2", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <Calendar size={16} /> Schedule Follow-up
+            <button onClick={() => setShowFollowUpModal(true)} style={{ flex: 1, background: form.followUpDate ? "#f3ebf9" : "white", color: "#8B5FBF", border: "1px solid #dfcff2", borderRadius: 8, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <Calendar size={16} /> {form.followUpDate ? `Follow-up: ${new Date(form.followUpDate).toLocaleDateString()}` : "Schedule Follow-up"}
             </button>
           </div>
         </div>
 
-        {/* Right Sidebar - Up Next */}
+        {/* Right Sidebar - Medical History */}
         <div style={{ width: 280, background: "white", borderLeft: "1px solid #e0e7ef", display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 }}>
           <div style={{ padding: "20px 24px", borderBottom: "1px solid #f0f4fa", fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8 }}>
-            UP NEXT
+            MEDICAL HISTORY
           </div>
-          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            {upNext.slice(0, 5).map((q, i) => (
-              <div key={q.id} style={{ background: "#f8fafd", border: "1px solid #eef2f8", borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0047AB" }}>{q.queue}</div>
-                  <div style={{ fontSize: 11, color: "#9aabc0" }}>Wait: {q.wait || "—"}</div>
+          <div style={{ padding: "16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+            {!patientData ? (
+              <div style={{ fontSize: 13, color: "#9aabc0", textAlign: "center", padding: "20px 0" }}>Loading history...</div>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Chronic Conditions</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {["hypertension", "diabetes", "asthma", "tuberculosis", "heart_disease"]
+                      .filter(k => patientData.medical_history?.[k])
+                      .map(k => (
+                        <span key={k} style={{ background: "#fdeee8", color: "#CC0000", padding: "4px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>
+                          {k.replace("_", " ")}
+                        </span>
+                      ))}
+                    {["hypertension", "diabetes", "asthma", "tuberculosis", "heart_disease"].every(k => !patientData.medical_history?.[k]) && (
+                      <span style={{ fontSize: 13, color: "#9aabc0" }}>None reported</span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#1a2540", marginBottom: 2 }}>{q.name}</div>
-                <div style={{ fontSize: 12, color: "#7a8fb0" }}>{q.reason}</div>
-              </div>
-            ))}
-            {upNext.length === 0 && <div style={{ fontSize: 13, color: "#9aabc0", textAlign: "center", padding: "20px 0" }}>No patients waiting</div>}
+
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Social History</div>
+                  <div style={{ fontSize: 13, color: "#1a2540", display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 60, color: "#7a8fb0" }}>Smoking:</span>
+                      <strong>{patientData.medical_history?.smoker ? "Yes" : "No"}</strong>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 60, color: "#7a8fb0" }}>Alcohol:</span>
+                      <strong>{patientData.medical_history?.alcohol ? "Yes" : "No"}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {patientData.medical_history?.allergies && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Allergies</div>
+                    <div style={{ background: "#fdf8e6", border: "1px solid #fbeeb8", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#b07830", fontWeight: 600 }}>
+                      {patientData.medical_history.allergies}
+                    </div>
+                  </div>
+                )}
+
+                {patientData.medical_history?.other_conditions && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Other Notes</div>
+                    <div style={{ fontSize: 13, color: "#1a2540", lineHeight: 1.5 }}>
+                      {patientData.medical_history.other_conditions}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Edit Vitals Modal */}
+      {editVitalsMode && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s ease" }}>
+          <div style={{ background: "white", borderRadius: 16, width: 450, padding: 30, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 20, color: "#1a2540" }}>Edit Patient Vitals</h2>
+              <button onClick={() => setEditVitalsMode(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9aabc0" }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 30 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Heart size={16} /> Blood Pressure</div>
+                {renderVitalInput(v.bp, e => setVitalsForm({...v, bp: e.target.value}), "120/80", "mmHg")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Thermometer size={16} /> Temperature</div>
+                {renderVitalInput(v.temp, e => setVitalsForm({...v, temp: e.target.value}), "36.5", "°C", "number", "0.1")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Activity size={16} /> Heart Rate</div>
+                {renderVitalInput(v.hr, e => setVitalsForm({...v, hr: e.target.value}), "80", "bpm", "number")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Wind size={16} /> SpO2</div>
+                {renderVitalInput(v.spo2, e => setVitalsForm({...v, spo2: e.target.value}), "98", "%", "number")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Scale size={16} /> Weight</div>
+                {renderVitalInput(v.weight, e => setVitalsForm({...v, weight: e.target.value}), "65", "kg", "number", "0.1")}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#4a5d75", display: "flex", alignItems: "center", gap: 8 }}><Scale size={16} /> Height</div>
+                {renderVitalInput(v.height, e => setVitalsForm({...v, height: e.target.value}), "170", "cm", "number", "0.1")}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button onClick={() => setEditVitalsMode(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #e0e7ef", background: "white", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => setEditVitalsMode(false)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: "#0047AB", color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <Check size={16} /> Save Vitals
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lab Request Modal */}
       {showLabModal && (
@@ -408,10 +598,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
                 </label>
               ))}
             </div>
-            <div style={{ marginBottom: 30 }}>
-              <label style={{ fontSize: 14, fontWeight: 600, color: "#1a2540", marginBottom: 6, display: "block" }}>Others:</label>
-              <input value={labOthers} onChange={e => setLabOthers(e.target.value)} placeholder="Specify other tests..." style={{ width: "100%", padding: "10px", border: "1px solid #e0e7ef", borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-            </div>
+
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button onClick={() => setShowLabModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #e0e7ef", background: "white", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
               <button onClick={handlePrintLab} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: "#0047AB", color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
@@ -436,10 +623,29 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button onClick={() => setShowFollowUpModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #e0e7ef", background: "white", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-              <button onClick={() => setShowFollowUpModal(false)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: "#8B5FBF", color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <button onClick={() => {
+                if(!form.followUpDate) return;
+                setShowFollowUpModal(false);
+                showToast(`Follow-up scheduled for ${new Date(form.followUpDate).toLocaleDateString()}`);
+              }} style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: "#8B5FBF", color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                 <Check size={16} /> Save Date
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Record Modal Overlay */}
+      {showFullRecord && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "white", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#f0f4fa", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #dde8e5" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2540" }}>Full Patient Record: {patient.name}</div>
+            <button onClick={() => setShowFullRecord(false)} style={{ background: "white", border: "1px solid #CCDAF0", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#4a5d75", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+              <X size={14} /> Close & Return to Consultation
+            </button>
+          </div>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+             <DoctorPatientRecords navState={{ patientId: patient.patientId }} />
           </div>
         </div>
       )}

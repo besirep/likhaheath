@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { getPatientPhone, sendSMS, appointmentMessage } = require('../helpers/smsHelper');
 
 /**
  * GET /api/consultations/queue
@@ -38,7 +39,6 @@ const getDoctorQueue = async (req, res) => {
        LEFT JOIN staff st    ON st.id = v.recorded_by_id
        WHERE DATE(a.scheduled_date) = CURDATE()
          AND a.doctor_id = ?
-         AND q.status != 'Done'
        ORDER BY
          CASE q.status
            WHEN 'In-Progress' THEN 1
@@ -150,10 +150,11 @@ const saveConsultation = async (req, res) => {
     }
 
     // 1. Save medical record
+    const labResultsJSON = req.body.labs && req.body.labs.length > 0 ? JSON.stringify(req.body.labs) : null;
     await conn.query(
-      `INSERT INTO medical_records (patient_id, appointment_id, doctor_id, diagnosis, treatment, notes, record_date)
-       VALUES (?, ?, ?, ?, ?, ?, CURDATE())`,
-      [patientId, appointmentId, doctorId, diagnosis, treatment, notes || null]
+      `INSERT INTO medical_records (patient_id, appointment_id, doctor_id, diagnosis, treatment, notes, lab_results, record_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())`,
+      [patientId, appointmentId, doctorId, diagnosis, treatment, notes || null, labResultsJSON]
     );
 
     // 2. Mark appointment as Completed
@@ -162,35 +163,55 @@ const saveConsultation = async (req, res) => {
       [appointmentId]
     );
 
+    // 2.5 Update Vitals if changed (Upsert if skipped nurse stage)
+    if (req.body.vitals) {
+      await conn.query(
+        `INSERT INTO vitals (appointment_id, blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm, recorded_by_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE 
+         blood_pressure = VALUES(blood_pressure), 
+         temperature = VALUES(temperature), 
+         heart_rate = VALUES(heart_rate), 
+         spo2 = VALUES(spo2), 
+         weight_kg = VALUES(weight_kg), 
+         height_cm = VALUES(height_cm)`,
+        [
+          appointmentId,
+          req.body.vitals.bp || null, 
+          req.body.vitals.temp || null, 
+          req.body.vitals.hr || null, 
+          req.body.vitals.spo2 || null, 
+          req.body.vitals.weight || null, 
+          req.body.vitals.height || null, 
+          doctorId
+        ]
+      );
+    }
+
     // 3. Mark queue entry as Done
     await conn.query(
       `UPDATE queue SET status = 'Done' WHERE appointment_id = ?`,
       [appointmentId]
     );
 
-    // 4. If a follow-up date is provided, create a new appointment + queue entry
+    // 4. If a follow-up date is provided, create a new appointment (DO NOT insert into queue until check-in)
     if (followUpDate) {
-      // Issue #5 — Use MAX from queue table (joined with appointments) to avoid duplicate queue numbers
-      const [queueMax] = await conn.query(
-        `SELECT COALESCE(MAX(q.queue_number), 0) AS max_q
-         FROM queue q
-         JOIN appointments a ON a.id = q.appointment_id
-         WHERE DATE(a.scheduled_date) = ?`,
-        [followUpDate]
-      );
-      const nextQueue = (queueMax[0].max_q || 0) + 1;
-
       const [apptResult] = await conn.query(
-        `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, queue_number, status, notes)
-         VALUES (?, ?, ?, ?, ?, 'Scheduled', 'Follow-up')`,
-        [patientId, doctorId, doctorId, followUpDate, nextQueue]
+        `INSERT INTO appointments (patient_id, doctor_id, created_by_id, scheduled_date, status, notes)
+         VALUES (?, ?, ?, ?, 'Scheduled', 'Follow-up')`,
+        [patientId, doctorId, doctorId, followUpDate]
       );
 
-      await conn.query(
-        `INSERT INTO queue (appointment_id, queue_number, status)
-         VALUES (?, ?, 'Waiting')`,
-        [apptResult.insertId, nextQueue]
-      );
+      // Fetch patient's first name for SMS
+      const [patientRes] = await conn.query(`SELECT first_name FROM patients WHERE id = ?`, [patientId]);
+      const patientFirstName = patientRes[0]?.first_name || 'Patient';
+
+      // Send SMS notification
+      const phone = await getPatientPhone(patientId, conn);
+      if (phone) {
+        const msg = require('../helpers/smsHelper').followUpMessage(patientFirstName, followUpDate);
+        await sendSMS({ phone, message: msg, patient_id: patientId, appointment_id: apptResult.insertId, conn });
+      }
     }
 
     await conn.commit();

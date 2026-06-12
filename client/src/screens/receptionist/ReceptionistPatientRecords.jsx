@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Search, Building2, Plus, Stethoscope, Clock, ClipboardList, BarChart3, CalendarDays, FolderOpen, UserRound, User, Lock, AlertTriangle, Phone, LayoutDashboard, Users, Smartphone, X, Droplets, MapPin } from "lucide-react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
+import EditPatientModal from "../../components/EditPatientModal.jsx";
 
 /** Normalize a backend patient row to the shape the UI expects */
 function normalizePatient(p) {
@@ -158,7 +159,7 @@ function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
 }
 
 // ── Profile Panel ─────────────────────────────────────────────────────────────
-function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onSms }) {
+function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onSms, onEditRecord }) {
   const [tab, setTab] = useState("overview");
 
   if (!patient) return (
@@ -197,6 +198,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
           {/* Receptionist actions */}
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button onClick={() => onEditRecord && onEditRecord(patient)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Edit Record</button>
             <button onClick={() => onSms && onSms(patient.name)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>SMS</button>
             <button onClick={() => onAddQueue && onAddQueue(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
           </div>
@@ -397,7 +399,7 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Chief Complaint / Reason</label>
-            <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Enter reason for visit..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+            <input value={reason} onChange={e => setReason(e.target.value.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()))} placeholder="Enter reason for visit..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
           </div>
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Assign Doctor</label>
@@ -425,6 +427,7 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
   const [search, setSearch]               = useState("");
   const [statusFilter, setStatusFilter]   = useState("all");
   const [addQueueModal, setAddQueueModal] = useState(null);
+  const [editPatientModal, setEditPatientModal] = useState(null);
   const [toast, setToast]                 = useState(null);
   const [loading, setLoading]             = useState(true);
   const [visitsLoading, setVisitsLoading] = useState(false);
@@ -485,7 +488,17 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
   return (
     <div style={{ background: "#f4f7fb", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       
-      
+      {editPatientModal && (
+        <EditPatientModal 
+          patientId={editPatientModal.id} 
+          onClose={() => setEditPatientModal(null)} 
+          onSaved={() => {
+            setEditPatientModal(null);
+            showToast(`${editPatientModal.name}'s record updated successfully`);
+            fetchPatients(search);
+          }} 
+        />
+      )}
 
       <AddToQueueModal
         patient={addQueueModal}
@@ -624,6 +637,7 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
               onVisitSelect={setActiveVisit}
               selectedVisitId={activeVisit?.id}
               onAddQueue={(p) => setAddQueueModal(p)}
+              onEditRecord={(p) => setEditPatientModal(p)}
               onSms={async (name) => {
                 try {
                   await smsApi.send({ patient_id: selected.id, message: `LikhaHealth: Reminder regarding your recent clinic visit. Please contact us for follow-up.` });

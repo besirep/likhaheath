@@ -229,7 +229,7 @@ function BookModal({ defaultDate, onClose, onBook }) {
 
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>Reason for Visit</label>
-            <input value={form.reason} onChange={e => update("reason", e.target.value)} placeholder="Chief complaint or visit reason"
+            <input value={form.reason} onChange={e => update("reason", e.target.value.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()))} placeholder="Chief complaint or visit reason"
               style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, color: "#1a2540", outline: "none", boxSizing: "border-box" }}
               onFocus={e => e.target.style.borderColor = "#0047AB"} onBlur={e => e.target.style.borderColor = "#D8E4F2"} />
           </div>

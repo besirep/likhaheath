@@ -136,6 +136,47 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
+
+// PATCH /api/queue/:id/vitals — nurse records vitals for a queued patient
+exports.updateVitals = async (req, res) => {
+  const { blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm } = req.body;
+  const staffId = req.user?.staffId || null;
+  try {
+    // Get appointment_id from queue
+    const [[qrow]] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [req.params.id]);
+    if (!qrow) return res.status(404).json({ error: 'Queue entry not found.' });
+    const apptId = qrow.appointment_id;
+
+    // Upsert vitals row
+    await db.query(
+      `INSERT INTO vitals (appointment_id, blood_pressure, temperature, heart_rate, spo2, weight_kg, height_cm, recorded_by_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         blood_pressure  = VALUES(blood_pressure),
+         temperature     = VALUES(temperature),
+         heart_rate      = VALUES(heart_rate),
+         spo2            = VALUES(spo2),
+         weight_kg       = VALUES(weight_kg),
+         height_cm       = VALUES(height_cm),
+         recorded_by_id  = VALUES(recorded_by_id),
+         recorded_at     = CURRENT_TIMESTAMP`,
+      [apptId, blood_pressure || null, temperature || null, heart_rate || null,
+       spo2 || null, weight_kg || null, height_cm || null, staffId]
+    );
+
+    // Advance status: Waiting → In-Progress (vitals done, ready for doctor)
+    // We use a separate interim flag on the frontend; backend stores 'Waiting'
+    // but we can set a custom status to indicate vitals-done
+    // For now: update queue status to 'Vitals-Done' (we'll add it to ENUM below)
+    await db.query("UPDATE queue SET status='Vitals-Done' WHERE id=?", [req.params.id]);
+
+    res.json({ message: 'Vitals recorded and patient marked ready for doctor.' });
+  } catch (err) {
+    console.error('[Queue] updateVitals error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // PATCH /api/queue/:id/doctor
 exports.updateDoctor = async (req, res) => {
   const { doctor_id } = req.body;

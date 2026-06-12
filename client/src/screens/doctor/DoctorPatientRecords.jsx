@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, CalendarDays, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil, Building2, FolderOpen, ClipboardList, Stethoscope } from "lucide-react";
+import { Search, Plus, CalendarDays, Heart, Thermometer, Wind, Scale, User, AlertTriangle, Phone, FileText, Activity, X, Ruler, Droplets, MapPin, TestTubes, Printer, Pencil, Building2, FolderOpen, ClipboardList, Stethoscope, Save } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { patientsApi } from "../../lib/api/patients.js";
+import { consultationsApi } from "../../lib/api/consultations.js";
 
 // ── Static helpers ────────────────────────────────────────────────────────────
 const statusStyle = {
@@ -115,7 +116,30 @@ function VitalCard({ icon, label, value, unit, flag }) {
 }
 
 // ── Visit Detail Drawer ───────────────────────────────────────────────────────
-function VisitDrawer({ visit, patient, onClose }) {
+function VisitDrawer({ visit, patient, onClose, onUpdate }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ diagnosis: "", treatment: "" });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (visit) {
+      const combined = [visit.notes, visit.plan].filter(Boolean).join("\n\n");
+      setEditForm({ diagnosis: visit.diagnosis || "", treatment: combined || "" });
+      setIsEditing(false);
+    }
+  }, [visit]);
+
+  const handleSave = async () => {
+    if (!window.confirm("Save changes to this consultation record?")) return;
+    setSaving(true);
+    try {
+      await consultationsApi.updateConsultation(visit.id, { ...editForm, notes: "" });
+      if (onUpdate) onUpdate({ ...visit, diagnosis: editForm.diagnosis, plan: editForm.treatment, notes: "" });
+      setIsEditing(false);
+    } catch { alert("Failed to update."); }
+    finally { setSaving(false); }
+  };
+
   if (!visit) return null;
   const v = visit.vitals;
   return (
@@ -132,6 +156,22 @@ function VisitDrawer({ visit, patient, onClose }) {
           <button onClick={onClose} style={{ background: "#f0f3fa", border: "none", borderRadius: 8, width: 34, height: 34, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
         </div>
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+             <div style={{ fontSize: 16, fontWeight: 700, color: "#1e2d40" }}>Medical Record</div>
+             {!isEditing ? (
+               <button onClick={() => setIsEditing(true)} style={{ background: "none", border: "1px solid #e0e7ef", borderRadius: 9, padding: "6px 12px", fontSize: 12, color: "#0047AB", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontWeight: 600 }}>
+                 <Pencil size={12} /> Edit Record
+               </button>
+             ) : (
+               <div style={{ display: "flex", gap: 8 }}>
+                 <button onClick={() => setIsEditing(false)} style={{ background: "none", border: "1px solid #e0e7ef", borderRadius: 9, padding: "6px 12px", fontSize: 12, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
+                 <button onClick={handleSave} disabled={saving} style={{ background: saving ? "#888" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", border: "none", borderRadius: 9, padding: "6px 12px", fontSize: 12, color: "white", cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                   <Save size={12} /> {saving ? "Saving…" : "Save"}
+                 </button>
+               </div>
+             )}
+          </div>
+          
           {v && (
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 }}>Vitals</div>
@@ -145,25 +185,46 @@ function VisitDrawer({ visit, patient, onClose }) {
               </div>
             </div>
           )}
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Chief Complaint</div>
-            <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7 }}>{visit.reason}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Assessment / Diagnosis</div>
-            <div style={{ fontSize: 14, color: "#1a2540", fontWeight: 600 }}>{visit.diagnosis}</div>
-          </div>
-          {visit.notes && (
+          
+          {!isEditing && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Doctor's Notes / Treatment</div>
-              <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7, background: "#f7f9fd", borderRadius: 12, padding: "14px 16px" }}>{visit.notes}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Chief Complaint</div>
+              <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7 }}>{visit.reason}</div>
             </div>
           )}
-          {visit.plan && visit.plan !== visit.notes && (
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Treatment Plan</div>
-              <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7 }}>{visit.plan}</div>
+
+          {isEditing ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 10 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Assessment / Diagnosis</div>
+                <input value={editForm.diagnosis} onChange={e => setEditForm({ ...editForm, diagnosis: e.target.value })}
+                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #e0e7ef", borderRadius: 10, fontSize: 14, fontFamily: "inherit", color: "#1e2d40", outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Clinical Notes & Treatment Plan</div>
+                <textarea value={editForm.treatment} onChange={e => setEditForm({ ...editForm, treatment: e.target.value })} rows={6}
+                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #e0e7ef", borderRadius: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical", color: "#1e2d40", outline: "none", boxSizing: "border-box" }} />
+              </div>
             </div>
+          ) : (
+            <>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Assessment / Diagnosis</div>
+                <div style={{ fontSize: 14, color: "#1a2540", fontWeight: 600 }}>{visit.diagnosis}</div>
+              </div>
+              {visit.notes && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Doctor's Notes / Treatment</div>
+                  <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7, background: "#f7f9fd", borderRadius: 12, padding: "14px 16px", whiteSpace: "pre-wrap" }}>{visit.notes}</div>
+                </div>
+              )}
+              {visit.plan && visit.plan !== visit.notes && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Treatment Plan</div>
+                  <div style={{ fontSize: 14, color: "#1a2540", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{visit.plan}</div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -476,7 +537,15 @@ export default function DoctorPatientRecords({ onNavigate, navState }) {
       {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1a2540", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 300, boxShadow: "0 8px 24px rgba(20,40,90,0.28)", animation: "fadeUp 0.3s ease" }}>{toast}</div>}
 
       {/* Visit detail drawer */}
-      <VisitDrawer visit={activeVisit} patient={selected} onClose={() => setActiveVisit(null)} />
+      <VisitDrawer 
+        visit={activeVisit} 
+        patient={selected} 
+        onClose={() => setActiveVisit(null)} 
+        onUpdate={(updatedVisit) => {
+          setSelectedVisits(prev => prev.map(v => v.id === updatedVisit.id ? updatedVisit : v));
+          setActiveVisit(updatedVisit);
+        }}
+      />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { authApi } from "../lib/api/auth";
+import ConfirmationModal from "./ConfirmationModal";
 
 export default function ChangePasswordModal({ onClose }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -9,11 +10,10 @@ export default function ChangePasswordModal({ onClose }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    if (!window.confirm("Are you sure you want to change your password?")) return;
+  const executeSubmit = async () => {
+    setShowConfirm(false);
     if (newPassword !== confirmPassword) {
       return setError("New passwords do not match.");
     }
@@ -33,6 +33,20 @@ export default function ChangePasswordModal({ onClose }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (newPassword !== confirmPassword) {
+      return setError("New passwords do not match.");
+    }
+    if (newPassword.length < 8) {
+      return setError("New password must be at least 8 characters long.");
+    }
+    
+    setShowConfirm(true);
   };
 
   return (
@@ -86,6 +100,17 @@ export default function ChangePasswordModal({ onClose }) {
           </form>
         )}
       </div>
+
+      {showConfirm && (
+        <ConfirmationModal
+          title="Change Password"
+          message="Are you sure you want to change your password? You will need to use the new password the next time you log in."
+          onConfirm={executeSubmit}
+          onCancel={() => setShowConfirm(false)}
+          confirmText="Change Password"
+          confirmColor="#6b21a8"
+        />
+      )}
     </div>
   );
 }

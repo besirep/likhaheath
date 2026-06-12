@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { UserPlus, Search, Stethoscope, Building2, Eye, EyeOff, Plus, Key, Copy, Check, ShieldCheck, UserCog, User } from "lucide-react";
 import { staffApi } from "../../lib/api/staff.js";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const ROLE_OPTIONS = [
   { value: "Admin", label: "Admin (MHO)" },
@@ -17,6 +18,10 @@ export default function AdminStaffManagement() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Confirmation states
+  const [confirmToggle, setConfirmToggle] = useState(null); // { id, currentStatus }
+  const [confirmReset, setConfirmReset] = useState(null); // { id }
   
   // New user credentials display
   const [newUser, setNewUser] = useState(null);
@@ -44,31 +49,40 @@ export default function AdminStaffManagement() {
     loadStaff();
   }, [search]);
 
-  const handleToggle = async (id, currentStatus) => {
-    const action = currentStatus ? "deactivate" : "activate";
-    if (!window.confirm(`Are you sure you want to ${action} this staff account?`)) return;
-    
+  const executeToggle = async () => {
+    if (!confirmToggle) return;
     try {
-      await staffApi.toggleStatus(id);
+      await staffApi.toggleStatus(confirmToggle.id);
       loadStaff();
     } catch (err) {
       console.error(err);
       alert("Failed to toggle status");
+    } finally {
+      setConfirmToggle(null);
     }
   };
 
-  const handleResetPassword = async (id) => {
-    if (!window.confirm("Are you sure you want to reset the password for this staff member?")) return;
+  const handleToggle = (id, currentStatus) => {
+    setConfirmToggle({ id, currentStatus });
+  };
+
+  const executeResetPassword = async () => {
+    if (!confirmReset) return;
     try {
       setLoading(true);
-      const res = await staffApi.resetPassword(id);
+      const res = await staffApi.resetPassword(confirmReset.id);
       setNewUser({ username: res.username, password: res.password });
     } catch (err) {
       console.error(err);
       alert("Failed to reset password: " + err.message);
     } finally {
       setLoading(false);
+      setConfirmReset(null);
     }
+  };
+
+  const handleResetPassword = (id) => {
+    setConfirmReset({ id });
   };
 
   const handleSubmit = async (e) => {
@@ -115,6 +129,30 @@ export default function AdminStaffManagement() {
           <UserPlus size={16} strokeWidth={2} /> Add New Staff
         </button>
       </div>
+
+      {/* Confirmation Modals */}
+      {confirmToggle && (
+        <ConfirmationModal
+          title={confirmToggle.currentStatus ? "Deactivate Account" : "Activate Account"}
+          message={`Are you sure you want to ${confirmToggle.currentStatus ? "deactivate" : "activate"} this staff account? ${confirmToggle.currentStatus ? "They will no longer be able to log in." : ""}`}
+          onConfirm={executeToggle}
+          onCancel={() => setConfirmToggle(null)}
+          confirmText={confirmToggle.currentStatus ? "Deactivate" : "Activate"}
+          isDestructive={confirmToggle.currentStatus}
+          confirmColor="#2a9d8f"
+        />
+      )}
+
+      {confirmReset && (
+        <ConfirmationModal
+          title="Reset Password"
+          message="Are you sure you want to reset the password for this staff member? A new temporary password will be generated."
+          onConfirm={executeResetPassword}
+          onCancel={() => setConfirmReset(null)}
+          confirmText="Reset Password"
+          confirmColor="#9333ea"
+        />
+      )}
 
       {/* New Credentials Alert */}
       {newUser && (

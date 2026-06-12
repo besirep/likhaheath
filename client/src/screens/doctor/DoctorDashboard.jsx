@@ -420,9 +420,11 @@ function QueueRow({ patient, index, onStartConsult }) {
       <div>
         {patient.vitals ? (
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-            {Object.values(patient.vitals).map(v => (
-              <span key={v} style={{ background: "#EBF0FA", color: "#0047AB", borderRadius: 6, padding: "2px 7px", fontSize: 14, fontWeight: 500 }}>{v}</span>
-            ))}
+            {Object.entries(patient.vitals)
+              .filter(([k, v]) => ["bp", "temp", "hr", "spo2", "weight", "height"].includes(k) && v)
+              .map(([k, v]) => (
+                <span key={k} style={{ background: "#EBF0FA", color: "#0047AB", borderRadius: 6, padding: "2px 7px", fontSize: 14, fontWeight: 500 }}>{v}</span>
+              ))}
           </div>
         ) : (
           <span style={{ fontSize: 14, color: "#c0cde0", fontStyle: "italic" }}>Awaiting vitals</span>
@@ -497,7 +499,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
         status:   mapStatus(p.status),
         wait:     "—",
         priority: null,
-        vitals:   p.vitals ? { bp: p.vitals.bp, temp: `${p.vitals.temp}°C`, hr: `${p.vitals.hr} bpm` } : null,
+        vitals:   p.vitals || null,
       }));
       setMyQueue(normalized);
     } catch (e) {
@@ -509,7 +511,12 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   // Auto-refresh every 30s
   useEffect(() => {
     const t = setInterval(loadQueue, 30_000);
-    return () => clearInterval(t);
+    const onSaved = () => loadQueue();
+    window.addEventListener('consultationSaved', onSaved);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('consultationSaved', onSaved);
+    };
   }, [loadQueue]);
 
   useEffect(() => {
@@ -669,7 +676,7 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
               ))}
             </div>
 
-            {myQueue.map((p, i) => <QueueRow key={p.id} patient={p} index={i} onStartConsult={handleStartConsult} />)}
+            {myQueue.filter(p => p.status !== "done" && p.status !== "skipped").map((p, i) => <QueueRow key={p.id} patient={p} index={i} onStartConsult={handleStartConsult} />)}
 
             <div style={{ padding: "11px 20px", borderTop: "1px solid #f0f3fa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 14, color: "#b0bdd6" }}>{myQueue.filter(p => p.status === "waiting").length} patients waiting</span>

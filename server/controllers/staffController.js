@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { logAudit } = require('../helpers/auditLogger');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 // Sanitize internal error — never expose DB details to client
@@ -101,6 +102,12 @@ exports.create = async (req, res) => {
     );
 
     await conn.commit();
+    
+    // Log Audit
+    if (req.user && req.user.staffId) {
+      await logAudit(req.user.staffId, 'CREATE_ACCOUNT', { createdStaffId: staffId, username, role });
+    }
+
     res.status(201).json({ id: staffId, username, message: 'Staff and user account registered successfully.' });
   } catch (err) {
     await conn.rollback();
@@ -131,6 +138,12 @@ exports.update = async (req, res) => {
       ]
     );
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Staff not found.' });
+
+    // Log Audit
+    if (req.user && req.user.staffId) {
+      await logAudit(req.user.staffId, 'UPDATE_ACCOUNT', { targetStaffId: req.params.id, action: 'Updated staff details' });
+    }
+
     res.json({ message: 'Staff updated.' });
   } catch (err) { internalError(res, err); }
 };
@@ -146,6 +159,11 @@ exports.toggleStatus = async (req, res) => {
     await conn.query('UPDATE staff SET is_active = ? WHERE id = ?', [newStatus, req.params.id]);
     await conn.query('UPDATE users SET is_active = ? WHERE staff_id = ?', [newStatus, req.params.id]);
     
+    // Log Audit
+    if (req.user && req.user.staffId) {
+      await logAudit(req.user.staffId, 'UPDATE_ACCOUNT', { targetStaffId: req.params.id, action: newStatus ? 'Activated account' : 'Deactivated account' });
+    }
+
     res.json({ message: 'Status updated.', is_active: newStatus });
   } catch (err) { internalError(res, err); }
   finally { conn.release(); }
@@ -162,6 +180,11 @@ exports.resetPassword = async (req, res) => {
     const password_hash = await bcrypt.hash(defaultPass, 10);
 
     await conn.query('UPDATE users SET password_hash = ? WHERE staff_id = ?', [password_hash, req.params.id]);
+
+    // Log Audit
+    if (req.user && req.user.staffId) {
+      await logAudit(req.user.staffId, 'UPDATE_ACCOUNT', { targetStaffId: req.params.id, action: 'Reset password' });
+    }
 
     res.json({ username: userRows[0].username, password: defaultPass, message: 'Password reset successfully.' });
   } catch (err) {

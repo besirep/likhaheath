@@ -4,7 +4,7 @@ import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
 import { dashboardApi } from "../../lib/api/dashboard.js";
 import { staffApi } from "../../lib/api/staff.js";
-import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X, Check } from "lucide-react";
+import { Building2, LayoutDashboard, ClipboardList, UserPlus, FolderOpen, CalendarDays, MessageSquare, BarChart3, Bell, Stethoscope, Clock, CheckCircle2, SkipForward, AlertCircle, Megaphone, Smartphone, UserRound, RefreshCw, CheckCheck, AlertTriangle, Heart, Thermometer, Activity, Wind, X, Check, Ruler, Scale } from "lucide-react";
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: true  },
@@ -39,7 +39,94 @@ function Avatar({ name, size = 34 }) {
 }
 
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// ── Vitals Entry Modal ────────────────────────────────────────────────────────
+function VitalsModal({ patient, onClose, onSave }) {
+  const [vitals, setVitals] = useState({ bp: "", temp: "", hr: "", spo2: "", weight: "", height: "" });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr]       = useState(null);
+  if (!patient) return null;
+
+  const fields = [
+    { k: "bp",     label: "Blood Pressure", unit: "mmHg", type: "text",   placeholder: "120/80",  Icon: Heart },
+    { k: "temp",   label: "Temperature",    unit: "°C",   type: "number", placeholder: "36.5",   Icon: Thermometer },
+    { k: "hr",     label: "Heart Rate",     unit: "bpm",  type: "number", placeholder: "80",     Icon: Activity },
+    { k: "spo2",   label: "SpO₂",           unit: "%",    type: "number", placeholder: "98",     Icon: Wind },
+    { k: "weight", label: "Weight",         unit: "kg",   type: "number", placeholder: "65",     Icon: Scale },
+    { k: "height", label: "Height",         unit: "cm",   type: "number", placeholder: "165",    Icon: Ruler },
+  ];
+
+  const wt = parseFloat(vitals.weight), ht = parseFloat(vitals.height) / 100;
+  const bmi = (wt && ht) ? (wt / (ht * ht)).toFixed(1) : null;
+
+  const handleSave = async () => {
+    if (!vitals.bp && !vitals.temp && !vitals.hr && !vitals.spo2 && !vitals.weight && !vitals.height) {
+      setErr("Please enter at least one vital sign.");
+      return;
+    }
+    setSaving(true); setErr(null);
+    try {
+      await onSave(patient.queueDbId, {
+        blood_pressure: vitals.bp    || null,
+        temperature:    vitals.temp  ? Number(vitals.temp)   : null,
+        heart_rate:     vitals.hr    ? Number(vitals.hr)     : null,
+        spo2:           vitals.spo2  ? Number(vitals.spo2)   : null,
+        weight_kg:      vitals.weight? Number(vitals.weight) : null,
+        height_cm:      vitals.height? Number(vitals.height) : null,
+      });
+      onClose();
+    } catch (e) { setErr(e.message); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: 480, padding: "28px 32px", boxShadow: "0 24px 64px rgba(20,40,70,0.22)", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
+        <style>{`@keyframes popIn { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#1e2d40" }}>Record Vitals</div>
+            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>{patient.name} · {patient.queue}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f0f4f8", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} strokeWidth={2} /></button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          {fields.map(f => (
+            <div key={f.k}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 5, display: "flex", alignItems: "center", gap: 5 }}>
+                <f.Icon size={13} strokeWidth={2} /> {f.label}
+              </label>
+              <div style={{ position: "relative" }}>
+                <input value={vitals[f.k]} onChange={e => setVitals(v => ({ ...v, [f.k]: e.target.value }))} type={f.type} placeholder={f.placeholder} step="0.1"
+                  style={{ width: "100%", padding: "9px 40px 9px 12px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
+                  onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
+                <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#9aabc0" }}>{f.unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {bmi && (
+          <div style={{ background: "#f0faf8", borderRadius: 10, padding: "10px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "#5a8f80" }}>BMI (auto-calculated)</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#2a9d8f" }}>{bmi}</span>
+          </div>
+        )}
+
+        {err && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "9px 14px", fontSize: 13, color: "#c0392b", marginBottom: 12 }}>⚠ {err}</div>}
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, background: "#f0f4f8", color: "#7a8fb0", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: saving ? "#d0dbe8" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(42,157,143,0.3)" }}>
+            {saving ? "Saving…" : "✓ Save Vitals & Mark Ready"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function Toast({ msg, onDone }) {
   useState(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); });
   return (
@@ -108,9 +195,26 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate, availableDoctor
                   <select 
                     value={availableDoctors.find(d => `${d.first_name} ${d.last_name}` === patient.doctor)?.id || ""}
                     onChange={e => onAssignDoctor(patient, e.target.value ? Number(e.target.value) : null)}
-                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #dde8e5", fontSize: 14, color: patient.doctor ? "#2a9d8f" : "#c07030", outline: "none", background: patient.doctor ? "#e8f7f5" : "#fdf3e8", fontWeight: 600, cursor: "pointer" }}
+                    style={{ 
+                      padding: "6px 28px 6px 12px", 
+                      borderRadius: 8, 
+                      border: "1.5px solid #e0e7ef", 
+                      fontSize: 13, 
+                      color: "#1e2d40", 
+                      outline: "none", 
+                      background: "white", 
+                      fontWeight: 600, 
+                      cursor: "pointer",
+                      appearance: "none",
+                      backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a9bb0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 10px center",
+                      transition: "border-color 0.2s"
+                    }}
+                    onFocus={e => e.target.style.borderColor = "#0047AB"}
+                    onBlur={e => e.target.style.borderColor = "#e0e7ef"}
                   >
-                    <option value="">-- No Doctor Assigned --</option>
+                    <option value="">Unassigned</option>
                     {availableDoctors.map(d => <option key={d.id} value={d.id}>Dr. {d.last_name}</option>)}
                   </select>
                 ) : (
@@ -151,11 +255,22 @@ function PatientDrawer({ patient, onClose, onAction, onNavigate, availableDoctor
           {/* Actions */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
             {patient.status === "waiting" && (
+            <>
+              {/* Record Vitals — primary action for triage nurse */}
+              <button onClick={() => onAction("vitals", patient)} style={{ width: "100%", background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8 }}>
+                <Activity size={16} strokeWidth={2} /> Record Vitals →
+              </button>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => onAction("skip", patient)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><SkipForward size={14} /> Skip</button>
                 <button onClick={() => onAction("call", patient)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Megaphone size={14} strokeWidth={2.5} /> Call Directly</button>
               </div>
-            )}
+            </>
+          )}
+          {patient.status === "vitals-done" && (
+            <div style={{ background: "#e8f7f5", borderRadius: 11, padding: "13px", textAlign: "center", color: "#2a9d8f", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <CheckCircle2 size={16} strokeWidth={2} /> Vitals recorded — ready for doctor
+            </div>
+          )}
             {patient.status === "skipped" && (
               <button onClick={() => onAction("requeue", patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                 ↺ Re-queue Patient
@@ -240,6 +355,7 @@ export default function ReceptionistQueue({ onNavigate }) {
   const [error, setError]         = useState(null);
   const [filter, setFilter]       = useState("active");
   const [selected, setSelected]   = useState(null);
+  const [vitalsPatient, setVitalsPatient] = useState(null);
   const [toast, setToast]         = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [summaryStats, setSummaryStats] = useState({ avg_wait: 0, sms_sent: 0 });
@@ -265,7 +381,7 @@ export default function ReceptionistQueue({ onNavigate }) {
   useEffect(() => {
     fetchQueue();
     dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {});
-    staffApi.getAll().then(res => setAvailableDoctors(res.filter(s => s.role === 'Doctor'))).catch(() => {});
+    staffApi.getAll().then(res => setAvailableDoctors(res.filter(s => s.position?.toLowerCase().includes('doctor') || s.position?.toLowerCase() === 'physician'))).catch(() => {});
     const interval = setInterval(() => { fetchQueue(true); dashboardApi.getStats('today').then(s => setSummaryStats({ avg_wait: s.avg_wait ?? 0, sms_sent: s.sms_sent ?? 0 })).catch(() => {}); }, 30_000);
     return () => clearInterval(interval);
   }, [fetchQueue]);
@@ -278,6 +394,12 @@ export default function ReceptionistQueue({ onNavigate }) {
       requeue: "waiting",
       done:    "done",
     };
+
+    if (action === "vitals") {
+      setVitalsPatient(patient);
+      setSelected(null);
+      return;
+    }
 
     if (action === "sms") {
       try {
@@ -333,6 +455,12 @@ export default function ReceptionistQueue({ onNavigate }) {
     }
   };
 
+  const handleSaveVitals = async (queueDbId, vitalsPayload) => {
+    await queueApi.recordVitals(queueDbId, vitalsPayload);
+    showToast(`Vitals recorded — patient marked ready for doctor`);
+    fetchQueue(true);
+  };
+
   const callNext = () => {
     const next = queue.find(p => p.status === "waiting");
     if (next) setSelected(next);
@@ -380,6 +508,7 @@ export default function ReceptionistQueue({ onNavigate }) {
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
       <PatientDrawer patient={selected} onClose={() => setSelected(null)} onAction={handleAction} onNavigate={onNavigate} availableDoctors={availableDoctors} onAssignDoctor={handleAssignDoctor} />
+      <VitalsModal patient={vitalsPatient} onClose={() => setVitalsPatient(null)} onSave={handleSaveVitals} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Top bar */}

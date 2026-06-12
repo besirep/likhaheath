@@ -102,6 +102,16 @@ const LAB_TEMPLATES = {
     { key: "ft4",   label: "Free T4", unit: "ng/dL", ref: "0.8–1.8" },
     { key: "ft3",   label: "Free T3", unit: "pg/mL", ref: "2.3–4.2" },
   ],
+  "Fecalysis": [],
+  "Blood Typing": [],
+  "HBA1C": [],
+  "Malaria Smear": [],
+  "Peripheral Blood Smear": [],
+  "Dengue NS1": [],
+  "ECG": [],
+  "2D ECHO": [],
+  "Chest X-ray": [],
+  "UTZ": [],
   "Custom / Other": [],
 };
 
@@ -136,7 +146,15 @@ function LabModal({ record, onClose, onSave }) {
   };
 
   const printRequest = () => {
-    const win = window.open("", "_blank");
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    const win = iframe.contentWindow;
     win.document.write(`<html><body style="font-family:sans-serif;padding:40px;max-width:700px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:20px;">
         <h4 style="margin:0;font-weight:normal">REPUBLIC OF THE PHILIPPINES<br/>PROVINCE OF RIZAL<br/>MUNICIPALITY OF ANGONO</h4>
@@ -158,7 +176,11 @@ function LabModal({ record, onClose, onSave }) {
       </div>
     </body></html>`);
     win.document.close();
-    setTimeout(() => { win.focus(); win.print(); }, 400);
+    setTimeout(() => { 
+      win.focus(); 
+      win.print(); 
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 400);
     setEditMode("results");
   };
 
@@ -213,11 +235,11 @@ function LabModal({ record, onClose, onSave }) {
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
           {/* Left: lab selector */}
-          <div style={{ width: 220, borderRight: "1px solid #e8edf7", display: "flex", flexDirection: "column", background: "#f7f9fb" }}>
+          <div style={{ width: 240, flexShrink: 0, borderRight: "1px solid #e8edf7", display: "flex", flexDirection: "column", background: "#f7f9fb" }}>
             <div style={{ padding: "14px 14px 10px", fontSize: 12, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #edf0f7" }}>
               Test Types
             </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+            <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "8px" }}>
               {Object.keys(LAB_TEMPLATES).map(name => {
                 const isAdded = requested.find(l => l.name === name);
                 return (
@@ -236,7 +258,7 @@ function LabModal({ record, onClose, onSave }) {
                 <div style={{ display: "flex", gap: 5 }}>
                   <input placeholder="Lab name…" value={customName} onChange={e => setCustomName(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && addLab(customName)}
-                    style={{ flex: 1, padding: "7px 9px", border: "1.5px solid #e0e7ef", borderRadius: 8, fontSize: 13, outline: "none" }}
+                    style={{ flex: 1, minWidth: 0, padding: "7px 9px", border: "1.5px solid #e0e7ef", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
                     onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
                   <button onClick={() => addLab(customName)} style={{ background: "#2a9d8f", border: "none", borderRadius: 8, color: "white", padding: "0 10px", cursor: "pointer", fontSize: 16 }}>+</button>
                 </div>
@@ -408,12 +430,13 @@ function QueueItem({ item, isCurrent }) {
 // ── Record Detail Panel ────────────────────────────────────────────────────────
 function RecordDetail({ record, onUpdate, onLabOpen }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm]   = useState({ diagnosis: "", treatment: "", notes: "" });
+  const [editForm, setEditForm]   = useState({ diagnosis: "", treatment: "" });
   const [saving, setSaving]       = useState(false);
 
   useEffect(() => {
     if (record) {
-      setEditForm({ diagnosis: record.diagnosis || "", treatment: record.treatment || "", notes: record.notes || "" });
+      const combined = [record.notes, record.treatment].filter(Boolean).join("\n\n");
+      setEditForm({ diagnosis: record.diagnosis || "", treatment: combined || "" });
       setIsEditing(false);
     }
   }, [record?.id]);
@@ -430,15 +453,23 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
     if (!window.confirm("Save changes to this consultation record?")) return;
     setSaving(true);
     try {
-      await consultationsApi.updateConsultation(record.id, editForm);
-      if (onUpdate) onUpdate(editForm);
+      await consultationsApi.updateConsultation(record.id, { ...editForm, notes: "" });
+      if (onUpdate) onUpdate({ ...editForm, notes: "" });
       setIsEditing(false);
     } catch { alert("Failed to update."); }
     finally { setSaving(false); }
   };
 
   const printRecord = () => {
-    const win = window.open("", "_blank");
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    const win = iframe.contentWindow;
     win.document.write(`<html><body style="font-family:sans-serif;padding:40px;max-width:800px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:20px;">
         <h4 style="margin:0;font-weight:normal">REPUBLIC OF THE PHILIPPINES<br/>PROVINCE OF RIZAL<br/>MUNICIPALITY OF ANGONO</h4>
@@ -464,7 +495,11 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
       </div>
     </body></html>`);
     win.document.close();
-    setTimeout(() => { win.focus(); win.print(); }, 400);
+    setTimeout(() => { 
+      win.focus(); 
+      win.print(); 
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 400);
   };
 
   const v   = record.vitals;
@@ -528,16 +563,10 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
                 onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Treatment Plan</div>
-              <textarea value={editForm.treatment} onChange={e => setEditForm({ ...editForm, treatment: e.target.value })} rows={4}
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Clinical Notes & Treatment Plan</div>
+              <textarea value={editForm.treatment} onChange={e => setEditForm({ ...editForm, treatment: e.target.value })} rows={6}
                 style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
                 onFocus={e => e.target.style.borderColor = "#0047AB"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Clinical Notes</div>
-              <textarea value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} rows={4}
-                style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical", color: "#1e2d40", outline: "none", boxSizing: "border-box" }}
-                onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
             </div>
           </div>
         ) : (
@@ -546,11 +575,13 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
               <div style={{ fontSize: 11, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 5 }}>Diagnosis</div>
               <div style={{ fontSize: 17, fontWeight: 700, color: "#1e2d40" }}>{record.diagnosis || "—"}</div>
             </div>
-            <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e8edf7" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>📝 Clinical Notes</div>
-              <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.notes || "No notes recorded."}</div>
-            </div>
-            <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #C0D4F0" }}>
+            {record.notes && (
+              <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e8edf7" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>📝 Clinical Notes</div>
+                <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.notes}</div>
+              </div>
+            )}
+            <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #C0D4F0", gridColumn: record.notes ? "auto" : "1 / -1" }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>📋 Treatment Plan</div>
               <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.treatment || "—"}</div>
             </div>

@@ -133,6 +133,18 @@ function queueCalledMessage(firstName, queueNumber) {
   );
 }
 
+function followUpMessage(firstName, scheduledDate) {
+  const d = new Date(scheduledDate);
+  const dateStr = d.toLocaleDateString('en-PH', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+  return (
+    `Good day, ${firstName}! This is a reminder for your follow-up consultation at LikhaHealth — ` +
+    `Angono Municipal Health Center on ${dateStr}. ` +
+    `Please proceed to the receptionist to get your queue number upon arrival. Thank you!`
+  );
+}
+
 module.exports = {
   normalizePhone,
   getPatientPhone,
@@ -140,4 +152,5 @@ module.exports = {
   registrationMessage,
   appointmentMessage,
   queueCalledMessage,
+  followUpMessage,
 };

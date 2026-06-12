@@ -42,10 +42,11 @@ async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, pri
     [patient_id, doctor_id || null, staff_id || null, now, queue_number, notes || null]
   );
   const appointment_id = apptResult.insertId;
-  await conn.query(
+  const [queueResult] = await conn.query(
     `INSERT INTO queue (appointment_id, queue_number, status) VALUES (?, ?, 'Waiting')`,
     [appointment_id, queue_number]
   );
+  const queue_id = queueResult.insertId;
   // Save vitals (standard + pediatric) if provided during registration
   if (vitals && (vitals.blood_pressure || vitals.temperature || vitals.length_cm)) {
     await conn.query(
@@ -75,7 +76,7 @@ async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, pri
       ]
     );
   }
-  return { appointment_id, queue_number };
+  return { appointment_id, queue_id, queue_number };
 }
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -300,7 +301,7 @@ exports.create = async (req, res) => {
       );
     }
 
-    const { appointment_id, queue_number } = await createVisitEntry(conn, {
+    const { appointment_id, queue_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null,
       visit_reason, priority, notes, staff_id, vitals: vitals || null,
     });
@@ -318,7 +319,7 @@ exports.create = async (req, res) => {
       }
     }
 
-    res.status(201).json({ patient_id, appointment_id, queue_number, message: 'Patient registered successfully.' });
+    res.status(201).json({ patient_id, appointment_id, queue_id, queue_number, message: 'Patient registered successfully.' });
 
   } catch (err) {
     await conn.rollback();
@@ -340,7 +341,7 @@ exports.update = async (req, res) => {
       sex_name, civil_status_name, blood_type_code,
       nationality, occupation, philhealth_no, emergency_contact,
       address = {},
-      medical_history, female_health,
+      medical_history, female_health, phone,
     } = req.body;
 
     const sex_id          = await resolveId(conn, 'sex_options', 'label', sex_name);
@@ -364,6 +365,12 @@ exports.update = async (req, res) => {
         req.params.id,
       ]
     );
+
+    // Update phone number
+    if (phone) {
+      await conn.query('DELETE FROM contact_info WHERE patient_id = ? AND type = "phone"', [req.params.id]);
+      await conn.query('INSERT INTO contact_info (patient_id, type, value, is_primary) VALUES (?, "phone", ?, 1)', [req.params.id, phone]);
+    }
 
     // Update medical history (upsert)
     if (medical_history) {
@@ -470,7 +477,7 @@ exports.createVisit = async (req, res) => {
 
     const { visit_reason, doctor_id, notes, priority, vitals, send_sms, medical_history, female_health, sex_name } = req.body;
     const staff_id = req.user?.staffId || null;
-    const { appointment_id, queue_number } = await createVisitEntry(conn, {
+    const { appointment_id, queue_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id, vitals: vitals || null,
     });
 
@@ -545,8 +552,8 @@ exports.createVisit = async (req, res) => {
     }
 
     res.status(201).json({
-      patient_id, appointment_id, queue_number,
-      patient_name: `${p.first_name} ${p.last_name}`,
+      patient_id, appointment_id, queue_id, queue_number,
+      patient_name: `${p.last_name}, ${p.first_name}`,
       message: 'Patient added to queue.',
     });
 
@@ -597,7 +604,7 @@ exports.getVisits = async (req, res) => {
        LEFT JOIN staff      s  ON a.doctor_id      = s.id
        LEFT JOIN vitals     v  ON v.appointment_id = a.id
        LEFT JOIN medical_records mr ON mr.appointment_id = a.id
-       WHERE a.patient_id = ?
+       WHERE a.patient_id = ? AND (a.status = 'Completed' OR mr.id IS NOT NULL OR DATE(a.scheduled_date) = CURDATE())
        ORDER BY a.scheduled_date DESC`,
       [patient_id]
     );
@@ -608,3 +615,107 @@ exports.getVisits = async (req, res) => {
   }
 };
 
+// PATCH /api/patients/:id/visits/:queueId — update visit reason/doctor/priority/SMS after queue # issued
+exports.updateVisit = async (req, res) => {
+  const { visit_reason, doctor_id, notes, priority, send_sms } = req.body;
+  const queueId   = parseInt(req.params.queueId, 10);
+  const patientId = parseInt(req.params.id, 10);
+  try {
+    // Resolve queue → appointment
+    const [[qrow]] = await db.query('SELECT appointment_id FROM queue WHERE id=?', [queueId]);
+    if (!qrow) return res.status(404).json({ error: 'Queue entry not found.' });
+    const apptId = qrow.appointment_id;
+
+    // Update appointment notes (visit reason) and doctor
+    await db.query(
+      `UPDATE appointments SET notes=?, doctor_id=? WHERE id=? AND patient_id=?`,
+      [visit_reason || null, doctor_id || null, apptId, patientId]
+    );
+
+    // If priority provided, upsert into appointment_services
+    if (priority) {
+      await db.query(
+        `INSERT INTO appointment_services (appointment_id, service_name, quantity)
+         VALUES (?, ?, 1)
+         ON DUPLICATE KEY UPDATE service_name = VALUES(service_name)`,
+        [apptId, priority]
+      );
+    } else {
+      await db.query(
+        `DELETE FROM appointment_services WHERE appointment_id=? AND service_name IN ('elderly','pwd','pregnant','pediatric','solo_parent')`,
+        [apptId]
+      );
+    }
+
+    // SMS (async, non-blocking)
+    if (send_sms) {
+      const [[p]] = await db.query('SELECT first_name FROM patients WHERE id=?', [patientId]);
+      const [[q]] = await db.query('SELECT queue_number FROM queue WHERE id=?', [queueId]);
+      if (p && q) {
+        const { sendSMS, getPatientPhone, registrationMessage } = require('../helpers/smsHelper');
+        getPatientPhone(patientId).then(phone => {
+          if (!phone) return;
+          const msg = registrationMessage(p.first_name, q.queue_number);
+          return sendSMS({ phone, message: msg, patient_id: patientId, appointment_id: apptId });
+        }).catch(err => console.error('[SMS] updateVisit SMS error:', err.message));
+      }
+    }
+
+    res.json({ message: 'Visit details updated.' });
+  } catch (err) {
+    console.error('[patientController.updateVisit]', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ── PATCH /api/patients/:id/medical-history
+exports.updateMedicalHistory = async (req, res) => {
+  const patientId = req.params.id;
+  const mh = req.body;
+  if (!mh) return res.json({ message: 'No medical history provided.' });
+
+  try {
+    await db.query(
+      `INSERT INTO patient_medical_history 
+        (patient_id, has_hypertension, has_heart_disease, has_diabetes, has_stroke,
+         has_asthma, has_tuberculosis, has_copd, has_allergies, has_smoking_hx, has_none,
+         other_conditions, social_smoking, social_alcohol, general_survey,
+         no_of_children, lmp, period_duration_days, cycle_length_days, fp_method, menopausal_age)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         has_hypertension = VALUES(has_hypertension),
+         has_heart_disease = VALUES(has_heart_disease),
+         has_diabetes = VALUES(has_diabetes),
+         has_stroke = VALUES(has_stroke),
+         has_asthma = VALUES(has_asthma),
+         has_tuberculosis = VALUES(has_tuberculosis),
+         has_copd = VALUES(has_copd),
+         has_allergies = VALUES(has_allergies),
+         has_smoking_hx = VALUES(has_smoking_hx),
+         has_none = VALUES(has_none),
+         other_conditions = VALUES(other_conditions),
+         social_smoking = VALUES(social_smoking),
+         social_alcohol = VALUES(social_alcohol),
+         general_survey = VALUES(general_survey),
+         no_of_children = VALUES(no_of_children),
+         lmp = VALUES(lmp),
+         period_duration_days = VALUES(period_duration_days),
+         cycle_length_days = VALUES(cycle_length_days),
+         fp_method = VALUES(fp_method),
+         menopausal_age = VALUES(menopausal_age),
+         updated_at = CURRENT_TIMESTAMP`,
+      [
+        patientId,
+        mh.has_hypertension ? 1 : 0, mh.has_heart_disease ? 1 : 0, mh.has_diabetes ? 1 : 0, mh.has_stroke ? 1 : 0,
+        mh.has_asthma ? 1 : 0, mh.has_tuberculosis ? 1 : 0, mh.has_copd ? 1 : 0, mh.has_allergies ? 1 : 0, mh.has_smoking_hx ? 1 : 0, mh.has_none ? 1 : 0,
+        mh.other_conditions || null, mh.social_smoking || null, mh.social_alcohol || null, mh.general_survey || null,
+        mh.no_of_children || null, mh.lmp || null, mh.period_duration_days || null, mh.cycle_length_days || null, mh.fp_method || null, mh.menopausal_age || null
+      ]
+    );
+
+    res.json({ message: 'Medical history updated successfully.' });
+  } catch (err) {
+    console.error('[patientController.updateMedicalHistory]', err);
+    res.status(500).json({ error: err.message });
+  }
+};
