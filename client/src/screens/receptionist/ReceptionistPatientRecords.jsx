@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Search, Building2, Plus, Stethoscope, Clock, ClipboardList, BarChart3, CalendarDays, FolderOpen, UserRound, User, Lock, AlertTriangle, Phone, LayoutDashboard, Users, Smartphone, X, Droplets, MapPin } from "lucide-react";
 import { patientsApi } from "../../lib/api/patients.js";
 import { smsApi } from "../../lib/api/sms.js";
+import { staffApi } from "../../lib/api/staff.js";
 import EditPatientModal from "../../components/EditPatientModal.jsx";
 
 /** Normalize a backend patient row to the shape the UI expects */
@@ -383,7 +384,19 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 // ── Add to Queue Modal ──────────────────────────────────────────────────────
 function AddToQueueModal({ patient, onClose, onConfirm }) {
   const [reason, setReason] = useState(patient?.reason || '');
-  const [doctor, setDoctor] = useState('Dr. Reyes');
+  const [doctor, setDoctor] = useState('');
+  const [availableDoctors, setAvailableDoctors] = useState([]);
+
+  useEffect(() => {
+    staffApi.getAll()
+      .then(res => {
+        const docs = res.filter(s => s.position?.toLowerCase().includes('doctor') || s.position?.toLowerCase() === 'physician');
+        setAvailableDoctors(docs);
+        if (docs.length > 0) setDoctor(`${docs[0].first_name} ${docs[0].last_name}`);
+      })
+      .catch(() => {});
+  }, []);
+
   if (!patient) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
@@ -404,9 +417,12 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Assign Doctor</label>
             <select value={doctor} onChange={e => setDoctor(e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
-              <option>Dr. Reyes</option>
-              <option>Dr. Santos</option>
-              <option>Dr. Cruz</option>
+              {availableDoctors.map(d => (
+                <option key={d.id} value={`${d.first_name} ${d.last_name}`}>
+                  Dr. {d.first_name} {d.last_name}
+                </option>
+              ))}
+              {availableDoctors.length === 0 && <option value="">No doctors available</option>}
             </select>
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>

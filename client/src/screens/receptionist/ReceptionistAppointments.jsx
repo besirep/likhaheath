@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, Building2, Plus, AlertCircle, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, UserRound, User, LayoutDashboard, Phone, X, Ghost, Pencil } from "lucide-react";
 import { appointmentsApi } from "../../lib/api/appointments.js";
 import { smsApi } from "../../lib/api/sms.js";
+import { staffApi } from "../../lib/api/staff.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // Map DB status strings → UI status keys
@@ -67,7 +68,6 @@ const priorityConfig = {
   pediatric: { label: "Pedia",          Icon: UserRound, color: "#e09040" },
 };
 
-const doctors = ["Dr. Reyes", "Dr. Santos", "Dr. Cruz"]; // fallback list; live list comes from API
 
 function Avatar({ name, size = 32 }) {
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2);
@@ -91,6 +91,13 @@ function BookModal({ defaultDate, onClose, onSubmit, showToast }) {
     time: "09:00", duration: "30", doctor: "", type: "follow-up", priority: "", notes: "",
   });
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const [availableDoctors, setAvailableDoctors] = useState([]);
+  useEffect(() => {
+    staffApi.getAll()
+      .then(res => setAvailableDoctors(res.filter(s => s.position?.toLowerCase().includes('doctor') || s.position?.toLowerCase() === 'physician')))
+      .catch(() => {});
+  }, []);
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(20,40,70,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
@@ -156,14 +163,23 @@ function BookModal({ defaultDate, onClose, onSubmit, showToast }) {
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 8 }}>Assign Doctor</label>
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-              {["", ...doctors].map(d => (
-                <button key={d} onClick={() => update("doctor", d)} style={{
-                  padding: "8px 14px", border: `1.5px solid ${form.doctor === d ? "#2a9d8f" : "#e0e7ef"}`,
-                  borderRadius: 9, background: form.doctor === d ? "#e8f7f5" : "white",
-                  color: form.doctor === d ? "#2a9d8f" : "#7a8fb0",
-                  fontSize: 14, fontWeight: form.doctor === d ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
-                }}>{d || "Auto-assign"}</button>
-              ))}
+              <button onClick={() => update("doctor", "")} style={{
+                padding: "8px 14px", border: `1.5px solid ${form.doctor === "" ? "#2a9d8f" : "#e0e7ef"}`,
+                borderRadius: 9, background: form.doctor === "" ? "#e8f7f5" : "white",
+                color: form.doctor === "" ? "#2a9d8f" : "#7a8fb0",
+                fontSize: 14, fontWeight: form.doctor === "" ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
+              }}>Auto-assign</button>
+              {availableDoctors.map(d => {
+                const name = `Dr. ${d.first_name} ${d.last_name}`;
+                return (
+                  <button key={d.id} onClick={() => update("doctor", name)} style={{
+                    padding: "8px 14px", border: `1.5px solid ${form.doctor === name ? "#2a9d8f" : "#e0e7ef"}`,
+                    borderRadius: 9, background: form.doctor === name ? "#e8f7f5" : "white",
+                    color: form.doctor === name ? "#2a9d8f" : "#7a8fb0",
+                    fontSize: 14, fontWeight: form.doctor === name ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
+                  }}>{name}</button>
+                );
+              })}
             </div>
           </div>
 
