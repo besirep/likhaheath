@@ -116,7 +116,7 @@ function VitalCard({ icon, label, value, unit, flag }) {
 }
 
 // ── Visit Detail Drawer ───────────────────────────────────────────────────────
-function VisitDrawer({ visit, patient, onClose, onUpdate }) {
+function VisitDrawer({ visit, patient, onClose, onUpdate, showToast }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ diagnosis: "", treatment: "" });
   const [saving, setSaving] = useState(false);
@@ -136,7 +136,7 @@ function VisitDrawer({ visit, patient, onClose, onUpdate }) {
       await consultationsApi.updateConsultation(visit.id, { ...editForm, notes: "" });
       if (onUpdate) onUpdate({ ...visit, diagnosis: editForm.diagnosis, plan: editForm.treatment, notes: "" });
       setIsEditing(false);
-    } catch { alert("Failed to update."); }
+    } catch { showToast ? showToast("Failed to update.") : alert("Failed to update."); }
     finally { setSaving(false); }
   };
 
@@ -541,6 +541,7 @@ export default function DoctorPatientRecords({ onNavigate, navState }) {
         visit={activeVisit} 
         patient={selected} 
         onClose={() => setActiveVisit(null)} 
+        showToast={showToast}
         onUpdate={(updatedVisit) => {
           setSelectedVisits(prev => prev.map(v => v.id === updatedVisit.id ? updatedVisit : v));
           setActiveVisit(updatedVisit);

@@ -221,6 +221,10 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const [searchQuery,   setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching,     setSearching]     = useState(false);
+  const [showSearch, setShowSearch]     = useState(false);
+  const [toast, setToast]               = useState(null);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   const fetchQueue = () => {
     queueApi.getToday()
@@ -448,6 +452,10 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
           onAnother={handleAnother}
         />
       )}
+      
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 400, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "fadeUp 0.3s ease" }}>{toast}</div>
+      )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
         {/* Top bar */}
@@ -670,7 +678,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                     try {
                       await patientsApi.updateMedicalHistory(form.existingPatientId, form.mh);
                       setStep(3);
-                    } catch (err) { alert(err.message); }
+                    } catch (err) { showToast(err.message); }
                     setSubmitting(false);
                   }} disabled={submitting} style={{ flex: 1, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>
                     {submitting ? "Saving..." : "Save & Continue →"}

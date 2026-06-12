@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Building2, Plus, AlertCircle, ClipboardList, Smartphone, BarChart3, CalendarDays, FolderOpen, UserRound, User, LayoutDashboard, Phone, X, Ghost, Pencil } from "lucide-react";
 import { appointmentsApi } from "../../lib/api/appointments.js";
+import { smsApi } from "../../lib/api/sms.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // Map DB status strings → UI status keys
@@ -84,7 +85,7 @@ function Avatar({ name, size = 32 }) {
 
 
 // ── Book Modal ────────────────────────────────────────────────────────────────
-function BookModal({ defaultDate, onClose, onSubmit }) {
+function BookModal({ defaultDate, onClose, onSubmit, showToast }) {
   const [form, setForm] = useState({
     name: "", age: "", contact: "", reason: "", date: defaultDate || "",
     time: "09:00", duration: "30", doctor: "", type: "follow-up", priority: "", notes: "",
@@ -206,7 +207,7 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
             <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
             <button onClick={() => {
               if (!form.name.trim() || !form.date || !form.reason.trim()) {
-                alert("Please fill in Patient Name, Date, and Reason.");
+                showToast ? showToast("Please fill in Patient Name, Date, and Reason.") : alert("Please fill in Patient Name, Date, and Reason.");
                 return;
               }
               onSubmit(form);
@@ -222,7 +223,7 @@ function BookModal({ defaultDate, onClose, onSubmit }) {
 }
 
 // ── Appointment Drawer ────────────────────────────────────────────────────────
-function AppointmentDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue }) {
+function AppointmentDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAddToQueue, onReschedule, onSms }) {
   if (!appt) return null;
   const tc = typeConfig[appt.type];
   const sc = statusConfig[appt.status];
@@ -290,7 +291,7 @@ function AppointmentDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAdd
                   Check In Patient
                 </button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => {}} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Reschedule</button>
+                  <button onClick={() => onReschedule(appt)} style={{ flex: 1, background: "#E5EDF8", color: "#0047AB", border: "1px solid #B0C8E8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Pencil size={14} strokeWidth={2.5} /> Reschedule</button>
                   <button onClick={() => onNoShow(appt)} style={{ flex: 1, background: "#fce8f0", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 10, padding: "9px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}><Ghost size={16} strokeWidth={2} /> No-show</button>
                 </div>
                 <button onClick={() => onCancel(appt)} style={{ background: "white", color: "#9aabc0", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}><X size={16} strokeWidth={2} /> Cancel Appointment</button>
@@ -302,7 +303,7 @@ function AppointmentDrawer({ appt, onClose, onCheckin, onCancel, onNoShow, onAdd
                 <button onClick={() => onAddToQueue(appt)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
               </>
             )}
-            <button onClick={() => {}} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>Send Reminder SMS</button>
+            <button onClick={() => onSms(appt)} style={{ background: "white", color: "#4a5d75", border: "1px solid #e0e7ef", borderRadius: 10, padding: "9px", fontSize: 14, cursor: "pointer" }}>Send Reminder SMS</button>
           </div>
         </div>
       </div>
@@ -500,6 +501,9 @@ export default function ReceptionistAppointments({ onNavigate }) {
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showBook, setShowBook]         = useState(false);
   const [view, setView]                 = useState("day");
+  const [toast, setToast]               = useState(null);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   // ── Fetch from live API ──────────────────────────────────────────────────────
   const loadAppointments = useCallback(async () => {
@@ -546,6 +550,36 @@ export default function ReceptionistAppointments({ onNavigate }) {
     } catch { /* ignore */ }
   };
 
+  const handleReschedule = async (a) => {
+    const newDate = window.prompt(`Enter new date (YYYY-MM-DD) for ${a.name}'s appointment:`, a.date);
+    if (!newDate) return;
+    const newTime = window.prompt(`Enter new time (HH:MM) for ${a.name}'s appointment:`, a.time);
+    if (!newTime) return;
+    
+    try {
+      await appointmentsApi.update(a.id, { scheduled_date: `${newDate}T${newTime}:00` });
+      setAppts(q => q.map(x => x.id === a.id ? { ...x, date: newDate, time: newTime } : x));
+      showToast(`Appointment rescheduled to ${newDate} ${newTime}`);
+      setSelectedAppt(null);
+    } catch (e) {
+      showToast(`Failed to reschedule: ${e.message}`);
+    }
+  };
+
+  const handleSms = async (a) => {
+    try {
+      showToast(`Sending SMS to ${a.name}...`);
+      await smsApi.send({
+        patient_id: a._patientId, 
+        appointment_id: a.id, 
+        message: `LikhaHealth: Reminder for your appointment on ${a.date} at ${a.time}.` 
+      });
+      showToast(`SMS sent to ${a.name}`);
+    } catch (err) {
+      showToast(`SMS failed: ${err.message}`);
+    }
+  };
+
   const handleAddToQueue = () => { if (onNavigate) onNavigate("queue"); };
 
   const handleNewAppt = async (f) => {
@@ -568,8 +602,12 @@ export default function ReceptionistAppointments({ onNavigate }) {
 
   return (
     <div style={{ height: "100vh", display: "flex", background: "#f4f7fb", overflow: "hidden" }}>
-      {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onSubmit={handleNewAppt} />}
-      <AppointmentDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCheckIn={handleCheckin} onCancel={handleCancel} onNoShow={handleNoShow} onAddToQueue={handleAddToQueue} />
+      {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onSubmit={handleNewAppt} showToast={showToast} />}
+      <AppointmentDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCheckin={handleCheckin} onCancel={handleCancel} onNoShow={handleNoShow} onAddToQueue={handleAddToQueue} onReschedule={handleReschedule} onSms={handleSms} />
+      
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 400, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "slideIn 0.3s ease" }}>{toast}</div>
+      )}
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Top bar */}

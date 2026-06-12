@@ -27,6 +27,10 @@ export default function AdminStaffManagement() {
   const [newUser, setNewUser] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Toast state
+  const [toast, setToast] = useState(null);
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
   // Form
   const [form, setForm] = useState({
     first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor",
@@ -56,7 +60,7 @@ export default function AdminStaffManagement() {
       loadStaff();
     } catch (err) {
       console.error(err);
-      alert("Failed to toggle status");
+      showToast("Failed to toggle status");
     } finally {
       setConfirmToggle(null);
     }
@@ -74,7 +78,7 @@ export default function AdminStaffManagement() {
       setNewUser({ username: res.username, password: res.password });
     } catch (err) {
       console.error(err);
-      alert("Failed to reset password: " + err.message);
+      showToast("Failed to reset password: " + err.message);
     } finally {
       setLoading(false);
       setConfirmReset(null);
@@ -98,7 +102,7 @@ export default function AdminStaffManagement() {
       setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", prc_license_number: "", prc_expiry_date: "" });
     } catch (err) {
       console.error(err);
-      alert("Failed to create staff: " + err.message);
+      showToast("Failed to create staff: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -114,6 +118,10 @@ export default function AdminStaffManagement() {
   return (
     <div style={{ minHeight: "100vh", background: "#f4f7fb", padding: "32px 40px" }}>
       
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1a2540", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 400, boxShadow: "0 8px 24px rgba(20,40,90,0.28)", animation: "fadeIn 0.3s ease" }}>{toast}</div>
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
         <div>

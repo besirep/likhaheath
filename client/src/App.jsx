@@ -237,6 +237,9 @@ export default function App() {
   const [navState, setNavState] = useState(null);
   const [savingConsultation, setSavingConsultation] = useState(false);
 
+  const [toast, setToast] = useState(null);
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
   const handleNavigate = useCallback((id, state = null) => {
     setActiveId(id);
     setNavState(state);
@@ -269,7 +272,7 @@ export default function App() {
       window.dispatchEvent(new Event('consultationSaved'));
     } catch (e) {
       console.error("Failed to save consultation:", e);
-      alert("Failed to save consultation. Please try again.");
+      showToast("Failed to save consultation. Please try again.");
     } finally {
       setSavingConsultation(false);
     }
@@ -387,6 +390,11 @@ export default function App() {
           saving={savingConsultation}
           onNavigate={handleNavigate}
         />
+      )}
+
+      {/* Global Toast */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1a2540", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 1000, boxShadow: "0 8px 24px rgba(20,40,90,0.28)", animation: "fadeIn 0.3s ease" }}>{toast}</div>
       )}
     </div>
   );

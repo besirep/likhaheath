@@ -116,7 +116,7 @@ const LAB_TEMPLATES = {
 };
 
 // ── Lab Request + Results Editor Modal ───────────────────────────────────────
-function LabModal({ record, onClose, onSave }) {
+function LabModal({ record, onClose, onSave, showToast }) {
   const [requested, setRequested] = useState(record.labs || []);
   const [editMode, setEditMode]   = useState(record.labs?.length > 0 ? "results" : "request");
   const [customName, setCustomName] = useState("");
@@ -195,7 +195,7 @@ function LabModal({ record, onClose, onSave }) {
       const labPayload = requested.map(l => ({ name: l.name, results: results[l.name] || {} }));
       await onSave({ labs: labPayload });
       onClose();
-    } catch { alert("Failed to save lab results."); }
+    } catch { showToast ? showToast("Failed to save lab results.", "error") : alert("Failed to save lab results."); }
     finally { setSaving(false); }
   };
 
@@ -428,7 +428,7 @@ function QueueItem({ item, isCurrent }) {
 }
 
 // ── Record Detail Panel ────────────────────────────────────────────────────────
-function RecordDetail({ record, onUpdate, onLabOpen }) {
+function ConsultationDetail({ record, onUpdate, onPrint, onLab, showToast }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm]   = useState({ diagnosis: "", treatment: "" });
   const [saving, setSaving]       = useState(false);
@@ -456,7 +456,7 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
       await consultationsApi.updateConsultation(record.id, { ...editForm, notes: "" });
       if (onUpdate) onUpdate({ ...editForm, notes: "" });
       setIsEditing(false);
-    } catch { alert("Failed to update."); }
+    } catch { showToast("Failed to update.", "error"); }
     finally { setSaving(false); }
   };
 
@@ -534,7 +534,7 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
                 <button onClick={printRecord} style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
                   <Printer size={13} /> Print
                 </button>
-                <button onClick={() => onLabOpen(record)} style={{ background: hasLabs ? "linear-gradient(135deg,#2a9d8f,#3abca8)" : "rgba(255,255,255,0.12)", border: hasLabs ? "none" : "1px solid rgba(255,255,255,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5, boxShadow: hasLabs ? "0 3px 10px rgba(42,157,143,0.3)" : "none" }}>
+                <button onClick={() => onLab(record)} style={{ background: hasLabs ? "linear-gradient(135deg,#2a9d8f,#3abca8)" : "rgba(255,255,255,0.12)", border: hasLabs ? "none" : "1px solid rgba(255,255,255,0.2)", borderRadius: 9, padding: "7px 14px", fontSize: 13, color: "white", cursor: "pointer", fontWeight: 600, display: "flex", alignItems: "center", gap: 5, boxShadow: hasLabs ? "0 3px 10px rgba(42,157,143,0.3)" : "none" }}>
                   <FlaskConical size={13} /> {hasLabs ? "Lab Results" : "Order Labs"}
                 </button>
               </>
@@ -617,7 +617,7 @@ function RecordDetail({ record, onUpdate, onLabOpen }) {
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#1e2d40", display: "flex", alignItems: "center", gap: 6 }}>
                         <FlaskConical size={14} color="#2a9d8f" /> {lab.name}
                       </div>
-                      <button onClick={() => onLabOpen(record)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2a9d8f", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                      <button onClick={() => onLab(record)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2a9d8f", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                         <Pencil size={12} /> Edit
                       </button>
                     </div>
@@ -760,7 +760,7 @@ export default function DoctorConsultations({ activePatient, onConsultComplete, 
 
       {/* Lab Modal */}
       {labRecord && (
-        <LabModal record={labRecord} onClose={() => setLabRecord(null)} onSave={handleLabSave} />
+        <LabModal record={labRecord} onClose={() => setLabRecord(null)} onSave={handleLabSave} showToast={showToast} />
       )}
 
       {/* Toast */}
@@ -890,9 +890,10 @@ export default function DoctorConsultations({ activePatient, onConsultComplete, 
           {/* ── Column 3: Record Detail ────────────────────────────────────── */}
           <div style={{ display: "flex", overflow: "hidden" }}>
             <ErrorBoundary>
-              <RecordDetail
+              <ConsultationDetail
                 record={selectedRecord}
-                onLabOpen={setLabRecord}
+                onLab={setLabRecord}
+                showToast={showToast}
                 onUpdate={(newVals) => {
                   loadHistory();
                   showToast("Record updated");

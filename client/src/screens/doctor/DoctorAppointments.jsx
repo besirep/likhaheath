@@ -182,7 +182,7 @@ function AppointmentDrawer({ appt, onClose, onCancel, onNavigate }) {
 }
 
 // ── Book Modal ────────────────────────────────────────────────────────────────
-function BookModal({ defaultDate, onClose, onBook }) {
+function BookModal({ defaultDate, onClose, onBook, showToast }) {
   const [form, setForm] = useState({
     name: "", age: "", contact: "", reason: "",
     date: defaultDate || "", time: "09:00", duration: "30", type: "follow-up", notes: "",
@@ -252,14 +252,17 @@ function BookModal({ defaultDate, onClose, onBook }) {
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button onClick={onClose} style={{ flex: 1, background: "#EBF0FA", border: "1px solid #CCDAF0", borderRadius: 11, padding: "12px", fontSize: 14, color: "#7a8fb0", cursor: "pointer", fontWeight: 500 }}>Cancel</button>
             <button onClick={async () => {
-              if (!form.name.trim() || !form.reason.trim()) { alert("Please fill in Patient Name and Reason for Visit"); return; }
+              if (!form.name.trim() || !form.reason.trim()) { 
+                showToast ? showToast("Please fill in Patient Name and Reason for Visit") : alert("Please fill in Patient Name and Reason for Visit"); 
+                return; 
+              }
               try {
                 const scheduled = `${form.date}T${form.time}:00`;
                 await appointmentsApi.create({ patient_name: form.name.trim(), scheduled_date: scheduled, notes: form.reason.trim() });
                 if (onBook) onBook();
                 onClose();
               } catch (err) {
-                alert(`Failed to book: ${err.message}`);
+                showToast ? showToast(`Failed to book: ${err.message}`) : alert(`Failed to book: ${err.message}`);
               }
             }} style={{ flex: 2, background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(0,71,171,0.3)" }}>
               Book Appointment
@@ -469,6 +472,9 @@ export default function DoctorAppointments({ onNavigate }) {
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showBook, setShowBook]         = useState(false);
   const [view, setView]                 = useState("day");
+  const [toast, setToast]               = useState(null);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   // ── Fetch from live API ────────────────────────────────────────────────────
   const loadAppointments = useCallback(async () => {
@@ -504,7 +510,11 @@ export default function DoctorAppointments({ onNavigate }) {
         </div>
       )}
 
-      {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onBook={loadAppointments} />}
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1a2540", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 400, boxShadow: "0 8px 24px rgba(20,40,90,0.28)", animation: "fadeUp 0.3s ease" }}>{toast}</div>
+      )}
+
+      {showBook && <BookModal defaultDate={selectedDate} onClose={() => setShowBook(false)} onBook={loadAppointments} showToast={showToast} />}
       <AppointmentDrawer appt={selectedAppt} onClose={() => setSelectedAppt(null)} onCancel={handleCancel} onNavigate={onNavigate} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>

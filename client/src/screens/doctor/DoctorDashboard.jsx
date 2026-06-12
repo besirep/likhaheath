@@ -60,14 +60,11 @@ function MiniModal({ title, icon, children, onClose }) {
       </div>
     </div>
   );
-}
-
 // ── Consultation Modal ─────────────────────────────────────────────────────────
 function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndConsult }) {
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [elapsed, setElapsed] = useState(0);
-  const [modal, setModal] = useState(null); // 'record' | 'lab' | 'followup'
   const [toast, setToast] = useState(null);
 
   const showToast = (msg) => { setToast(null); setTimeout(() => setToast(msg), 10); };
@@ -125,55 +122,7 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndCons
         input:focus { outline:none; border-color:#0047AB !important; }
       `}</style>
 
-      {/* Sub-modal: Add to Record */}
-      {modal === 'record' && (
-        <MiniModal title="Add to Medical Record" icon={<ClipboardList size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 14, color: "#4a5d75" }}>Recording consultation for <b>{patient.name}</b></div>
-            <input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} placeholder="Diagnosis / ICD-10..." style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Doctor's notes..." rows={4} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, resize: "vertical", boxSizing: "border-box" }} />
-            <button onClick={() => { setModal(null); showToast("Added to medical records"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save to Record</button>
-          </div>
-        </MiniModal>
-      )}
 
-      {/* Sub-modal: Lab Request */}
-      {modal === 'lab' && (
-        <MiniModal title="Request Laboratory" icon={<TestTubes size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ fontSize: 14, color: "#4a5d75" }}>Patient: <b>{patient.name}</b></div>
-            {["CBC (Complete Blood Count)","Blood Chemistry","Urinalysis","Lipid Profile","FBS (Fasting Blood Sugar)","ECG","Chest X-ray"].map(test => (
-              <label key={test} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, cursor: "pointer", padding: "6px 0", borderBottom: "1px solid #f0f3f7" }}>
-                <input type="checkbox" style={{ width: 16, height: 16, cursor: "pointer" }} />
-                {test}
-              </label>
-            ))}
-            <button onClick={() => { setModal(null); showToast(<><TestTubes size={16} strokeWidth={2} /> Lab request submitted</>); }} style={{ marginTop: 8, background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Submit Lab Request</button>
-          </div>
-        </MiniModal>
-      )}
-
-      {/* Sub-modal: Schedule Follow-up */}
-      {modal === 'followup' && (
-        <MiniModal title="Schedule Follow-up" icon={<CalendarDays size={16} strokeWidth={2} />} onClose={() => setModal(null)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontSize: 14, color: "#4a5d75" }}>Schedule follow-up for <b>{patient.name}</b></div>
-            <div>
-              <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Date</label>
-              <input type="date" style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Time</label>
-              <input type="time" style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
-            </div>
-            <div>
-              <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Notes</label>
-              <input placeholder="Reason for follow-up..." style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #D8E4F2", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
-            </div>
-            <button onClick={() => { setModal(null); showToast("Follow-up scheduled"); }} style={{ background: "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Confirm Schedule</button>
-          </div>
-        </MiniModal>
-      )}
 
       {toast && (
         <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1e2d40", color: "white", borderRadius: 12, padding: "12px 20px", fontSize: 14, zIndex: 400, boxShadow: "0 8px 24px rgba(30,45,64,0.28)", animation: "slideIn 0.3s ease" }}>{toast}</div>
@@ -248,15 +197,7 @@ function ConsultationModal({ patient, onClose, onNavigate, queue = [], onEndCons
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Record findings, observations, and treatment plan..."
               style={{ flex: 1, minHeight: 200, padding: "14px 16px", border: "1.5px solid #D8E4F2", borderRadius: 12, fontSize: 14, color: "#1a2540", background: "white", resize: "none", lineHeight: 1.7 }} />
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            {[
-              { label: <><ClipboardList size={16} strokeWidth={2} /> Add to Records</>, key: "record" },
-              { label: <><TestTubes size={16} strokeWidth={2} /> Request Lab</>,    key: "lab"    },
-              { label: "Schedule Follow-up", key: "followup" },
-            ].map(({ label, key }) => (
-              <button key={key} onClick={() => setModal(key)} style={{ flex: 1, background: "#EBF0FA", color: "#0047AB", border: "1.5px solid #C0D4F0", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{label}</button>
-            ))}
-          </div>
+
         </div>
 
         {/* Right */}
