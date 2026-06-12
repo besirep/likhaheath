@@ -154,7 +154,7 @@ exports.getRecent = async (req, res) => {
        WHERE p.is_deleted=0 ORDER BY p.created_at DESC LIMIT 5`
     );
     const [recent_records] = await db.query(
-      `SELECT mr.id, mr.diagnosis, mr.record_date, CONCAT(p.first_name,' ',p.last_name) AS patient_name, CONCAT(d.first_name,' ',d.last_name) AS doctor_name
+      `SELECT mr.id, mr.diagnosis, mr.record_date, CONCAT(p.last_name,', ',p.first_name) AS patient_name, CONCAT(d.first_name,' ',d.last_name) AS doctor_name
        FROM medical_records mr
        JOIN patients p ON mr.patient_id=p.id
        LEFT JOIN staff d ON mr.doctor_id=d.id

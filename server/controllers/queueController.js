@@ -20,7 +20,7 @@ exports.getToday = async (req, res) => {
           a.doctor_id,
 
           -- Patient
-          CONCAT(p.first_name, ' ', p.last_name)  AS patient_name,
+          CONCAT(p.last_name, ', ', p.first_name)  AS patient_name,
           p.date_of_birth,
           p.philhealth_no,
 
@@ -71,7 +71,7 @@ exports.getToday = async (req, res) => {
 exports.getNext = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT q.*, CONCAT(p.first_name,' ',p.last_name) AS patient_name
+      `SELECT q.*, CONCAT(p.last_name,', ',p.first_name) AS patient_name
        FROM queue q
        JOIN appointments a ON q.appointment_id = a.id
        JOIN patients     p ON a.patient_id      = p.id

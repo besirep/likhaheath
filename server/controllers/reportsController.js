@@ -2,13 +2,12 @@ const db = require('../config/db');
 
 /**
  * GET /api/reports?days=1|7|30
- * Returns aggregated stats for the Reports screen.
+ * Returns aggregated chart data for the Reports screen.
  * days=1 → today, days=7 → week, days=30 → month
  */
 exports.getWeekly = async (req, res) => {
   const days = parseInt(req.query.days, 10) || 7;
 
-  // Build appropriate date filter
   const dateFilter = days <= 1
     ? 'DATE(a.scheduled_date) = CURDATE()'
     : `a.scheduled_date >= DATE_SUB(CURDATE(), INTERVAL ${days} DAY)`;
@@ -18,11 +17,11 @@ exports.getWeekly = async (req, res) => {
     : `n.sent_at >= DATE_SUB(CURDATE(), INTERVAL ${days} DAY)`;
 
   try {
-    // Daily queue summary for the period
+    // Daily queue summary
     const [dailyQueue] = await db.query(
       `SELECT
-         DATE(a.scheduled_date)                                AS day,
-         COUNT(a.id)                                           AS total,
+         DATE(a.scheduled_date)                                   AS day,
+         COUNT(a.id)                                              AS total,
          SUM(CASE WHEN a.status = 'Completed' THEN 1 ELSE 0 END) AS completed,
          SUM(CASE WHEN q.status  = 'Skipped'  THEN 1 ELSE 0 END) AS skipped
        FROM appointments a
@@ -32,7 +31,7 @@ exports.getWeekly = async (req, res) => {
        ORDER BY day ASC`
     );
 
-    // Hourly flow for the period
+    // Hourly patient flow
     const [hourlyFlow] = await db.query(
       `SELECT
          HOUR(a.scheduled_date) AS hour,
@@ -43,7 +42,7 @@ exports.getWeekly = async (req, res) => {
        ORDER BY hour ASC`
     );
 
-    // Priority breakdown for the period
+    // Priority breakdown
     const [priorityRows] = await db.query(
       `SELECT
          COALESCE(svc.service_name, 'regular') AS priority,
@@ -56,20 +55,20 @@ exports.getWeekly = async (req, res) => {
        GROUP BY priority`
     );
 
-    // Top visit reasons for the period
+    // Top visit reasons — case-normalized: "HYPERTENSION" = "hypertension" = "Hypertension"
     const [reasonRows] = await db.query(
       `SELECT
-         a.notes                   AS reason,
-         COUNT(a.id)               AS cnt
+         LOWER(TRIM(a.notes)) AS reason,
+         COUNT(a.id)          AS cnt
        FROM appointments a
        WHERE ${dateFilter}
-         AND a.notes IS NOT NULL AND a.notes != ''
-       GROUP BY a.notes
+         AND a.notes IS NOT NULL AND TRIM(a.notes) != ''
+       GROUP BY LOWER(TRIM(a.notes))
        ORDER BY cnt DESC
-       LIMIT 5`
+       LIMIT 10`
     );
 
-    // Doctor workload for the period
+    // Doctor workload
     const [doctorRows] = await db.query(
       `SELECT
          CONCAT(s.first_name,' ',s.last_name) AS doctor,
@@ -82,7 +81,7 @@ exports.getWeekly = async (req, res) => {
        ORDER BY patients DESC`
     );
 
-    // SMS delivery for the period
+    // SMS delivery per day
     const [smsRows] = await db.query(
       `SELECT
          DATE(n.sent_at) AS day,
@@ -94,7 +93,7 @@ exports.getWeekly = async (req, res) => {
        ORDER BY day ASC`
     );
 
-    // Avg wait time per day
+    // Average wait time per day
     const [waitRows] = await db.query(
       `SELECT
          DATE(a.scheduled_date) AS day,
@@ -120,6 +119,44 @@ exports.getWeekly = async (req, res) => {
     });
   } catch (err) {
     console.error('[reportsController.getWeekly]', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /api/reports/reasons?days=7&search=&limit=50
+ * Full paginated visit-reason list, case-normalized.
+ * Used by the "View More" modal in the Reports screen.
+ */
+exports.getReasons = async (req, res) => {
+  const days   = parseInt(req.query.days,  10) || 7;
+  const limit  = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+  const search = (req.query.search || '').trim().toLowerCase();
+
+  const dateFilter = days <= 1
+    ? 'DATE(a.scheduled_date) = CURDATE()'
+    : `a.scheduled_date >= DATE_SUB(CURDATE(), INTERVAL ${days} DAY)`;
+
+  const searchClause = search ? `AND LOWER(TRIM(a.notes)) LIKE ?` : '';
+  const params = search ? [`%${search}%`] : [];
+
+  try {
+    const [rows] = await db.query(
+      `SELECT
+         LOWER(TRIM(a.notes)) AS reason,
+         COUNT(a.id)          AS cnt
+       FROM appointments a
+       WHERE ${dateFilter}
+         AND a.notes IS NOT NULL AND TRIM(a.notes) != ''
+         ${searchClause}
+       GROUP BY LOWER(TRIM(a.notes))
+       ORDER BY cnt DESC
+       LIMIT ${limit}`,
+      params
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('[reportsController.getReasons]', err);
     res.status(500).json({ error: err.message });
   }
 };

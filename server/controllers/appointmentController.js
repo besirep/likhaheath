@@ -7,7 +7,7 @@ exports.getAll = async (req, res) => {
   try {
     let query = `
       SELECT a.*,
-        CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+        CONCAT(p.last_name,', ',p.first_name) AS patient_name,
         CONCAT(s.first_name,' ',s.last_name) AS doctor_name
       FROM appointments a
       JOIN patients p ON a.patient_id = p.id
@@ -30,7 +30,7 @@ exports.getToday = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT a.*,
-         CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+         CONCAT(p.last_name,', ',p.first_name) AS patient_name,
          CONCAT(s.first_name,' ',s.last_name) AS doctor_name,
          q.status AS queue_status, q.queue_number
        FROM appointments a
@@ -51,7 +51,7 @@ exports.getOne = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT a.*,
-         CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+         CONCAT(p.last_name,', ',p.first_name) AS patient_name,
          CONCAT(s.first_name,' ',s.last_name) AS doctor_name
        FROM appointments a
        JOIN patients p ON a.patient_id = p.id

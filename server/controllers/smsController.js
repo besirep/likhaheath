@@ -59,7 +59,7 @@ exports.getHistory = async (req, res) => {
       `SELECT
          sn.id, sn.patient_id, sn.message, sn.recipient, sn.status,
          sn.semaphore_id, sn.error_message, sn.sent_at,
-         CONCAT(p.first_name,' ',p.last_name) AS patient_name,
+         CONCAT(p.last_name,', ',p.first_name) AS patient_name,
          ci.value AS contact_number
        FROM sms_notifications sn
        JOIN patients     p  ON sn.patient_id = p.id
