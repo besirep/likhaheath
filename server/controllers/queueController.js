@@ -191,3 +191,17 @@ exports.updateDoctor = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// DELETE /api/queue/:id
+exports.remove = async (req, res) => {
+  try {
+    const [result] = await db.query('DELETE FROM queue WHERE id=?', [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Queue entry not found.' });
+    }
+    res.json({ message: 'Queue entry removed successfully.' });
+  } catch (err) {
+    console.error('[Queue] remove error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -75,14 +75,10 @@ function Select({ label, value, onChange, options, required, error, placeholder 
 // Queue # is issued when the patient is identified (returning) or after address step (new)
 // ── Step bar ─────────────────────────────────────────────────────────────────
 function StepBar({ step, isReturning }) {
-  const steps = isReturning
-    ? ["Check-In", "Queue Issued", "Medical History", "Visit Details"]
-    : ["Check-In", "Personal Info", "Address & Contact", "Queue Issued", "Medical History", "Visit Details"];
+  const steps = ["Personal Info", "Address & Contact", "Queue Issued", "Medical History", "Visit Details"];
 
   // Map logical step to display index
-  const displayIdx = isReturning
-    ? { "-1": 0, "queue": 1, "2": 2, "3": 3 }[String(step)] ?? step
-    : { "-1": 0, "0": 1, "1": 2, "queue": 3, "2": 4, "3": 5 }[String(step)] ?? step;
+  const displayIdx = { "0": 0, "1": 1, "queue": 2, "2": 3, "3": 4 }[String(step)] ?? Number(step);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28, flexWrap: "wrap", rowGap: 8 }}>
@@ -204,7 +200,7 @@ const emptyForm = {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function PatientRegistration({ onNavigate, draft, onDraftChange, onDraftClear, preloadPatientId }) {
-  const [step, setStep]       = useState(draft?.step ?? -1);
+  const [step, setStep]       = useState(Math.max(0, draft?.step ?? 0));
   const [form, setForm]       = useState(draft?.form ?? emptyForm);
   const [errors, setErrors]   = useState({});
   const [queueSlip, setQueueSlip]   = useState(null);   // shown right after queue # assigned
@@ -218,11 +214,6 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   // Sidebar queue state
   const [queueCounter, setQueueCounter] = useState(0);
   const [queueItems,   setQueueItems]   = useState([]);
-
-  const [searchQuery,   setSearchQuery]   = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching,     setSearching]     = useState(false);
-  const [showSearch, setShowSearch]     = useState(false);
   const [toast, setToast]               = useState(null);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
@@ -269,20 +260,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
     : `${form.firstName} ${form.lastName}`.trim();
   const isReturning = !!form.existingPatientId;
 
-  const searchPatients = async (q) => {
-    setSearchQuery(q);
-    if (q.trim().length < 2) { setSearchResults([]); return; }
-    setSearching(true);
-    try {
-      const { data } = await patientsApi.getAll({ search: q.trim(), limit: 8 });
-      setSearchResults(data || []);
-    } catch { setSearchResults([]); }
-    finally { setSearching(false); }
-  };
-
   // ── Returning patient selected: load records, immediately create queue entry ──
   const selectReturningPatient = async (p) => {
-    setSearching(true);
     try {
       const full = await patientsApi.getOne(p.id);
       const formatDate = (ds) => { if (!ds) return ""; const d = new Date(ds); return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0]; };
@@ -290,38 +269,32 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       const newForm = {
         ...emptyForm,
         existingPatientId: full.id,
-        firstName:    full.first_name    || "",
-        middleName:   full.middle_name   || "",
-        lastName:     full.last_name     || "",
-        sex:          full.sex           || "",
-        barangay:     full.barangay      || "",
-        municipality: full.municipality  || "Angono",
-        province:     "Rizal",
+        firstName:    full.first_name       || "",
+        middleName:   full.middle_name      || "",
+        lastName:     full.last_name        || "",
+        suffix:       full.suffix           || "",
+        dob:          formatDate(full.date_of_birth),
+        sex:          full.sex              || "",
+        civilStatus:  full.civil_status     || "",
+        bloodType:    full.blood_type       || "",
+        philhealthNo: full.philhealth_no    || "",
+        emergencyContact: full.emergency_contact || "",
+        street:       full.street           || "",
+        barangay:     full.barangay         || "",
+        municipality: full.municipality     || "Angono",
+        province:     full.province         || "Rizal",
         phone:        full.contacts?.find(c => c.is_primary)?.value || full.contacts?.[0]?.value || "",
-        mh:           full.medical_history || {},
+        mh:           full.medical_history  || {},
       };
       setForm(newForm);
       setErrors({});
-
-      // Issue queue number right now (with no visit reason yet)
-      const slipName = `${full.last_name}, ${full.first_name}`;
-      const { queue_number, queue_id } = await patientsApi.createVisit(full.id, {
-        visit_reason: "To be determined",
-        priority: null, send_sms: false,
-        vitals: null, medical_history: null, female_health: null,
-      });
-
-      setForm(f => ({ ...f, assignedQueueId: queue_id, assignedQueueNumber: queue_number }));
-      setQueueSlip({ queue: `A-${String(queue_number).padStart(3, "0")}`, name: slipName, isReturning: true });
-      fetchQueue();
+      setStep(0);
     } catch (err) {
       console.error(err);
-      // Fallback: go to step 2 without pre-issuing
+      // Fallback: go to step 0 without pre-issuing
       setForm(f => ({ ...f, existingPatientId: p.id, firstName: p.first_name || "", lastName: p.last_name || "", barangay: p.barangay || "", phone: p.primary_contact || "" }));
-      setStep(2);
+      setStep(0);
       setErrors({});
-    } finally {
-      setSearching(false);
     }
   };
 
@@ -361,12 +334,25 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
         priority: null, send_sms: false, vitals: null,
       };
 
-      const { queue_number, queue_id, patient_id } = await patientsApi.create(payload);
-      setForm(f => ({ ...f, existingPatientId: patient_id, assignedQueueId: queue_id, assignedQueueNumber: queue_number }));
+      if (form.existingPatientId) {
+        // Patient already exists (returning patient or we already issued queue # for new patient)
+        await patientsApi.update(form.existingPatientId, payload);
+        if (!form.assignedQueueNumber) {
+           const { queue_number, queue_id } = await patientsApi.createVisit(form.existingPatientId, {
+             visit_reason: "To be determined", priority: null, send_sms: false, vitals: null,
+           });
+           setForm(f => ({ ...f, assignedQueueId: queue_id, assignedQueueNumber: queue_number }));
+           setQueueSlip({ queue: `A-${String(queue_number).padStart(3, "0")}`, name: `${form.lastName}, ${form.firstName}`, isReturning: true });
+        } else {
+           setStep(2); // If they already had a queue number and just went back to edit, just go to next step
+        }
+      } else {
+        // Create new patient & queue
+        const { queue_number, queue_id, patient_id } = await patientsApi.create(payload);
+        setForm(f => ({ ...f, existingPatientId: patient_id, assignedQueueId: queue_id, assignedQueueNumber: queue_number }));
+        setQueueSlip({ queue: `A-${String(queue_number).padStart(3, "0")}`, name: `${form.lastName}, ${form.firstName}`, isReturning: false });
+      }
       fetchQueue();
-
-      const slipName = `${form.lastName}, ${form.firstName}`;
-      setQueueSlip({ queue: `A-${String(queue_number).padStart(3, "0")}`, name: slipName, isReturning: false });
     } catch (err) {
       setApiError(err.message);
     } finally {
@@ -421,8 +407,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   };
 
   const handleAnother = () => {
-    setForm(emptyForm); setStep(-1); setSuccess(null); setErrors({});
-    setSearchQuery(""); setSearchResults([]); setQueueSlip(null);
+    setForm(emptyForm); setStep(0); setSuccess(null); setErrors({});
+    setQueueSlip(null);
     if (onDraftClear) onDraftClear();
   };
 
@@ -470,16 +456,26 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
         {/* Top bar */}
         <div style={{ background: "#f4f7fb", borderBottom: "1px solid #dde8e5", padding: "16px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Patient Check-In</h1>
-            <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
-              {step === -1 ? "Search for an existing patient or register a new one" :
-               step === 0  ? "Step 1 of 2 — Personal Information" :
-               step === 1  ? "Step 2 of 2 — Address & Contact" :
-               step === 2  ? (isReturning ? "Returning patient — Medical History" : "New patient — Medical History") :
-               step === 3  ? (isReturning ? "Returning patient — Visit Details" : "New patient — Visit Details") :
-               "Completing registration…"}
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e2d40" }}>Patient Check-In</h1>
+              <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 2 }}>
+                {step === 0  ? "Step 1 of 4 — Personal Information" :
+                 step === 1  ? "Step 2 of 4 — Address & Contact" :
+                 step === 2  ? "Step 3 of 4 — Medical History" :
+                 step === 3  ? "Step 4 of 4 — Visit Details" :
+
+                 "Completing registration…"}
+              </div>
             </div>
+            { (step > 0 || isReturning || Object.keys(errors).length > 0) && !success && (
+              <button onClick={handleAnother} style={{ background: "white", border: "1.5px solid #ffdbdb", borderRadius: 8, padding: "8px 14px", color: "#e05050", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#fff0f0"; e.currentTarget.style.borderColor = "#ffc0c0"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#ffdbdb"; }}
+              >
+                Cancel & Restart
+              </button>
+            )}
           </div>
           <div style={{ background: "linear-gradient(135deg,#1e2d40,#2a4060)", borderRadius: 13, padding: "10px 18px", textAlign: "center" }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: "white", lineHeight: 1 }}>A-{String(queueCounter + 1).padStart(3, "0")}</div>
@@ -491,78 +487,6 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
           {/* ── Form area ── */}
           <div style={{ overflowY: "auto", padding: "28px 32px" }}>
             {step >= 0 && <StepBar step={step} isReturning={isReturning} />}
-
-            {/* ── Step -1: Check-in / Search ── */}
-            {step === -1 && (
-              <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40" }}>Is this patient already registered?</div>
-
-                {/* Search box */}
-                <div style={{ position: "relative" }}>
-                  <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8a9bb0", pointerEvents: "none", display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-                  <input
-                    value={searchQuery} onChange={e => searchPatients(e.target.value)}
-                    placeholder="Search by surname, first name, or phone…"
-                    style={{ width: "100%", padding: "13px 16px 13px 44px", border: "1.5px solid #dde8e5", borderRadius: 13, fontSize: 15, color: "#1e2d40", background: "white", outline: "none", boxSizing: "border-box", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-                    onFocus={e => e.target.style.borderColor = "#2a9d8f"}
-                    onBlur={e  => e.target.style.borderColor = "#dde8e5"}
-                    autoFocus
-                  />
-                  {searching && <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", width: 16, height: 16, border: "2px solid #e0e7ef", borderTopColor: "#2a9d8f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
-                </div>
-
-                {/* Results */}
-                {searchResults.length > 0 && (
-                  <div style={{ background: "white", borderRadius: 14, border: "1px solid #e0e7ef", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" }}>
-                    <div style={{ padding: "10px 16px", background: "#f7f9fd", fontSize: 12, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.7 }}>
-                      Existing Patients — click to check in
-                    </div>
-                    {searchResults.map((p, i) => (
-                      <button key={p.id} onClick={() => selectReturningPatient(p)} style={{
-                        width: "100%", padding: "13px 18px", display: "flex", alignItems: "center", gap: 14,
-                        background: "white", border: "none", borderTop: i > 0 ? "1px solid #f0f4f8" : "none",
-                        cursor: "pointer", textAlign: "left", transition: "background 0.12s",
-                      }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f0faf8"}
-                        onMouseLeave={e => e.currentTarget.style.background = "white"}
-                        disabled={searching}
-                      >
-                        <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white", flexShrink: 0 }}>
-                          {p.last_name?.[0]}{p.first_name?.[0]}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: "#1e2d40" }}>{p.last_name}, {p.first_name}{p.suffix ? ` ${p.suffix}` : ""}</div>
-                          <div style={{ fontSize: 13, color: "#8a9bb0", marginTop: 2 }}>{p.primary_contact || "No contact"} · {p.barangay || "—"}</div>
-                        </div>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#2a9d8f", background: "#e8f7f5", padding: "4px 10px", borderRadius: 7 }}>
-                          {searching ? "…" : "Check In →"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
-                  <div style={{ textAlign: "center", color: "#8a9bb0", fontSize: 14, padding: "12px 0" }}>No patient found for "{searchQuery}"</div>
-                )}
-
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ flex: 1, height: 1, background: "#e0e7ef" }} />
-                  <span style={{ fontSize: 13, color: "#8a9bb0", fontWeight: 500 }}>or</span>
-                  <div style={{ flex: 1, height: 1, background: "#e0e7ef" }} />
-                </div>
-
-                <button onClick={() => { setForm(emptyForm); setStep(0); }} style={{
-                  padding: "16px", background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white",
-                  border: "none", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: "pointer",
-                  boxShadow: "0 4px 18px rgba(42,157,143,0.35)", transition: "opacity 0.15s",
-                }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                >
-                  + Register New Patient
-                </button>
-              </div>
-            )}
 
             {/* ── Step 0: Personal Info (new patients only) ── */}
             {step === 0 && (
@@ -598,13 +522,13 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                 <Input label="PhilHealth No." value={form.philhealthNo} onChange={v => update("philhealthNo", v)} placeholder="XX-XXXXXXXXX-X" error={errors.philhealthNo} />
 
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                  <button onClick={() => setStep(-1)} style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px 22px", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button onClick={tryAdvance} style={{ flex: 1, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.3)" }}>Continue →</button>
+
                 </div>
               </div>
             )}
 
-            {/* ── Step 1: Address & Contact (new patients only) ── */}
+            {/* ── Step 1: Address & Contact ── */}
             {step === 1 && (
               <div style={{ animation: "fadeUp 0.25s ease", display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40", marginBottom: 4 }}>Address & Contact</div>
@@ -639,8 +563,8 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                     boxShadow: submitting ? "none" : "0 4px 14px rgba(42,157,143,0.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   }}>
                     {submitting
-                      ? <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} /> Issuing Queue…</>
-                      : "Issue Queue Number →"}
+                      ? <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} /> Saving…</>
+                      : (form.assignedQueueNumber ? "Save & Continue →" : "Issue Queue Number →")}
                   </button>
                 </div>
               </div>
@@ -681,6 +605,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                 </div>
 
                 <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                  <button onClick={() => setStep(1)} style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px 22px", fontSize: 14, cursor: "pointer" }}>← Back</button>
                   <button onClick={async () => {
                     setSubmitting(true);
                     try {
@@ -808,7 +733,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                 {apiError && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 11, padding: "10px 14px", fontSize: 14, color: "#c0392b" }}>Error: {apiError}</div>}
 
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                  {/* Can't go back — queue # already issued */}
+                  <button onClick={() => setStep(2)} style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "13px 22px", fontSize: 15, cursor: "pointer" }}>← Back</button>
                   <button onClick={handleSaveVisitDetails} disabled={submitting} style={{
                     flex: 1, background: submitting ? "#d0dbe8" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none",
                     borderRadius: 11, padding: "13px", fontSize: 15, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer",

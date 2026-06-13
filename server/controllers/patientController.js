@@ -212,6 +212,16 @@ exports.create = async (req, res) => {
     if (!first_name || !last_name || !date_of_birth || !sex_name || !civil_status_name || !address.barangay)
       return res.status(400).json({ error: 'Required: first_name, last_name, date_of_birth, sex_name, civil_status_name, address.barangay.' });
 
+    // Check for duplicates
+    const [existingPatient] = await conn.query(
+      `SELECT id FROM patients WHERE first_name = ? AND last_name = ? AND DATE(date_of_birth) = DATE(?) AND is_deleted = 0 LIMIT 1`,
+      [first_name, last_name, date_of_birth]
+    );
+    if (existingPatient.length > 0) {
+      await conn.rollback();
+      return res.status(409).json({ error: 'A patient with the same name and date of birth is already registered. Please check the Patient Records.' });
+    }
+
     // Resolve FKs
     const sex_id          = await resolveId(conn, 'sex_options', 'label', sex_name);
     const civil_status_id = await resolveId(conn, 'civil_statuses', 'label', civil_status_name);

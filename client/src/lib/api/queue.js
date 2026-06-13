@@ -132,4 +132,12 @@ export const queueApi = {
     if (!res.ok) throw new Error(data.error || 'Failed to record vitals.');
     return data;
   },
+
+  /** DELETE /api/queue/:id */
+  remove: async (queueId) => {
+    const res = await apiFetch(`/queue/${queueId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to remove queue entry.');
+    return data;
+  },
 };

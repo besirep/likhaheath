@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { queueApi } from "../../lib/api/queue.js";
 import { dashboardApi } from "../../lib/api/dashboard.js";
 import { smsApi } from "../../lib/api/sms.js";
-import { Stethoscope, Clock, CheckCircle2, CircleCheckBig, AlertCircle, Building2, UserRound, ClipboardList, UserPlus, Smartphone, Check, Loader2, Megaphone, AlertTriangle } from "lucide-react";
+import { Stethoscope, Clock, CheckCircle2, CircleCheckBig, AlertCircle, Building2, UserRound, ClipboardList, UserPlus, Smartphone, Check, Loader2, Megaphone, AlertTriangle, X } from "lucide-react";
+import VitalsModal from "../../components/VitalsModal.jsx";
 
 const statusConfig = {
   "in-consultation": { label: "In Consultation", color: "#2a9d8f", bg: "#e8f7f5", dot: "#2a9d8f", pulse: true  },
   "vitals-done":     { label: "Vitals Ready",    color: "#0047AB", bg: "#E5EDF8", dot: "#0047AB", pulse: false },
   "waiting":         { label: "Waiting",          color: "#e09040", bg: "#fdf3e8", dot: "#e09040", pulse: false },
   "done":            { label: "Done",             color: "#8a9bb0", bg: "#f0f3f7", dot: "#8a9bb0", pulse: false },
+  "skipped":         { label: "Skipped",          color: "#c05080", bg: "#fce8f0", dot: "#c05080", pulse: false },
 };
 
 const priorityConfig = {
@@ -57,8 +59,19 @@ export default function ClinicDashboard({ onNavigate, user }) {
   const [stats, setStats]         = useState(null);
   const [loading, setLoading]     = useState(true);
   const [toast, setToast]         = useState(null);
+  const [vitalsPatient, setVitalsPatient] = useState(null);
 
   const showToast = (msg) => { setToast(null); setTimeout(() => setToast(msg), 10); };
+
+  const deleteQueue = async (queueDbId) => {
+    try {
+      await queueApi.remove(queueDbId);
+      setPatients(q => q.filter(p => p.id !== queueDbId));
+      showToast('Queue entry removed');
+    } catch (err) {
+      showToast('Failed to remove: ' + err.message);
+    }
+  };
 
   // ── Live clock ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -131,6 +144,15 @@ export default function ClinicDashboard({ onNavigate, user }) {
       <style>{`@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} } @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }`}</style>
 
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
+      <VitalsModal 
+        patient={vitalsPatient} 
+        onClose={() => setVitalsPatient(null)} 
+        onSave={async (dbId, vitalsData) => {
+          await queueApi.recordVitals(dbId, vitalsData);
+          showToast(`Vitals recorded for ${vitalsPatient.name}`);
+          fetchData(true);
+        }} 
+      />
 
       <div style={{ padding: "26px 30px" }}>
         {/* Header */}
@@ -242,6 +264,7 @@ export default function ClinicDashboard({ onNavigate, user }) {
                 { key: "vitals-done",     label: "Vitals Ready" },
                 { key: "in-consultation", label: "In Consult" },
                 { key: "done",            label: "Done" },
+                { key: "skipped",         label: "Skipped" },
               ].map(tab => (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ background: activeTab === tab.key ? "#e8f7f5" : "transparent", color: activeTab === tab.key ? "#2a9d8f" : "#8a9bb0", border: activeTab === tab.key ? "1px solid #c5ece8" : "1px solid transparent", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: activeTab === tab.key ? 600 : 400, cursor: "pointer", transition: "all 0.2s" }}>
                   {tab.label}
@@ -288,9 +311,10 @@ export default function ClinicDashboard({ onNavigate, user }) {
                 </div>
                 <div style={{ fontSize: 14, color: "#8a9bb0" }}>{p.arrived}</div>
                 <div>
-                  {p.status === "waiting"         && <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "vitals-done"); showToast(`Vitals recorded for ${p.name}`); }} style={{ background: "#fdf3e8", color: "#e09040", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Vitals</button>}
+                  {p.status === "waiting"         && <button onClick={(e) => { e.stopPropagation(); setVitalsPatient(p); }} style={{ background: "#fdf3e8", color: "#e09040", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Vitals</button>}
                   {p.status === "vitals-done"     && <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "in-consultation"); showToast(`${p.name} called to consultation`); }} style={{ background: "#e8f7f5", color: "#2a9d8f", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Call</button>}
                   {p.status === "in-consultation" && <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "done"); showToast(`${p.name} marked as done`); }} style={{ background: "#E5EDF8", color: "#0047AB", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Done</button>}
+                  {p.status === "skipped"         && <button onClick={(e) => { e.stopPropagation(); deleteQueue(p.id); }} style={{ background: "white", color: "#c05080", border: "1px solid #f0c0d8", borderRadius: 8, padding: "5px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}><X size={14} /> Delete</button>}
                 </div>
               </div>
             );
