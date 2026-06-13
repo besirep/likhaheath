@@ -385,6 +385,8 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 function AddToQueueModal({ patient, onClose, onConfirm }) {
   const COMMON_REASONS = ["Checkup", "Follow-up", "Consultation", "Fever", "Cough & Colds", "Hypertension", "Prenatal", "Vaccination"];
   const [reason, setReason] = useState(patient?.reason || '');
+  const [type, setType] = useState('Consultation');
+  const [priority, setPriority] = useState('Regular');
   const [doctor, setDoctor] = useState('');
   const [availableDoctors, setAvailableDoctors] = useState([]);
 
@@ -427,6 +429,28 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
             </div>
             <input value={reason} onChange={e => setReason(e.target.value ? e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1).toLowerCase() : '')} placeholder="Or type a custom reason..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
           </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Queue Type</label>
+              <select value={type} onChange={e => setType(e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
+                <option value="Consultation">Consultation</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Vaccination">Vaccination</option>
+                <option value="Laboratory">Laboratory</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Priority</label>
+              <select value={priority} onChange={e => setPriority(e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
+                <option value="Regular">Regular</option>
+                <option value="Senior Citizen">Senior Citizen</option>
+                <option value="PWD">PWD</option>
+                <option value="Pregnant">Pregnant</option>
+                <option value="Pediatric">Pediatric</option>
+                <option value="Solo Parent">Solo Parent</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Assign Doctor</label>
             <select value={doctor} onChange={e => setDoctor(e.target.value)} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }}>
@@ -440,7 +464,7 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button onClick={onClose} style={{ flex: 1, background: "#f4f7fb", border: "1px solid #e0e7ef", borderRadius: 10, padding: "11px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
-            <button onClick={() => { onConfirm(patient, reason, doctor); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>Add to Queue</button>
+            <button onClick={() => { onConfirm(patient, reason, doctor, type, priority); onClose(); }} style={{ flex: 2, background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 14px rgba(42,157,143,0.28)" }}>Add to Queue</button>
           </div>
         </div>
       </div>
@@ -532,9 +556,9 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
       <AddToQueueModal
         patient={addQueueModal}
         onClose={() => setAddQueueModal(null)}
-        onConfirm={async (p, reason, doctor) => {
+        onConfirm={async (p, reason, doctor, type, priority) => {
           try {
-            const res = await patientsApi.createVisit(p.id, { visit_reason: reason || 'Walk-in', notes: reason });
+            const res = await patientsApi.createVisit(p.id, { visit_reason: reason || 'Walk-in', notes: reason, type, priority });
             showToast(`${p.name} added to queue — Q-${String(res.queue_number).padStart(3, '0')}`);
             fetchPatients(search);
           } catch (err) {

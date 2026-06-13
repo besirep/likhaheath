@@ -33,7 +33,7 @@ async function getNextQueueNumber(conn) {
 }
 
 // Shared helper: create appointment + queue entry (+ optional vitals) for a patient
-async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, priority, notes, staff_id, vitals }) {
+async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, priority, notes, type, staff_id, vitals }) {
   const now = new Date();
   const queue_number = await getNextQueueNumber(conn);
   const [apptResult] = await conn.query(
@@ -76,6 +76,30 @@ async function createVisitEntry(conn, { patient_id, doctor_id, visit_reason, pri
       ]
     );
   }
+
+  const servicesToInsert = [];
+  if (priority && priority !== 'Regular') {
+    const priorityMap = {
+      'Senior Citizen': 'elderly',
+      'PWD': 'pwd',
+      'Pregnant': 'pregnant',
+      'Pediatric': 'pediatric',
+      'Solo Parent': 'solo_parent'
+    };
+    const mapped = priorityMap[priority] || priority.toLowerCase().replace(" ", "_");
+    servicesToInsert.push([appointment_id, mapped, 1, null]);
+  }
+  if (type && type !== 'Consultation') {
+    servicesToInsert.push([appointment_id, type.toLowerCase().replace("-", "_"), 1, null]);
+  }
+
+  if (servicesToInsert.length > 0) {
+    await conn.query(
+      `INSERT INTO appointment_services (appointment_id, service_name, quantity, notes) VALUES ?`,
+      [servicesToInsert]
+    );
+  }
+
   return { appointment_id, queue_id, queue_number };
 }
 
@@ -303,7 +327,7 @@ exports.create = async (req, res) => {
 
     const { appointment_id, queue_id, queue_number } = await createVisitEntry(conn, {
       patient_id, doctor_id: doctor_id || null,
-      visit_reason, priority, notes, staff_id, vitals: vitals || null,
+      visit_reason, priority, notes, type: req.body.type || null, staff_id, vitals: vitals || null,
     });
 
     await conn.commit();
@@ -478,7 +502,7 @@ exports.createVisit = async (req, res) => {
     const { visit_reason, doctor_id, notes, priority, vitals, send_sms, medical_history, female_health, sex_name } = req.body;
     const staff_id = req.user?.staffId || null;
     const { appointment_id, queue_id, queue_number } = await createVisitEntry(conn, {
-      patient_id, doctor_id: doctor_id || null, visit_reason, priority, notes, staff_id, vitals: vitals || null,
+      patient_id, doctor_id: doctor_id || null, visit_reason, priority, type: req.body.type || null, notes, staff_id, vitals: vitals || null,
     });
 
     // Update medical history (upsert)
