@@ -494,5 +494,5 @@ export function downloadOperationsReportCSV({ period, stats, patientClassificati
     'Next Steps,Continue monitoring queue metrics daily.'
   ].join('\\n');
 
-  downloadFile(\`mhc-\${period}-operations-report-\${new Date().toISOString().slice(0, 10)}.csv\`, csv);
+  downloadFile(`mhc-${period}-operations-report-${new Date().toISOString().slice(0, 10)}.csv`, csv);
 }
