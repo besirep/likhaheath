@@ -13,7 +13,7 @@
 function clinicHeader(title, subtitle) {
   return `
     <div style="display:flex; align-items:center; gap:18px; border-bottom:3px solid #0047AB; padding-bottom:14px; margin-bottom:20px">
-      <div style="width:56px; height:56px; border-radius:12px; background:linear-gradient(135deg,#0047AB,#1565D8); display:flex; align-items:center; justify-content:center; font-size:26px; color:white; flex-shrink:0">🏥</div>
+      <div style="width:56px; height:56px; border-radius:12px; background:linear-gradient(135deg,#0047AB,#1565D8); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0">MHC</div>
       <div>
         <div style="font-size:22px; font-weight:700; color:#1a2540; line-height:1.1">
           <span>Likha</span><span style="color:#CC0000">Health</span>
@@ -343,9 +343,9 @@ export function printOperationsReport({ period, stats, patientClassification, wa
 
   // Wait Time Table
   const waitRows = waitTime.map(w => [
-    w.day || w.time || w.hour || '—', w.avg, w.peak || '—', w.volume || '—', w.avg <= 30 ? '✅ On Target' : w.avg <= 45 ? '⚠️ Approaching Threshold' : '❌ Exceeded Threshold'
+    w.day || w.time || w.hour || '—', w.avg, w.peak || '—', w.volume || '—', w.avg <= 30 ? 'On Target' : w.avg <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'
   ]);
-  waitRows.push(['**Overall Average**', stats.avgWait, '—', '—', stats.avgWait <= 30 ? '✅ On Target' : stats.avgWait <= 45 ? '⚠️ Approaching Threshold' : '❌ Exceeded Threshold']);
+  waitRows.push(['**Overall Average**', stats.avgWait, '—', '—', stats.avgWait <= 30 ? 'On Target' : stats.avgWait <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold']);
 
   // SMS Table
   const totalSmsSent = smsDelivery.reduce((s, r) => s + r.sent, 0);

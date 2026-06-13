@@ -59,7 +59,9 @@ export default function ChangePasswordModal({ onClose }) {
         
         {success ? (
           <div style={{ padding: 40, textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: "#1e2d40" }}>Password Updated!</div>
             <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 8 }}>Your password has been successfully changed.</div>
           </div>

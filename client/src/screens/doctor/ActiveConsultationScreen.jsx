@@ -195,7 +195,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
       checkboxesHtml += `
         <div style="display: flex; alignItems: center; gap: 8px;">
           <div style="width: 14px; height: 14px; border: 1px solid black; display: inline-block; text-align: center; line-height: 14px;">
-            ${isChecked ? "✔" : ""}
+            ${isChecked ? "X" : ""}
           </div>
           <span>${test}</span>
         </div>

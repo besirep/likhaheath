@@ -221,9 +221,9 @@ export default function ClinicDashboard({ onNavigate, user }) {
               <button onClick={async () => {
                 try {
                   await smsApi.send({ patient_id: nowServing.patientId, appointment_id: nowServing.appointmentId, message: `LikhaHealth: You are currently being called for consultation. Please proceed to the room.` });
-                  showToast(`📱 SMS sent to ${nowServing.name}`);
+                  showToast(`SMS sent to ${nowServing.name}`);
                 } catch (err) {
-                  showToast(`⚠️ SMS failed: ${err.message}`);
+                  showToast(`SMS failed: ${err.message}`);
                 }
               }} style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Smartphone size={14} strokeWidth={2} /> Send SMS</button>
               <button onClick={() => { updateStatus(nowServing.id, "done"); showToast(`${nowServing.name} marked as done`); }} style={{ background: "white", color: "#0047AB", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Check size={14} strokeWidth={2.5} /> Mark Done</button>

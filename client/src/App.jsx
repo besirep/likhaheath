@@ -76,7 +76,7 @@ class ScreenErrorBoundary extends React.Component {
       return (
         <div style={{ padding: "40px 32px", maxWidth: 700 }}>
           <div style={{ background: "#fdeee8", border: "1.5px solid #f5c0b0", borderRadius: 16, padding: "28px 24px" }}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 20, color: "#CC0000" }}>⚠ Something went wrong</h2>
+            <h2 style={{ margin: "0 0 8px", fontSize: 20, color: "#CC0000" }}>Something went wrong</h2>
             <p style={{ color: "#7a4030", fontSize: 14, margin: "0 0 16px" }}>This screen crashed unexpectedly. You can try reloading or navigating to another screen.</p>
             <pre style={{ background: "#fff5f0", borderRadius: 10, padding: "14px 16px", fontSize: 12, color: "#993322", overflowX: "auto", whiteSpace: "pre-wrap", margin: "0 0 16px", border: "1px solid #f0d0c0" }}>
               {this.state.error?.toString()}

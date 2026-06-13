@@ -136,7 +136,7 @@ function QueueSlipModal({ data, onContinue }) {
             </div>
           </div>
           <div style={{ background: "#fff8e6", border: "1.5px solid #ffe0a0", borderRadius: 13, padding: "12px 16px", marginBottom: 18, display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 22 }}>📋</span>
+            <span style={{ width: 22, height: 22, borderRadius: 4, background: "#b07800", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}></span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#b07800" }}>Next: Medical History & Visit Details</div>
               <div style={{ fontSize: 13, color: "#9a6800", marginTop: 2 }}>Please update medical history before proceeding</div>
@@ -158,19 +158,20 @@ function SuccessModal({ data, onClose, onAnother }) {
       <div style={{ background: "white", borderRadius: 22, width: 420, boxShadow: "0 24px 64px rgba(20,40,70,0.24)", animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)", overflow: "hidden" }}>
         <style>{`@keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
         <div style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", padding: "28px 32px", textAlign: "center" }}>
-          <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{data.name} is in the queue!</div>
           <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", marginTop: 6 }}>Queue <strong>{data.queue}</strong> · Visit details saved</div>
         </div>
         <div style={{ padding: "22px 28px 28px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
             {[
-              { icon: "📋", label: "Reason",   value: data.reason || "Not specified" },
-              { icon: "⏱️", label: "Next Step", value: "Nurse records vitals at triage" },
-              { icon: "📱", label: "SMS",       value: data.sendSms ? `Sent to ${data.contact}` : "Not sent" },
+              { label: "Reason",   value: data.reason || "Not specified" },
+              { label: "Next Step", value: "Nurse records vitals at triage" },
+              { label: "SMS",       value: data.sendSms ? `Sent to ${data.contact}` : "Not sent" },
             ].map(r => (
               <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 16, width: 22, textAlign: "center" }}>{r.icon}</span>
                 <span style={{ fontSize: 14, color: "#8a9bb0", width: 80 }}>{r.label}</span>
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#1e2d40" }}>{r.value}</span>
               </div>
@@ -489,7 +490,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
 
                 {/* Search box */}
                 <div style={{ position: "relative" }}>
-                  <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, color: "#8a9bb0", pointerEvents: "none" }}>🔍</div>
+                  <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#8a9bb0", pointerEvents: "none", display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
                   <input
                     value={searchQuery} onChange={e => searchPatients(e.target.value)}
                     placeholder="Search by surname, first name, or phone…"
@@ -549,7 +550,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                   onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
                   onMouseLeave={e => e.currentTarget.style.opacity = "1"}
                 >
-                  ➕ Register New Patient
+                  + Register New Patient
                 </button>
               </div>
             )}
@@ -619,7 +620,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                   </select>
                 </div>
 
-                {apiError && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 11, padding: "10px 14px", fontSize: 14, color: "#c0392b" }}>⚠ {apiError}</div>}
+                {apiError && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 11, padding: "10px 14px", fontSize: 14, color: "#c0392b" }}>Error: {apiError}</div>}
 
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                   <button onClick={() => setStep(0)} style={{ background: "white", color: "#7a8fb0", border: "1px solid #dde8e5", borderRadius: 11, padding: "12px 22px", fontSize: 14, cursor: "pointer" }}>← Back</button>
@@ -699,7 +700,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>{fullName}</div>
                     <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 3 }}>
-                      {isReturning ? "Returning patient" : "New patient"} · Queue number issued ✓
+                      {isReturning ? "Returning patient" : "New patient"} · Queue number issued
                     </div>
                   </div>
                 </div>
@@ -784,7 +785,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                       <div style={{ width: 18, height: 18, borderRadius: "50%", background: "white", position: "absolute", top: 3, left: form.sendSms ? 23 : 3, boxShadow: "0 1px 4px rgba(0,0,0,0.2)", transition: "left 0.2s" }} />
                     </button>
                   </div>
-                  {form.sendSms && !form.phone && <div style={{ fontSize: 13, color: "#CC0000", marginTop: 8 }}>⚠ No contact number on file — SMS cannot be sent</div>}
+                  {form.sendSms && !form.phone && <div style={{ fontSize: 13, color: "#CC0000", marginTop: 8 }}>No contact number on file — SMS cannot be sent</div>}
                 </div>
 
                 {/* Notes */}
@@ -795,7 +796,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                     onFocus={e => e.target.style.borderColor = "#2a9d8f"} onBlur={e => e.target.style.borderColor = "#e0e7ef"} />
                 </div>
 
-                {apiError && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 11, padding: "10px 14px", fontSize: 14, color: "#c0392b" }}>⚠ {apiError}</div>}
+                {apiError && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 11, padding: "10px 14px", fontSize: 14, color: "#c0392b" }}>Error: {apiError}</div>}
 
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                   {/* Can't go back — queue # already issued */}
@@ -806,7 +807,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                   }}>
                     {submitting
                       ? <><span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} /> Saving…</>
-                      : "✓ Confirm Visit Details"}
+                      : "Confirm Visit Details"}
                   </button>
                 </div>
               </div>

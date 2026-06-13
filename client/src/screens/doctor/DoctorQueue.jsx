@@ -19,12 +19,12 @@ const statusConfig = {
   "skipped":         { label: "Skipped",          color: "#c05080", bg: "#fce8f0", dot: "#c05080", pulse: false },
 };
 
-// icon = emoji for inline display; Icon = lucide component ref (not used in JSX template literals)
+// Icon = lucide component ref
 const priorityConfig = {
-  elderly:   { label: "Senior Citizen", icon: "👴", Icon: UserRound, color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
-  pregnant:  { label: "Pregnant",       icon: "🤰", Icon: UserRound, color: "#d4709a", bg: "#fce8f4", stripe: "#d4709a" },
-  pwd:       { label: "PWD",            icon: "♿", Icon: UserRound, color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
-  pediatric: { label: "Pedia (0–5)",    icon: "👶", Icon: UserRound, color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
+  elderly:   { label: "Senior Citizen", icon: "SC", Icon: UserRound, color: "#8B5FBF", bg: "#f0eafb", stripe: "#8B5FBF" },
+  pregnant:  { label: "Pregnant",       icon: "P",  Icon: UserRound, color: "#d4709a", bg: "#fce8f4", stripe: "#d4709a" },
+  pwd:       { label: "PWD",            icon: "PW", Icon: UserRound, color: "#0047AB", bg: "#EBF0FA", stripe: "#0047AB" },
+  pediatric: { label: "Pedia (0–5)",    icon: "PD", Icon: UserRound, color: "#e09040", bg: "#fdf3e8", stripe: "#e09040" },
 };
 
 // Vitals flags
@@ -208,12 +208,12 @@ function VitalsEntryModal({ patient, onClose, onSave }) {
           </div>
         )}
 
-        {err && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "9px 14px", fontSize: 13, color: "#c0392b", marginBottom: 12 }}>⚠ {err}</div>}
+        {err && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "9px 14px", fontSize: 13, color: "#c0392b", marginBottom: 12 }}>Error: {err}</div>}
 
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, background: "#f0f4f8", color: "#7a8fb0", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: saving ? "#d0dbe8" : "linear-gradient(135deg,#0047AB,#1565D8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(0,71,171,0.3)" }}>
-            {saving ? "Saving…" : "✓ Save Vitals & Mark Ready"}
+            {saving ? "Saving..." : "Save Vitals & Mark Ready"}
           </button>
         </div>
       </div>
@@ -577,7 +577,7 @@ export default function DoctorQueue({ onNavigate, onStartConsult, user }) {
               {[
                 { key: "all",             label: "Active Queue"   },
                 { key: "vitals-done",     label: "Vitals Ready"  },
-                { key: "in-consultation", label: "🩺 In Consult"  },
+                { key: "in-consultation", label: "In Consult"  },
                 { key: "skipped",         label: "Skipped"       },
                 { key: "done",            label: "Done Today"     },
               ].map(t => (
@@ -685,7 +685,9 @@ export default function DoctorQueue({ onNavigate, onStartConsult, user }) {
 
               {!loading && sorted.length === 0 && (
                 <div style={{ textAlign: "center", padding: "48px 20px", color: "#9aabc0" }}>
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
+                  <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#e8f7f5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#1a2540" }}>All clear!</div>
                   <div style={{ fontSize: 14, marginTop: 4 }}>No patients in this category.</div>
                 </div>

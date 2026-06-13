@@ -11,10 +11,10 @@ const mapStatus = s => {
 
 // -- Priority display config
 const priorityConfig = {
-  elderly:   { label: 'Senior Citizen', icon: '👴', color: '#8B5FBF' },
-  pregnant:  { label: 'Pregnant',       icon: '🤰', color: '#d4709a' },
-  pwd:       { label: 'PWD',            icon: '♿', color: '#0047AB' },
-  pediatric: { label: 'Pedia (0-5)',    icon: '👶', color: '#e09040' },
+  elderly:   { label: 'Senior Citizen', icon: 'SC', color: '#8B5FBF' },
+  pregnant:  { label: 'Pregnant',       icon: 'P',  color: '#d4709a' },
+  pwd:       { label: 'PWD',            icon: 'PW', color: '#0047AB' },
+  pediatric: { label: 'Pedia (0-5)',    icon: 'PD', color: '#e09040' },
 };
 
 // -- Static notification items (bell dropdown)

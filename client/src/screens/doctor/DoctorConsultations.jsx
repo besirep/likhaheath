@@ -54,7 +54,7 @@ function VitalChip({ icon, label, value, unit, flag = "ok" }) {
       <div style={{ fontSize: 17, fontWeight: 700, color: flagColor[flag], lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 11, color: "#9aabc0", marginTop: 2 }}>{unit}</div>
       <div style={{ fontSize: 10, color: "#b0bdd6", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
-      {flag !== "ok" && <div style={{ fontSize: 10, color: flagColor[flag], fontWeight: 700, marginTop: 3 }}>⚠ {flag.toUpperCase()}</div>}
+      {flag !== "ok" && <div style={{ fontSize: 10, color: flagColor[flag], fontWeight: 700, marginTop: 3 }}>{flag.toUpperCase()}</div>}
     </div>
   );
 }
@@ -222,7 +222,7 @@ function LabModal({ record, onClose, onSave, showToast }) {
               {/* Toggle request / results */}
               <div style={{ display: "flex", background: "rgba(255,255,255,0.12)", borderRadius: 9, overflow: "hidden" }}>
                 {["request", "results"].map(m => (
-                  <button key={m} onClick={() => setEditMode(m)} style={{ padding: "7px 14px", border: "none", cursor: "pointer", background: editMode === m ? "rgba(255,255,255,0.22)" : "transparent", color: "white", fontSize: 13, fontWeight: editMode === m ? 700 : 400, textTransform: "capitalize" }}>{m === "request" ? "📋 Request" : "🧪 Enter Results"}</button>
+                  <button key={m} onClick={() => setEditMode(m)} style={{ padding: "7px 14px", border: "none", cursor: "pointer", background: editMode === m ? "rgba(255,255,255,0.22)" : "transparent", color: "white", fontSize: 13, fontWeight: editMode === m ? 700 : 400, textTransform: "capitalize" }}>{m === "request" ? "Request" : "Enter Results"}</button>
                 ))}
               </div>
               <button onClick={onClose} style={{ background: "rgba(255,255,255,0.12)", border: "none", width: 32, height: 32, borderRadius: 8, cursor: "pointer", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -385,7 +385,7 @@ function LabModal({ record, onClose, onSave, showToast }) {
                 <Printer size={15} /> Print Request
               </button>
               <button onClick={() => setEditMode("results")} style={{ background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px 18px", fontSize: 14, color: "#4a5d75", cursor: "pointer", fontWeight: 500 }}>
-                🧪 Enter Results
+                Enter Results
               </button>
               <div style={{ flex: 1 }} />
               <button onClick={onClose} style={{ background: "white", border: "1px solid #e0e7ef", borderRadius: 10, padding: "10px 18px", fontSize: 14, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
@@ -577,12 +577,12 @@ function ConsultationDetail({ record, onUpdate, onPrint, onLab, showToast }) {
             </div>
             {record.notes && (
               <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #e8edf7" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>📝 Clinical Notes</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#8a9bb0", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>Clinical Notes</div>
                 <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.notes}</div>
               </div>
             )}
             <div style={{ background: "white", borderRadius: 14, padding: "16px 18px", border: "1px solid #C0D4F0", gridColumn: record.notes ? "auto" : "1 / -1" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>📋 Treatment Plan</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#0047AB", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>Treatment Plan</div>
               <div style={{ fontSize: 14, color: "#2a3550", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{record.treatment || "—"}</div>
             </div>
           </div>

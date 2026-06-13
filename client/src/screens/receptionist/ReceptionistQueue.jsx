@@ -113,12 +113,12 @@ function VitalsModal({ patient, onClose, onSave }) {
           </div>
         )}
 
-        {err && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "9px 14px", fontSize: 13, color: "#c0392b", marginBottom: 12 }}>⚠ {err}</div>}
+        {err && <div style={{ background: "#fff0ee", border: "1px solid #f5c6c0", borderRadius: 10, padding: "9px 14px", fontSize: 13, color: "#c0392b", marginBottom: 12 }}>Error: {err}</div>}
 
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, background: "#f0f4f8", color: "#7a8fb0", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: saving ? "#d0dbe8" : "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", boxShadow: saving ? "none" : "0 4px 14px rgba(42,157,143,0.3)" }}>
-            {saving ? "Saving…" : "✓ Save Vitals & Mark Ready"}
+            {saving ? "Saving..." : "Save Vitals & Mark Ready"}
           </button>
         </div>
       </div>
