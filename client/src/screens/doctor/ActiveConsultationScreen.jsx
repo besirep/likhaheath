@@ -401,18 +401,9 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
             </div>
           </div>
 
-          <div style={{ padding: "20px 24px", flex: 1 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16 }}>Last Visits</div>
-            {visits.slice(0, 3).map((visit, i) => (
-              <div key={i} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#1a2540" }}>{visit.diagnosis || visit.reason || "Check-up"}</div>
-                <div style={{ fontSize: 12, color: "#9aabc0", marginTop: 2 }}>{visit.date?.split(",")[0] || "—"}</div>
-              </div>
-            ))}
-            {visits.length === 0 && <div style={{ fontSize: 13, color: "#9aabc0", fontStyle: "italic" }}>No previous visits</div>}
-            
-            <button onClick={() => setShowFullRecord(true)} style={{ width: "100%", background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 10 }}>
-              View Full Record →
+          <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <button onClick={() => setShowFullRecord(true)} style={{ width: "100%", background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              View Full Patient Record →
             </button>
           </div>
         </div>
@@ -469,64 +460,37 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           </div>
         </div>
 
-        {/* Right Sidebar - Medical History */}
+        {/* Right Sidebar - Past Consultations */}
         <div style={{ width: 280, background: "white", borderLeft: "1px solid #e0e7ef", display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 }}>
           <div style={{ padding: "20px 24px", borderBottom: "1px solid #f0f4fa", fontSize: 12, fontWeight: 700, color: "#9aabc0", textTransform: "uppercase", letterSpacing: 0.8 }}>
-            MEDICAL HISTORY
+            PAST CONSULTATIONS
           </div>
-          <div style={{ padding: "16px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-            {!patientData ? (
-              <div style={{ fontSize: 13, color: "#9aabc0", textAlign: "center", padding: "20px 0" }}>Loading history...</div>
+          <div style={{ padding: "16px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {visits.length === 0 ? (
+              <div style={{ fontSize: 13, color: "#9aabc0", fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>No previous visits recorded.</div>
             ) : (
-              <>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Chronic Conditions</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {["hypertension", "diabetes", "asthma", "tuberculosis", "heart_disease"]
-                      .filter(k => patientData.medical_history?.[k])
-                      .map(k => (
-                        <span key={k} style={{ background: "#fdeee8", color: "#CC0000", padding: "4px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>
-                          {k.replace("_", " ")}
-                        </span>
-                      ))}
-                    {["hypertension", "diabetes", "asthma", "tuberculosis", "heart_disease"].every(k => !patientData.medical_history?.[k]) && (
-                      <span style={{ fontSize: 13, color: "#9aabc0" }}>None reported</span>
-                    )}
+              visits.map((visit, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setShowFullRecord(visit.id)}
+                  style={{ 
+                    padding: "12px", 
+                    borderRadius: "10px", 
+                    border: "1px solid #e0e7ef", 
+                    cursor: "pointer", 
+                    transition: "all 0.2s",
+                    background: "#fff"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#0047AB"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,71,171,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#e0e7ef"; e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1a2540", marginBottom: 4 }}>{visit.diagnosis || visit.reason || "Check-up"}</div>
+                  <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", justifyContent: "space-between" }}>
+                    <span>{visit.date?.split(",")[0] || "—"}</span>
+                    <span style={{ fontWeight: 500 }}>{visit.doctor ? `Dr. ${visit.doctor.split(' ').pop()}` : "—"}</span>
                   </div>
                 </div>
-
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Social History</div>
-                  <div style={{ fontSize: 13, color: "#1a2540", display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 60, color: "#7a8fb0" }}>Smoking:</span>
-                      <strong>{patientData.medical_history?.smoker ? "Yes" : "No"}</strong>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 60, color: "#7a8fb0" }}>Alcohol:</span>
-                      <strong>{patientData.medical_history?.alcohol ? "Yes" : "No"}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                {patientData.medical_history?.allergies && (
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Allergies</div>
-                    <div style={{ background: "#fdf8e6", border: "1px solid #fbeeb8", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#b07830", fontWeight: 600 }}>
-                      {patientData.medical_history.allergies}
-                    </div>
-                  </div>
-                )}
-
-                {patientData.medical_history?.other_conditions && (
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#7a8fb0", marginBottom: 6, textTransform: "uppercase" }}>Other Notes</div>
-                    <div style={{ fontSize: 13, color: "#1a2540", lineHeight: 1.5 }}>
-                      {patientData.medical_history.other_conditions}
-                    </div>
-                  </div>
-                )}
-              </>
+              ))
             )}
           </div>
         </div>
@@ -645,7 +609,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
             </button>
           </div>
           <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-             <DoctorPatientRecords navState={{ patientId: patient.patientId }} />
+             <DoctorPatientRecords navState={{ patientId: patient.patientId, visitId: showFullRecord !== true ? showFullRecord : undefined }} />
           </div>
         </div>
       )}

@@ -507,6 +507,10 @@ export default function DoctorPatientRecords({ onNavigate, navState }) {
         if (!cancelled) {
           const visits = (resp.data || []).map(normalizeVisit);
           setSelectedVisits(visits);
+          if (navState?.visitId) {
+            const v = visits.find(v => v.id === navState.visitId);
+            if (v) setActiveVisit(v);
+          }
         }
       } catch (e) {
         console.error("[DoctorPatientRecords] loadVisits error:", e);
@@ -517,7 +521,7 @@ export default function DoctorPatientRecords({ onNavigate, navState }) {
     };
     load();
     return () => { cancelled = true; };
-  }, [selected?.id]);
+  }, [selected?.id, navState?.visitId]);
 
   const handlePatientSelect = (p) => {
     setSelected(p);
