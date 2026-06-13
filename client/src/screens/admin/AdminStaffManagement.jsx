@@ -14,6 +14,8 @@ const ROLE_OPTIONS = [
 export default function AdminStaffManagement() {
   const [staffList, setStaffList] = useState([]);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All Roles");
+  const [statusFilter, setStatusFilter] = useState("All Status");
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -115,6 +117,13 @@ export default function AdminStaffManagement() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const filteredStaff = staffList.filter(s => {
+    if (roleFilter !== "All Roles" && s.role !== roleFilter) return false;
+    if (statusFilter === "Active" && !s.is_active) return false;
+    if (statusFilter === "Inactive" && s.is_active) return false;
+    return true;
+  });
+
   return (
     <div style={{ minHeight: "100vh", background: "#f4f7fb", padding: "32px 40px" }}>
       
@@ -191,8 +200,8 @@ export default function AdminStaffManagement() {
         </div>
       )}
 
-      {/* Search Bar */}
-      <div style={{ background: "white", padding: 16, borderRadius: 16, border: "1px solid #e0e7ef", marginBottom: 24, display: "flex", gap: 16 }}>
+      {/* Search Bar & Filters */}
+      <div style={{ background: "white", padding: 16, borderRadius: 16, border: "1px solid #e0e7ef", marginBottom: 24, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ position: "relative", width: 300 }}>
           <Search style={{ position: "absolute", left: 14, top: 11, color: "#8a9bb0" }} size={18} />
           <input 
@@ -203,6 +212,27 @@ export default function AdminStaffManagement() {
             style={{ width: "100%", padding: "10px 14px 10px 40px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box", outline: "none" }}
           />
         </div>
+        
+        <select 
+          value={roleFilter} 
+          onChange={e => setRoleFilter(e.target.value)}
+          style={{ padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, outline: "none", color: "#1a2540", background: "white" }}
+        >
+          <option value="All Roles">All Roles</option>
+          {ROLE_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        
+        <select 
+          value={statusFilter} 
+          onChange={e => setStatusFilter(e.target.value)}
+          style={{ padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, outline: "none", color: "#1a2540", background: "white" }}
+        >
+          <option value="All Status">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -220,10 +250,10 @@ export default function AdminStaffManagement() {
           <tbody>
             {loading ? (
               <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#8a9bb0" }}>Loading staff...</td></tr>
-            ) : staffList.length === 0 ? (
+            ) : filteredStaff.length === 0 ? (
               <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#8a9bb0" }}>No staff members found.</td></tr>
             ) : (
-              staffList.map((s) => (
+              filteredStaff.map((s) => (
                 <tr key={s.id} style={{ borderBottom: "1px solid #e0e7ef", background: s.is_active ? "white" : "#fcfcfd" }}>
                   <td style={{ padding: "16px 24px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
