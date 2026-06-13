@@ -402,70 +402,33 @@ export default function Reports() {
   const days           = period === "today" ? 1 : period === "month" ? 30 : 7;
 
   const exportCSV = () => {
-    const rows = [
-      ["LikhaHealth Dashboard Report - " + periodLabel[period].toUpperCase()],
-      ["Generated On", new Date().toLocaleString()],
-      [],
-      ["--- KEY PERFORMANCE INDICATORS ---"],
-      ["Metric", "Value"],
-      ["Total Patients Seen", totalAppts],
-      ["Completed", completedAppts],
-      ["Avg. Wait Time (min)", avgWait],
-      ["Skipped", skippedCount],
-      ["New Patients", newPatients],
-      ["SMS Sent", smsSent],
-      ["SMS Failed", smsFailed],
-      ["Priority Patients", totalPriority],
-      ["Medical Records Updated", recordsCount],
-      [],
-      ["--- QUEUE VOLUME BY DAY ---"],
-      ["Date", "Total", "Completed", "Skipped", "Completion %"],
-      ...weeklyQueue.map(r => [r.day, r.total, r.completed, r.skipped, r.total > 0 ? Math.round(r.completed / r.total * 100) + "%" : "0%"]),
-      [],
-      ["--- HOURLY PATIENT FLOW ---"],
-      ["Hour", "Patients"],
-      ...hourlyFlow.map(r => [r.hour, r.patients]),
-      [],
-      ["--- PATIENT CLASSIFICATION ---"],
-      ["Category", "Count"],
-      ...priorityBreakdown.map(r => [r.name, r.value]),
-      [],
-      ["--- TOP VISIT REASONS ---"],
-      ["Reason", "Count", "Percentage"],
-      ...topReasons.map(r => [r.reason, r.count, r.pct + "%"]),
-      [],
-      ["--- DOCTOR WORKLOAD ---"],
-      ["Doctor", "Patients Seen"],
-      ...doctorLoad.map(r => [r.doctor, r.patients]),
-      [],
-      ["--- AVERAGE WAIT TIME BY DAY ---"],
-      ["Date", "Avg Wait (min)"],
-      ...waitTimeWeek.map(r => [r.day, r.avg]),
-      [],
-      ["--- SMS DELIVERY LOG ---"],
-      ["Date", "Sent", "Failed", "Delivery %"],
-      ...smsWeekly.map(r => {
-         const t = r.sent + r.failed;
-         const pct = t > 0 ? Math.round(r.sent / t * 100) : 100;
-         return [r.day, r.sent, r.failed, pct + "%"];
-      }),
-    ];
-    const csv  = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url; a.download = `likhahealth-report-${period}.csv`;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-    showToast("Report downloaded as CSV");
+    showToast("Generating Operations Report CSV...");
+    import("../../lib/utils/printUtils.js").then(({ downloadOperationsReportCSV }) => {
+      downloadOperationsReportCSV({
+        period,
+        stats: { total: totalAppts, avgWait, smsSent, smsFailed, activeDoctors: doctorLoad.length, topReason: topReasons[0]?.reason || "None" },
+        patientClassification: priorityBreakdown,
+        waitTime: waitTimeWeek,
+        smsDelivery: smsWeekly,
+        doctorWorkload: doctorLoad,
+        topVisitReasons: topReasons,
+      });
+    });
   };
 
   const exportPDF = () => {
-    showToast("Generating branded PDF...");
-    printDailyReport({
-      stats: { total: totalAppts, completed: completedAppts, skipped: skippedCount, waiting: totalAppts - completedAppts - skippedCount, priority: totalPriority, avgWait: `${avgWait}m` },
-      queue: weeklyQueue.map(r => ({ queue: r.day, name: `${r.total} patients`, age: "—", reason: `${r.completed} completed`, status: `${r.skipped} skipped`, doctor: "—" })),
-      staffName: "Front Desk",
+    showToast("Generating Operations Report PDF...");
+    import("../../lib/utils/printUtils.js").then(({ printOperationsReport }) => {
+      printOperationsReport({
+        period,
+        stats: { total: totalAppts, avgWait, smsSent, smsFailed, activeDoctors: doctorLoad.length, topReason: topReasons[0]?.reason || "None" },
+        patientClassification: priorityBreakdown,
+        waitTime: waitTimeWeek,
+        smsDelivery: smsWeekly,
+        doctorWorkload: doctorLoad,
+        topVisitReasons: topReasons,
+        staffName: "Front Desk",
+      });
     });
   };
 

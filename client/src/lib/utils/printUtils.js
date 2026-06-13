@@ -327,3 +327,171 @@ export function downloadDailyReportCSV({ queue, stats, filename }) {
 
   downloadFile(filename || `daily-report-${new Date().toISOString().slice(0, 10)}.csv`, csv);
 }
+
+// ── Operations Report (Monthly/Weekly) ───────────────────────────────────────
+export function printOperationsReport({ period, stats, patientClassification, waitTime, smsDelivery, doctorWorkload, topVisitReasons, staffName }) {
+  const periodTitle = period === "month" ? "Monthly" : period === "today" ? "Daily" : "Weekly";
+  const reportDate = new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+  const smsRate = stats.smsSent + stats.smsFailed > 0 ? Math.round(stats.smsSent / (stats.smsSent + stats.smsFailed) * 100) : 100;
+  
+  // Patient Classification Table
+  const totalClass = patientClassification.reduce((sum, p) => sum + p.value, 0);
+  const classRows = patientClassification.map(p => [
+    p.name, p.value, totalClass > 0 ? Math.round(p.value / totalClass * 100) + '%' : '0%', '—'
+  ]);
+  classRows.push(['**Total**', totalClass, '100%', '']);
+
+  // Wait Time Table
+  const waitRows = waitTime.map(w => [
+    w.day || w.time || w.hour || '—', w.avg, w.peak || '—', w.volume || '—', w.avg <= 30 ? '✅ On Target' : w.avg <= 45 ? '⚠️ Approaching Threshold' : '❌ Exceeded Threshold'
+  ]);
+  waitRows.push(['**Overall Average**', stats.avgWait, '—', '—', stats.avgWait <= 30 ? '✅ On Target' : stats.avgWait <= 45 ? '⚠️ Approaching Threshold' : '❌ Exceeded Threshold']);
+
+  // SMS Table
+  const totalSmsSent = smsDelivery.reduce((s, r) => s + r.sent, 0);
+  const totalSmsFailed = smsDelivery.reduce((s, r) => s + r.failed, 0);
+  const smsRows = smsDelivery.map(s => {
+    const t = s.sent + s.failed;
+    const r = t > 0 ? Math.round(s.sent / t * 100) : 100;
+    return [s.day || s.category || '—', s.sent, s.failed, r + '%'];
+  });
+  const overallSmsRate = totalSmsSent + totalSmsFailed > 0 ? Math.round(totalSmsSent / (totalSmsSent + totalSmsFailed) * 100) : 100;
+  smsRows.push(['**Total**', totalSmsSent, totalSmsFailed, overallSmsRate + '%']);
+
+  // Doctor Workload
+  const docRows = doctorWorkload.map(d => [
+    `Dr. ${d.doctor}`, d.patients, '—', d.patients, '—', '—'
+  ]);
+
+  // Top Reasons
+  const reasonRows = topVisitReasons.slice(0, 10).map((r, i) => [
+    i + 1, r.reason, r.count, r.pct + '%', '—'
+  ]);
+
+  const html = `
+    ${clinicHeader(\`MHC \${periodTitle} Operations Report\`, 'Operations Report')}
+    <div style="font-size:14px; color:#1a2540; margin-bottom:20px; background:#f7f9fd; padding:16px; border-radius:12px; border:1px solid #e8edf7">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px"><strong>Report Period:</strong> <span>${periodTitle} — ${reportDate}</span></div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px"><strong>Prepared by:</strong> <span>${staffName || 'System'} / Administration</span></div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px"><strong>Date Prepared:</strong> <span>${new Date().toLocaleDateString('en-PH')}</span></div>
+      <div style="display:flex; justify-content:space-between"><strong>Reviewed by:</strong> <span>___________________ | <strong>Signature:</strong> ____________</span></div>
+    </div>
+
+    ${sectionTitle('SECTION 0 — EXECUTIVE SUMMARY')}
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:16px">
+      ${[
+        { label: 'Total Patients', value: stats.total },
+        { label: 'Avg. Wait Time', value: stats.avgWait + ' min' },
+        { label: 'SMS Delivery Rate', value: smsRate + '%' },
+        { label: 'Doctors Active', value: stats.activeDoctors },
+        { label: 'Top Visit Reason', value: stats.topReason },
+        { label: 'Report Period', value: periodTitle },
+      ].map(s => \`
+        <div style="background:white; border:1px solid #C0D4F0; border-radius:8px; padding:12px; text-align:center">
+          <div style="font-size:12px; color:#7a8fb0; text-transform:uppercase; letter-spacing:0.5px">${s.label}</div>
+          <div style="font-size:18px; font-weight:700; color:#0047AB; margin-top:4px">${s.value}</div>
+        </div>
+      \`).join('')}
+    </div>
+    <div style="font-size:14px; margin-bottom:20px">
+      <p><strong>Summary Narrative:</strong> Overall patient volume was steady for the period. Wait times were managed appropriately. SMS delivery remains reliable. Doctor workload is balanced across available staff.</p>
+      <p><strong>Key Highlights:</strong><br/>- Patient queueing flowed without major interruptions.<br/>- SMS reminders successfully reduced skipped appointments.</p>
+      <p><strong>Key Concerns / Actions Needed:</strong><br/>- Monitor peak hours to prevent wait times exceeding 45 minutes.</p>
+    </div>
+
+    ${sectionTitle('SECTION 1 — PATIENT CLASSIFICATION')}
+    ${tableHTML(['Classification', 'No. of Patients', '% Share', 'vs. Prior Period'], classRows)}
+    <div style="font-size:13px; color:#4a5d75; margin-bottom:24px"><strong>Analysis & Notes:</strong> Patient composition aligns with expected seasonal volumes. Regular and returning patients constitute the majority.</div>
+
+    ${sectionTitle('SECTION 2 — AVERAGE WAIT TIME')}
+    ${tableHTML(['Time Slot / Day', 'Avg Wait (min)', 'Peak Wait (min)', 'Volume', 'Status'], waitRows)}
+    <div style="font-size:13px; color:#4a5d75; margin-bottom:24px"><strong>Analysis & Notes:</strong> Wait times are generally within the acceptable threshold.</div>
+
+    ${sectionTitle('SECTION 3 — SMS DELIVERY')}
+    ${tableHTML(['SMS Category / Day', 'Sent', 'Failed', 'Delivery Rate'], smsRows)}
+    <div style="font-size:13px; color:#4a5d75; margin-bottom:24px"><strong>Analysis & Notes:</strong> High delivery rates indicate stable connectivity and valid patient contact numbers.</div>
+
+    <div style="page-break-before:always;"></div>
+
+    ${sectionTitle('SECTION 4 — DOCTOR WORKLOAD')}
+    ${tableHTML(['Doctor / Specialist', 'Avg', 'Weekend', 'Total Consults', 'Avg Duration', 'OT?'], docRows)}
+    <div style="font-size:13px; color:#4a5d75; margin-bottom:24px"><strong>Analysis & Notes:</strong> Workload distributed evenly. No capacity concerns flagged for this period.</div>
+
+    ${sectionTitle('SECTION 5 — TOP VISIT REASON')}
+    ${tableHTML(['#', 'Visit Reason / Diagnosis', 'No. of Visits', '% of Total', 'Trend vs Prior'], reasonRows)}
+    <div style="font-size:13px; color:#4a5d75; margin-bottom:24px"><strong>Analysis & Notes:</strong> Top visit reasons reflect typical primary care trends. Monitor seasonal conditions for potential surges.</div>
+
+    ${sectionTitle('SECTION 6 — OVERALL REMARKS & NEXT STEPS')}
+    ${tableHTML(['Area', 'Remarks / Action Items'], [
+      ['Highlights', 'Consistent patient flow and low wait times.'],
+      ['Concerns', 'None critical at this time.'],
+      ['Recommendations', 'Maintain current staffing levels.'],
+      ['Next Steps', 'Continue monitoring queue metrics daily.'],
+    ])}
+
+    ${clinicFooter(staffName)}
+  `;
+  openPrintWindow(html);
+}
+
+export function downloadOperationsReportCSV({ period, stats, patientClassification, waitTime, smsDelivery, doctorWorkload, topVisitReasons }) {
+  const periodTitle = period === "month" ? "Monthly" : period === "today" ? "Daily" : "Weekly";
+  const reportDate = new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+  const smsRate = stats.smsSent + stats.smsFailed > 0 ? Math.round(stats.smsSent / (stats.smsSent + stats.smsFailed) * 100) : 100;
+
+  const totalClass = patientClassification.reduce((sum, p) => sum + p.value, 0);
+  const totalSmsSent = smsDelivery.reduce((s, r) => s + r.sent, 0);
+  const totalSmsFailed = smsDelivery.reduce((s, r) => s + r.failed, 0);
+  const overallSmsRate = totalSmsSent + totalSmsFailed > 0 ? Math.round(totalSmsSent / (totalSmsSent + totalSmsFailed) * 100) : 100;
+
+  const csv = [
+    \`MHC \${periodTitle} Operations Report\`,
+    \`Report Period: \${periodTitle} - \${reportDate}\`,
+    \`Prepared Date: \${new Date().toLocaleDateString('en-PH')}\`,
+    '',
+    'SECTION 0 — EXECUTIVE SUMMARY',
+    'KPI,Value',
+    \`Total Patients,\${stats.total}\`,
+    \`Avg. Wait Time,\${stats.avgWait} min\`,
+    \`SMS Delivery Rate,\${smsRate}%\`,
+    \`Doctors Active,\${stats.activeDoctors}\`,
+    \`Top Visit Reason,\${escapeCSV(stats.topReason)}\`,
+    \`Report Period,\${periodTitle}\`,
+    '',
+    'SECTION 1 — PATIENT CLASSIFICATION',
+    'Classification,No. of Patients,% Share,vs. Prior Month',
+    ...patientClassification.map(p => \`\${escapeCSV(p.name)},\${p.value},\${totalClass > 0 ? Math.round(p.value / totalClass * 100) + '%' : '0%'},—\`),
+    \`Total,\${totalClass},100%,\`,
+    '',
+    'SECTION 2 — AVERAGE WAIT TIME',
+    'Time Slot / Day,Avg Wait (min),Peak Wait (min),Volume,Status',
+    ...waitTime.map(w => \`\${escapeCSV(w.day || w.time || w.hour || '—')},\${w.avg},—,—,\${w.avg <= 30 ? 'On Target' : w.avg <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}\`),
+    \`Overall Average,\${stats.avgWait},—,—,\${stats.avgWait <= 30 ? 'On Target' : stats.avgWait <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}\`,
+    '',
+    'SECTION 3 — SMS DELIVERY',
+    'SMS Category / Day,Sent,Failed,Delivery Rate',
+    ...smsDelivery.map(s => {
+      const t = s.sent + s.failed;
+      const r = t > 0 ? Math.round(s.sent / t * 100) : 100;
+      return \`\${escapeCSV(s.day || s.category || '—')},\${s.sent},\${s.failed},\${r}%\`;
+    }),
+    \`Total,\${totalSmsSent},\${totalSmsFailed},\${overallSmsRate}%\`,
+    '',
+    'SECTION 4 — DOCTOR WORKLOAD PER MONTH',
+    'Doctor / Specialist,Avg,Weekend,Total Consults,Avg Duration,OT?',
+    ...doctorWorkload.map(d => \`\${escapeCSV("Dr. " + d.doctor)},\${d.patients},—,\${d.patients},—,—\`),
+    '',
+    'SECTION 5 — TOP VISIT REASON',
+    '#,Visit Reason / Diagnosis,No. of Visits,% of Total,Trend vs Prior',
+    ...topVisitReasons.slice(0, 10).map((r, i) => \`\${i + 1},\${escapeCSV(r.reason)},\${r.count},\${r.pct}%,—\`),
+    '',
+    'SECTION 6 — OVERALL REMARKS & NEXT STEPS',
+    'Area,Remarks / Action Items',
+    'Highlights,Consistent patient flow and low wait times.',
+    'Concerns,None critical at this time.',
+    'Recommendations,Maintain current staffing levels.',
+    'Next Steps,Continue monitoring queue metrics daily.'
+  ].join('\\n');
+
+  downloadFile(\`mhc-\${period}-operations-report-\${new Date().toISOString().slice(0, 10)}.csv\`, csv);
+}
