@@ -160,7 +160,7 @@ function VisitDrawer({ visit, patient, onClose, onBook, onSms }) {
 }
 
 // ── Profile Panel ─────────────────────────────────────────────────────────────
-function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onSms, onEditRecord }) {
+function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onNavigate, onSms, onEditRecord }) {
   const [tab, setTab] = useState("overview");
 
   if (!patient) return (
@@ -201,7 +201,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             <button onClick={() => onEditRecord && onEditRecord(patient)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Edit Record</button>
             <button onClick={() => onSms && onSms(patient.name)} style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>SMS</button>
-            <button onClick={() => onAddQueue && onAddQueue(patient)} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
+            <button onClick={() => onNavigate && onNavigate('register', { preloadPatientId: patient.id })} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 3px 10px rgba(42,157,143,0.3)" }}><Plus size={16} strokeWidth={2} /> Add to Queue</button>
           </div>
         </div>
 
@@ -689,7 +689,7 @@ export default function ReceptionistPatientRecords({ onNavigate }) {
               patient={selected}
               onVisitSelect={setActiveVisit}
               selectedVisitId={activeVisit?.id}
-              onAddQueue={(p) => setAddQueueModal(p)}
+              onNavigate={onNavigate}
               onEditRecord={(p) => setEditPatientModal(p)}
               onSms={async (name) => {
                 try {

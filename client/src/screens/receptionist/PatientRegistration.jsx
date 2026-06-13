@@ -203,7 +203,7 @@ const emptyForm = {
 };
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function PatientRegistration({ onNavigate, draft, onDraftChange, onDraftClear }) {
+export default function PatientRegistration({ onNavigate, draft, onDraftChange, onDraftClear, preloadPatientId }) {
   const [step, setStep]       = useState(draft?.step ?? -1);
   const [form, setForm]       = useState(draft?.form ?? emptyForm);
   const [errors, setErrors]   = useState({});
@@ -252,6 +252,15 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       .then(data => { if (Array.isArray(data)) setAssignedStaffList(data.filter(s => s.position === "BHW" || s.position === "Midwife")); })
       .catch(console.error);
   }, []);
+
+  // Auto-trigger returning patient flow when a patient ID is pre-loaded (e.g. from Patient Records)
+  useEffect(() => {
+    if (!preloadPatientId) return;
+    patientsApi.getOne(preloadPatientId).then(full => {
+      selectReturningPatient({ id: full.id, first_name: full.first_name, last_name: full.last_name });
+    }).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preloadPatientId]);
 
   const update = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: undefined })); };
   const age      = getAge(form.dob);

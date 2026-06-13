@@ -372,6 +372,7 @@ export default function App() {
                 draft={registrationDraft}
                 onDraftChange={setRegistrationDraft}
                 onDraftClear={clearDraft}
+                preloadPatientId={navState?.preloadPatientId ?? null}
               />
             : activeScreen?.id === 'dr-dashboard'
             ? <DoctorDashboard
