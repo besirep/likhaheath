@@ -383,6 +383,7 @@ function ProfilePanel({ patient, onVisitSelect, selectedVisitId, onAddQueue, onS
 
 // ── Add to Queue Modal ──────────────────────────────────────────────────────
 function AddToQueueModal({ patient, onClose, onConfirm }) {
+  const COMMON_REASONS = ["Checkup", "Follow-up", "Consultation", "Fever", "Cough & Colds", "Hypertension", "Prenatal", "Vaccination"];
   const [reason, setReason] = useState(patient?.reason || '');
   const [doctor, setDoctor] = useState('');
   const [availableDoctors, setAvailableDoctors] = useState([]);
@@ -412,7 +413,19 @@ function AddToQueueModal({ patient, onClose, onConfirm }) {
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Chief Complaint / Reason</label>
-            <input value={reason} onChange={e => setReason(e.target.value.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()))} placeholder="Enter reason for visit..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+              {COMMON_REASONS.map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setReason(r)}
+                  style={{ background: reason === r ? "#2a9d8f" : "#f4f7fb", color: reason === r ? "white" : "#4a5d75", border: "1px solid", borderColor: reason === r ? "#2a9d8f" : "#e0e7ef", borderRadius: 20, padding: "4px 10px", fontSize: 12, cursor: "pointer", transition: "all 0.2s" }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <input value={reason} onChange={e => setReason(e.target.value ? e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1).toLowerCase() : '')} placeholder="Or type a custom reason..." style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
           </div>
           <div>
             <label style={{ fontSize: 14, fontWeight: 600, color: "#8a9bb0", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Assign Doctor</label>
