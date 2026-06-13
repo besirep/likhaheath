@@ -10,6 +10,7 @@ export default function AdminAuditLogs() {
   const [password, setPassword] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
+  const [filterAction, setFilterAction] = useState("ALL");
 
   useEffect(() => {
     if (isUnlocked) {
@@ -37,8 +38,12 @@ export default function AdminAuditLogs() {
     const term = search.toLowerCase();
     const staffName = `${log.first_name || ''} ${log.last_name || ''}`.toLowerCase();
     const action = log.action ? log.action.toLowerCase() : '';
-    return staffName.includes(term) || action.includes(term);
+    const matchSearch = staffName.includes(term) || action.includes(term);
+    const matchFilter = filterAction === "ALL" || log.action === filterAction;
+    return matchSearch && matchFilter;
   });
+
+  const uniqueActions = ["ALL", ...new Set(logs.map(l => l.action).filter(Boolean))];
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -127,9 +132,25 @@ export default function AdminAuditLogs() {
             <RefreshCw size={18} className={loading ? "spin" : ""} /> Refresh
             <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
           </button>
-          <button style={{ background: "#f0f4fa", border: "1px solid #e0e7ef", borderRadius: 10, padding: "0 16px", display: "flex", alignItems: "center", gap: 8, color: "#4a5b78", fontWeight: 600, cursor: "pointer" }}>
-            <Filter size={18} /> Filter
-          </button>
+          
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <Filter size={18} color="#4a5b78" style={{ position: "absolute", left: 12, pointerEvents: "none" }} />
+            <select
+              value={filterAction}
+              onChange={(e) => setFilterAction(e.target.value)}
+              style={{
+                appearance: "none",
+                background: "#f0f4fa", border: "1px solid #e0e7ef", borderRadius: 10,
+                padding: "10px 36px 10px 36px", color: "#4a5b78", fontWeight: 600,
+                cursor: "pointer", fontSize: 14, outline: "none"
+              }}
+            >
+              {uniqueActions.map(act => (
+                <option key={act} value={act}>{act === "ALL" ? "All Actions" : act}</option>
+              ))}
+            </select>
+            <div style={{ position: "absolute", right: 12, pointerEvents: "none", color: "#4a5b78", fontSize: 10 }}>▼</div>
+          </div>
         </div>
       </div>
 

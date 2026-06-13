@@ -52,6 +52,43 @@ exports.send = async (req, res) => {
   }
 };
 
+// POST /api/sms/:id/resend
+exports.resend = async (req, res) => {
+  const smsId = req.params.id;
+  try {
+    const [rows] = await db.query('SELECT * FROM sms_notifications WHERE id = ?', [smsId]);
+    if (!rows.length) return res.status(404).json({ error: 'SMS log not found' });
+    const log = rows[0];
+
+    // Try to resend using the existing parameters, passing sms_id to update the row
+    const result = await sendSMS({
+      phone: log.recipient,
+      message: log.message,
+      patient_id: log.patient_id,
+      appointment_id: log.appointment_id,
+      sms_id: smsId,
+    });
+
+    if (!result.success) {
+      return res.status(502).json({
+        id:    result.id,
+        error: 'SMS delivery failed. Check server logs.',
+      });
+    }
+
+    res.status(200).json({
+      id:           result.id,
+      semaphore_id: result.semaphore_id,
+      recipient:    log.recipient,
+      status:       'Sent',
+      message:      'SMS resent successfully.',
+    });
+  } catch (err) {
+    console.error('[SMS] Resend error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // GET /api/sms/history
 exports.getHistory = async (req, res) => {
   try {

@@ -37,7 +37,7 @@ export default function AdminStaffManagement() {
   // Form
   const [form, setForm] = useState({
     first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor",
-    prc_license_number: "", prc_expiry_date: ""
+    contact_number: "", prc_license_number: "", prc_expiry_date: ""
   });
 
   const loadStaff = async () => {
@@ -111,7 +111,7 @@ export default function AdminStaffManagement() {
       loadStaff();
       setModalOpen(false);
       setEditingId(null);
-      setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", prc_license_number: "", prc_expiry_date: "" });
+      setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", contact_number: "", prc_license_number: "", prc_expiry_date: "" });
     } catch (err) {
       console.error(err);
       showToast("Failed to save staff: " + err.message);
@@ -127,6 +127,7 @@ export default function AdminStaffManagement() {
       suffix: staff.suffix || "",
       position: staff.position,
       role: staff.role,
+      contact_number: staff.contact_number || "",
       prc_license_number: staff.prc_license_number || "",
       prc_expiry_date: staff.prc_expiry_date ? staff.prc_expiry_date.substring(0, 10) : ""
     });
@@ -135,7 +136,7 @@ export default function AdminStaffManagement() {
   };
 
   const openCreateModal = () => {
-    setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", prc_license_number: "", prc_expiry_date: "" });
+    setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", contact_number: "", prc_license_number: "", prc_expiry_date: "" });
     setEditingId(null);
     setModalOpen(true);
   };
@@ -401,6 +402,15 @@ export default function AdminStaffManagement() {
                   </select>
                   <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
                 </div>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#7a8fb0", marginBottom: 6 }}>Contact Number <span style={{ color: "#CC0000", marginLeft: 4 }}>*</span></label>
+                <div style={{ position: "relative" }}>
+                  <input required placeholder="09XX-XXX-XXXX" value={form.contact_number} onChange={e => setForm({...form, contact_number: e.target.value})} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e0e7ef", borderRadius: 10, fontSize: 14, boxSizing: "border-box" }} />
+                  <div style={{ position: "absolute", top: 1.5, right: 1.5, width: 14, height: 14, background: "#ef4444", clipPath: "polygon(0 0, 100% 0, 100% 100%)", borderTopRightRadius: 8, pointerEvents: "none" }} />
+                </div>
+                <div style={{ fontSize: 11, color: "#8a9bb0", marginTop: 4 }}>Required for password resets.</div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>

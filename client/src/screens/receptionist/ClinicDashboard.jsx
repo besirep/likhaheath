@@ -168,9 +168,11 @@ export default function ClinicDashboard({ onNavigate, user }) {
               <div style={{ fontSize: 20, fontWeight: 700, color: "#1e2d40", letterSpacing: 1 }}>{timeStr}</div>
               <div style={{ fontSize: 14, color: "#8a9bb0" }}>Current Time</div>
             </div>
-            <button onClick={() => onNavigate && onNavigate("register")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 12, padding: "12px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(42,157,143,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
-              <UserPlus size={16} strokeWidth={2} /> Register Patient
-            </button>
+            {user?.role?.toLowerCase() !== "admin" && (
+              <button onClick={() => onNavigate && onNavigate("register")} style={{ background: "linear-gradient(135deg,#2a9d8f,#52c4b8)", color: "white", border: "none", borderRadius: 12, padding: "12px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(42,157,143,0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+                <UserPlus size={16} strokeWidth={2} /> Register Patient
+              </button>
+            )}
           </div>
         </div>
 

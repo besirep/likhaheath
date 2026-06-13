@@ -3,6 +3,7 @@ const ctrl   = require('../controllers/smsController');
 const verify = require('../middleware/auth');
 
 router.post('/send',         verify, ctrl.send);
+router.post('/resend/:id',   verify, ctrl.resend);
 router.get('/history',       verify, ctrl.getHistory);
 router.get('/patient/:id',   verify, ctrl.getByPatient);
 

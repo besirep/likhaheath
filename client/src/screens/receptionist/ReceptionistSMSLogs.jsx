@@ -282,11 +282,7 @@ export default function ReceptionistSMSLogs() {
 
   const handleResend = async (log) => {
     try {
-      await smsApi.send({
-        patient_id: log.patient_id,
-        message: log.message,
-        phone: log.contact,
-      });
+      await smsApi.resend(log.id);
       setPreview(null);
       setToast(`Message resent to ${log.patient}`);
       fetchLogs(); // Refresh the list

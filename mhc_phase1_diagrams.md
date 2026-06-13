@@ -113,6 +113,7 @@ erDiagram
         varchar last_name
         varchar suffix            "nullable"
         varchar position          "Doctor, Nurse, Midwife, BHW, etc."
+        varchar contact_number    "nullable"
         varchar prc_license_number "nullable"
         date   prc_expiry_date    "nullable"
         enum   employment_status  "Regular, Contractual, Volunteer, MOA"
@@ -129,6 +130,15 @@ erDiagram
         enum   role           "Admin, Doctor, Nurse, Midwife, BHW"
         tinyint is_active
         timestamp last_login  "nullable"
+        timestamp created_at
+    }
+
+    PASSWORD_RESET_TOKENS {
+        int    id            PK
+        int    user_id       FK
+        varchar otp_hash     "bcrypt cost 10"
+        varchar reset_token  "uuid (nullable)"
+        timestamp expires_at
         timestamp created_at
     }
 
@@ -272,6 +282,7 @@ erDiagram
     HEALTH_CENTERS ||--o{ FAMILY_CLUSTERS  : "scopes"
 
     USERS         ||--||  STAFF            : "one login per staff"
+    USERS         ||--o{  PASSWORD_RESET_TOKENS : "user_id"
 
     STAFF         ||--o{  PATIENTS         : "registered_by_staff_id"
     STAFF         }o--o{  PATIENTS         : "assigned_staff_id"

@@ -22,6 +22,21 @@ export const smsApi = {
   },
 
   /**
+   * POST /api/sms/resend/:id
+   * @param {number} id - The ID of the SMS log to resend
+   */
+  resend: async (id) => {
+    const res = await apiFetch(`/sms/resend/${id}`, {
+      method: 'POST',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to resend SMS.');
+    }
+    return data;
+  },
+
+  /**
    * GET /api/sms/history
    * Returns all SMS notifications (most recent first, limit 200)
    */

@@ -84,36 +84,31 @@ export default function Login({ onLogin }) {
   const [loading,     setLoading]     = useState(false);
   const [showPass,    setShowPass]    = useState(false);
 
-  // Forgot password states
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: Username, 2: OTP, 3: New Password
   const [forgotUsername, setForgotUsername] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
   const [forgotPassword, setForgotPassword] = useState("");
   const [showForgotPass, setShowForgotPass] = useState(false);
   const [forgotError, setForgotError] = useState("");
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [maskedPhone, setMaskedPhone] = useState("");
+  const [resetToken, setResetToken] = useState("");
 
-  const [showForgotConfirm, setShowForgotConfirm] = useState(false);
-
-  const executeForgotPassword = async () => {
-    setShowForgotConfirm(false);
-    
+  const handleSendOtp = async () => {
     setForgotError("");
-    setForgotSuccess(false);
     setForgotLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+      const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: forgotUsername, newPassword: forgotPassword }),
+        body: JSON.stringify({ username: forgotUsername }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to reset password.");
-      }
-      setForgotSuccess(true);
-      setForgotUsername("");
-      setForgotPassword("");
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP.");
+      setMaskedPhone(data.maskedPhone);
+      setForgotStep(2);
     } catch (err) {
       setForgotError(err.message);
     } finally {
@@ -121,10 +116,51 @@ export default function Login({ onLogin }) {
     }
   };
 
-  const handleForgotPassword = () => {
+  const handleVerifyOtp = async () => {
     setForgotError("");
-    setShowForgotConfirm(true);
+    setForgotLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: forgotUsername, otp: forgotOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to verify OTP.");
+      setResetToken(data.resetToken);
+      setForgotStep(3);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setForgotLoading(false);
+    }
   };
+
+  const handleResetPassword = async () => {
+    setForgotError("");
+    setForgotSuccess(false);
+    setForgotLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword: forgotPassword, resetToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reset password.");
+      setForgotSuccess(true);
+      setForgotUsername("");
+      setForgotOtp("");
+      setForgotPassword("");
+      setResetToken("");
+      setForgotStep(1);
+    } catch (err) {
+      setForgotError(err.message);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
 
   const roleConfig = ROLES.find(r => r.key === selectedRole);
 
@@ -341,7 +377,9 @@ export default function Login({ onLogin }) {
               }}>
                 <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px", color: "#1e2d40" }}>Reset Password</h3>
                 <p style={{ fontSize: 14, color: "#7a8fb0", marginBottom: 24, lineHeight: 1.5 }}>
-                  Enter your username and your new password to reset it.
+                  {forgotStep === 1 && "Enter your username to receive a 6-digit OTP via SMS."}
+                  {forgotStep === 2 && `An OTP has been sent to ${maskedPhone}. Enter it below.`}
+                  {forgotStep === 3 && "Enter your new password to complete the reset process."}
                 </p>
 
                 {forgotError && (
@@ -357,26 +395,37 @@ export default function Login({ onLogin }) {
                   </div>
                 )}
 
-                <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={forgotUsername} onChange={setForgotUsername} placeholder="Enter your username" />
-                <div style={{ position: "relative" }}>
-                  <Field label="New Password" icon={<Lock size={16} strokeWidth={2} color="#8a9bb0" />} type={showForgotPass ? "text" : "password"} value={forgotPassword} onChange={setForgotPassword} placeholder="Enter new password" />
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPass(s => !s)}
-                    style={{ position: "absolute", right: 14, top: 36, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#8a9bb0" }}
-                  >
-                    {showForgotPass ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
-                  </button>
-                </div>
+                {forgotStep === 1 && (
+                  <Field label="Username" icon={<User size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={forgotUsername} onChange={setForgotUsername} placeholder="Enter your username" />
+                )}
+                
+                {forgotStep === 2 && (
+                  <Field label="6-Digit OTP" icon={<KeyRound size={16} strokeWidth={2} color="#8a9bb0" />} type="text" value={forgotOtp} onChange={setForgotOtp} placeholder="e.g. 123456" />
+                )}
+
+                {forgotStep === 3 && (
+                  <div style={{ position: "relative" }}>
+                    <Field label="New Password" icon={<Lock size={16} strokeWidth={2} color="#8a9bb0" />} type={showForgotPass ? "text" : "password"} value={forgotPassword} onChange={setForgotPassword} placeholder="Enter new password" />
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPass(s => !s)}
+                      style={{ position: "absolute", right: 14, top: 36, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#8a9bb0" }}
+                    >
+                      {showForgotPass ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
                   <button
                     onClick={() => {
                       setShowForgotPassword(false);
                       setForgotUsername("");
+                      setForgotOtp("");
                       setForgotPassword("");
                       setForgotError("");
                       setForgotSuccess(false);
+                      setForgotStep(1);
                     }}
                     style={{
                       flex: 1, padding: "12px", background: "white", color: "#7a8fb0", border: "1.5px solid #e0e7ef",
@@ -385,33 +434,54 @@ export default function Login({ onLogin }) {
                   >
                     Cancel
                   </button>
-                  <button
-                    onClick={handleForgotPassword}
-                    disabled={forgotLoading || !forgotUsername || !forgotPassword}
-                    style={{
-                      flex: 1, padding: "12px", background: roleConfig ? roleConfig.color : "#0047AB", color: "white", border: "none",
-                      borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: (forgotLoading || !forgotUsername || !forgotPassword) ? "not-allowed" : "pointer",
-                      opacity: (forgotLoading || !forgotUsername || !forgotPassword) ? 0.7 : 1
-                    }}
-                  >
-                    {forgotLoading ? "Resetting..." : "Reset Password"}
-                  </button>
+                  
+                  {forgotStep === 1 && (
+                    <button
+                      onClick={handleSendOtp}
+                      disabled={forgotLoading || !forgotUsername}
+                      style={{
+                        flex: 1, padding: "12px", background: roleConfig ? roleConfig.color : "#0047AB", color: "white", border: "none",
+                        borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: (forgotLoading || !forgotUsername) ? "not-allowed" : "pointer",
+                        opacity: (forgotLoading || !forgotUsername) ? 0.7 : 1
+                      }}
+                    >
+                      {forgotLoading ? "Sending..." : "Send OTP"}
+                    </button>
+                  )}
+
+                  {forgotStep === 2 && (
+                    <button
+                      onClick={handleVerifyOtp}
+                      disabled={forgotLoading || forgotOtp.length !== 6}
+                      style={{
+                        flex: 1, padding: "12px", background: roleConfig ? roleConfig.color : "#0047AB", color: "white", border: "none",
+                        borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: (forgotLoading || forgotOtp.length !== 6) ? "not-allowed" : "pointer",
+                        opacity: (forgotLoading || forgotOtp.length !== 6) ? 0.7 : 1
+                      }}
+                    >
+                      {forgotLoading ? "Verifying..." : "Verify OTP"}
+                    </button>
+                  )}
+
+                  {forgotStep === 3 && (
+                    <button
+                      onClick={handleResetPassword}
+                      disabled={forgotLoading || !forgotPassword}
+                      style={{
+                        flex: 1, padding: "12px", background: roleConfig ? roleConfig.color : "#0047AB", color: "white", border: "none",
+                        borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: (forgotLoading || !forgotPassword) ? "not-allowed" : "pointer",
+                        opacity: (forgotLoading || !forgotPassword) ? 0.7 : 1
+                      }}
+                    >
+                      {forgotLoading ? "Resetting..." : "Reset Password"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Step 4: Forgot Password Confirmation Modal ── */}
-          {showForgotConfirm && (
-            <ConfirmationModal
-              title="Reset Password"
-              message={`Are you sure you want to reset the password for username "${forgotUsername}"?`}
-              onConfirm={executeForgotPassword}
-              onCancel={() => setShowForgotConfirm(false)}
-              confirmText="Reset Password"
-              confirmColor="#6b21a8"
-            />
-          )}
+
 
           <style>{`
             @keyframes spin    { to { transform: rotate(360deg); } }

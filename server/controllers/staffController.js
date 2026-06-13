@@ -16,7 +16,7 @@ exports.getAll = async (req, res) => {
     // Only select columns that actually exist in the schema
     let query = `
       SELECT s.id, s.health_center_id, s.first_name, s.last_name, s.suffix,
-             s.position, s.prc_license_number, s.prc_expiry_date,
+             s.position, s.contact_number, s.prc_license_number, s.prc_expiry_date,
              s.employment_status, s.is_active, s.created_at,
              u.role
       FROM staff s
@@ -36,7 +36,7 @@ exports.getOne = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT s.id, s.health_center_id, s.first_name, s.last_name, s.suffix,
-              s.position, s.prc_license_number, s.prc_expiry_date,
+              s.position, s.contact_number, s.prc_license_number, s.prc_expiry_date,
               s.employment_status, s.is_active, s.created_at,
               u.role
        FROM staff s 
@@ -57,7 +57,7 @@ const bcrypt = require('bcryptjs');
 exports.create = async (req, res) => {
   const {
     first_name, last_name, suffix,
-    position, prc_license_number, prc_expiry_date,
+    position, contact_number, prc_license_number, prc_expiry_date,
     employment_status, health_center_id, role
   } = req.body;
 
@@ -71,12 +71,13 @@ exports.create = async (req, res) => {
     const [staffResult] = await conn.query(
       `INSERT INTO staff
          (health_center_id, first_name, last_name, suffix, position,
-          prc_license_number, prc_expiry_date, employment_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          contact_number, prc_license_number, prc_expiry_date, employment_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         health_center_id,
         first_name, last_name, suffix || null,
         position,
+        contact_number || null,
         prc_license_number || null,
         prc_expiry_date    || null,
         employment_status  || 'Regular',
@@ -126,16 +127,17 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   const {
     first_name, last_name, suffix,
-    position, prc_license_number, prc_expiry_date, employment_status,
+    position, contact_number, prc_license_number, prc_expiry_date, employment_status,
   } = req.body;
   try {
     const [result] = await db.query(
       `UPDATE staff
        SET first_name=?, last_name=?, suffix=?, position=?,
-           prc_license_number=?, prc_expiry_date=?, employment_status=?
+           contact_number=?, prc_license_number=?, prc_expiry_date=?, employment_status=?
        WHERE id=?`,
       [
         first_name, last_name, suffix || null, position,
+        contact_number || null,
         prc_license_number || null,
         prc_expiry_date    || null,
         employment_status  || 'Regular',

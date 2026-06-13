@@ -48,7 +48,7 @@ async function getPatientPhone(patientId, conn) {
  * @param {Object}  [opts.conn]        - Optional DB connection (for use inside transactions)
  * @returns {Promise<{success:boolean, semaphore_id:string|null, id:number}>}
  */
-async function sendSMS({ phone, message, patient_id, appointment_id, conn }) {
+async function sendSMS({ phone, message, patient_id, appointment_id, sms_id, conn }) {
   const pool      = conn || db;
   const recipient = normalizePhone(phone);
 
@@ -88,14 +88,26 @@ async function sendSMS({ phone, message, patient_id, appointment_id, conn }) {
   }
 
   // Log to DB
-  const [result] = await pool.query(
-    `INSERT INTO sms_notifications
-       (patient_id, appointment_id, message, recipient, status, semaphore_id, error_message)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [patient_id, appointment_id || null, message, recipient, smsStatus, semaphoreId, errorMessage]
-  );
+  let insertId = null;
+  if (sms_id) {
+    await pool.query(
+      `UPDATE sms_notifications
+       SET status = ?, semaphore_id = ?, error_message = ?, sent_at = NOW()
+       WHERE id = ?`,
+      [smsStatus, semaphoreId, errorMessage, sms_id]
+    );
+    insertId = sms_id;
+  } else if (patient_id) {
+    const [result] = await pool.query(
+      `INSERT INTO sms_notifications
+         (patient_id, appointment_id, message, recipient, status, semaphore_id, error_message)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [patient_id, appointment_id || null, message, recipient, smsStatus, semaphoreId, errorMessage]
+    );
+    insertId = result.insertId;
+  }
 
-  return { success: smsStatus === 'Sent', semaphore_id: semaphoreId, id: result.insertId };
+  return { success: smsStatus === 'Sent', semaphore_id: semaphoreId, id: insertId };
 }
 
 // ── Pre-built message templates ─────────────────────────────────────────────

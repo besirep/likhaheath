@@ -410,7 +410,6 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const headerFade   = useFadeIn(80);
   const bannerFade   = useFadeIn(300);
   const queueFade    = useFadeIn(420);
-  const apptFade     = useFadeIn(450);
   const progressFade = useFadeIn(500);
 
   // ── Live queue fetch (same API as DoctorQueue) ──────────────────────────────
@@ -470,18 +469,6 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
   const allConsultations = inConsult.map(p => ({
     doctor: displayName, room: "Room 1", patient: p.name, queue: p.queue, reason: p.reason,
   }));
-
-  // Build upcoming appointments from waiting queue
-  const appointments = myQueue
-    .filter(p => p.status === "waiting" || p.status === "vitals-done")
-    .slice(0, 3)
-    .map(p => ({
-      time: p.arrived && p.arrived !== '—' ? p.arrived : '12:00 PM',
-      name: p.name,
-      age: p.age,
-      reason: p.reason,
-      type: p.priority ? 'urgent' : 'regular'
-    }));
 
 
   return (
@@ -619,41 +606,6 @@ export default function DoctorDashboard({ user, onNavigate, onStartConsult }) {
 
           {/* Appointments + quick stats */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-            {/* This afternoon */}
-            <div style={{ background: "white", borderRadius: 16, border: "1px solid #D8E4F2", overflow: "hidden", boxShadow: "0 2px 10px rgba(60,90,140,0.07)", ...apptFade }}>
-              <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f0f3fa" }}>
-                <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a2540" }}>This Afternoon</h2>
-                <div style={{ fontSize: 14, color: "#8a9bb0", marginTop: 2 }}>Upcoming follow-ups</div>
-              </div>
-              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                {appointments.map((a, i) => (
-                  <div key={i} style={{
-                    padding: "12px 14px", borderRadius: 12,
-                    background: a.type === "urgent" ? "#FFF0F0" : "#f7f9fd",
-                    border: `1.5px solid ${a.type === "urgent" ? "#F5BCBC" : "#e8edf7"}`,
-                    display: "flex", alignItems: "center", gap: 12,
-                  }}>
-                    <div style={{ textAlign: "center", minWidth: 44 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: a.type === "urgent" ? "#CC0000" : "#0047AB" }}>{a.time.split(" ")[0]}</div>
-                      <div style={{ fontSize: 14, color: "#b0bdd6" }}>{a.time.split(" ")[1]}</div>
-                    </div>
-                    <div style={{ width: 1, height: 32, background: a.type === "urgent" ? "#F5BCBC" : "#e8edf7" }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "#1a2540" }}>{a.name}</span>
-                        {a.type === "urgent" && <span style={{ background: "#FDEAEA", color: "#CC0000", borderRadius: 5, padding: "1px 6px", fontSize: 11, fontWeight: 700 }}>URGENT</span>}
-                      </div>
-                      <div style={{ fontSize: 14, color: "#7a8fb0", marginTop: 1 }}>{a.age} yrs · {a.reason}</div>
-                    </div>
-                    <button onClick={() => onNavigate && onNavigate('dr-appts')} style={{ background: "none", border: "1px solid #D8E4F2", borderRadius: 8, padding: "4px 10px", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>View</button>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: "10px 20px", borderTop: "1px solid #f0f3fa" }}>
-                <button onClick={() => onNavigate && onNavigate('dr-appts')} style={{ background: "none", border: "none", fontSize: 14, color: "#0047AB", cursor: "pointer", fontWeight: 600 }}>View Full Schedule →</button>
-              </div>
-            </div>
 
             {/* Quick stats pill row */}
             <div style={{ background: "white", borderRadius: 14, border: "1px solid #D8E4F2", padding: "14px 18px", boxShadow: "0 2px 8px rgba(60,90,140,0.06)", ...progressFade }}>
