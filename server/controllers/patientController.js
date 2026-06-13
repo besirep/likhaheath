@@ -723,7 +723,7 @@ exports.updateMedicalHistory = async (req, res) => {
         patientId,
         mh.has_hypertension ? 1 : 0, mh.has_heart_disease ? 1 : 0, mh.has_diabetes ? 1 : 0, mh.has_stroke ? 1 : 0,
         mh.has_asthma ? 1 : 0, mh.has_tuberculosis ? 1 : 0, mh.has_copd ? 1 : 0, mh.has_allergies ? 1 : 0, mh.has_smoking_hx ? 1 : 0, mh.has_none ? 1 : 0,
-        mh.other_conditions || null, mh.social_smoking || null, mh.social_alcohol || null, mh.general_survey || null
+        mh.other_conditions || null, mh.social_smoking ? 1 : 0, mh.social_alcohol ? 1 : 0, mh.general_survey || null
       ]
     );
 
