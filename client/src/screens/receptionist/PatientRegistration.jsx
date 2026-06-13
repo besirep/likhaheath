@@ -420,7 +420,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
   const doneCount    = queueItems.filter(q => q.status === "done").length;
   const recentList   = [...queueItems].reverse().slice(0, 5).map(q => ({
     queue:  `A-${String(q.queue_number).padStart(3, "0")}`,
-    name:   q.patient_name || "Unknown",
+    name:   q.name || "Unknown",
     time:   new Date(q.created_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     status: q.priority_tag ? "Priority" : "Waiting",
     color:  q.priority_tag ? "#8B5FBF" : "#2a9d8f",

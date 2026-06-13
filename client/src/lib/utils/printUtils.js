@@ -369,7 +369,7 @@ export function printOperationsReport({ period, stats, patientClassification, wa
   ]);
 
   const html = `
-    ${clinicHeader(\`MHC \${periodTitle} Operations Report\`, 'Operations Report')}
+    ${clinicHeader(`MHC ${periodTitle} Operations Report`, 'Operations Report')}
     <div style="font-size:14px; color:#1a2540; margin-bottom:20px; background:#f7f9fd; padding:16px; border-radius:12px; border:1px solid #e8edf7">
       <div style="display:flex; justify-content:space-between; margin-bottom:8px"><strong>Report Period:</strong> <span>${periodTitle} — ${reportDate}</span></div>
       <div style="display:flex; justify-content:space-between; margin-bottom:8px"><strong>Prepared by:</strong> <span>${staffName || 'System'} / Administration</span></div>
@@ -386,12 +386,12 @@ export function printOperationsReport({ period, stats, patientClassification, wa
         { label: 'Doctors Active', value: stats.activeDoctors },
         { label: 'Top Visit Reason', value: stats.topReason },
         { label: 'Report Period', value: periodTitle },
-      ].map(s => \`
+      ].map(s => `
         <div style="background:white; border:1px solid #C0D4F0; border-radius:8px; padding:12px; text-align:center">
           <div style="font-size:12px; color:#7a8fb0; text-transform:uppercase; letter-spacing:0.5px">${s.label}</div>
           <div style="font-size:18px; font-weight:700; color:#0047AB; margin-top:4px">${s.value}</div>
         </div>
-      \`).join('')}
+      `).join('')}
     </div>
     <div style="font-size:14px; margin-bottom:20px">
       <p><strong>Summary Narrative:</strong> Overall patient volume was steady for the period. Wait times were managed appropriately. SMS delivery remains reliable. Doctor workload is balanced across available staff.</p>
@@ -445,45 +445,46 @@ export function downloadOperationsReportCSV({ period, stats, patientClassificati
   const overallSmsRate = totalSmsSent + totalSmsFailed > 0 ? Math.round(totalSmsSent / (totalSmsSent + totalSmsFailed) * 100) : 100;
 
   const csv = [
-    \`MHC \${periodTitle} Operations Report\`,
-    \`Report Period: \${periodTitle} - \${reportDate}\`,
-    \`Prepared Date: \${new Date().toLocaleDateString('en-PH')}\`,
+    `MHC ${periodTitle} Operations Report`,
+    `Report Period: ${periodTitle} - ${reportDate}`,
+    `Prepared Date: ${new Date().toLocaleDateString('en-PH')}`,
     '',
     'SECTION 0 — EXECUTIVE SUMMARY',
     'KPI,Value',
-    \`Total Patients,\${stats.total}\`,
-    \`Avg. Wait Time,\${stats.avgWait} min\`,
-    \`SMS Delivery Rate,\${smsRate}%\`,
-    \`Doctors Active,\${stats.activeDoctors}\`,
-    \`Top Visit Reason,\${escapeCSV(stats.topReason)}\`,
-    \`Report Period,\${periodTitle}\`,
+    `Total Patients,${stats.total}`,
+    `Avg. Wait Time,${stats.avgWait} min`,
+    `SMS Delivery Rate,${smsRate}%`,
+    `Doctors Active,${stats.activeDoctors}`,
+    `Top Visit Reason,${escapeCSV(stats.topReason)}`,
+    `Report Period,${periodTitle}`,
     '',
     'SECTION 1 — PATIENT CLASSIFICATION',
     'Classification,No. of Patients,% Share,vs. Prior Month',
-    ...patientClassification.map(p => \`\${escapeCSV(p.name)},\${p.value},\${totalClass > 0 ? Math.round(p.value / totalClass * 100) + '%' : '0%'},—\`),
-    \`Total,\${totalClass},100%,\`,
+    ...patientClassification.map(p => `${escapeCSV(p.name)},${p.value},${totalClass > 0 ? Math.round(p.value / totalClass * 100) + '%' : '0%'},—`),
+    `Total,${totalClass},100%,`,
     '',
     'SECTION 2 — AVERAGE WAIT TIME',
     'Time Slot / Day,Avg Wait (min),Peak Wait (min),Volume,Status',
-    ...waitTime.map(w => \`\${escapeCSV(w.day || w.time || w.hour || '—')},\${w.avg},—,—,\${w.avg <= 30 ? 'On Target' : w.avg <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}\`),
-    \`Overall Average,\${stats.avgWait},—,—,\${stats.avgWait <= 30 ? 'On Target' : stats.avgWait <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}\`,
+    ...waitTime.map(w => `${escapeCSV(w.day || w.time || w.hour || '—')},${w.avg},—,—,${w.avg <= 30 ? 'On Target' : w.avg <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}`),
+    `Overall Average,${stats.avgWait},—,—,${stats.avgWait <= 30 ? 'On Target' : stats.avgWait <= 45 ? 'Approaching Threshold' : 'Exceeded Threshold'}`,
     '',
     'SECTION 3 — SMS DELIVERY',
     'SMS Category / Day,Sent,Failed,Delivery Rate',
     ...smsDelivery.map(s => {
       const t = s.sent + s.failed;
       const r = t > 0 ? Math.round(s.sent / t * 100) : 100;
-      return \`\${escapeCSV(s.day || s.category || '—')},\${s.sent},\${s.failed},\${r}%\`;
+      return `${escapeCSV(s.day || s.category || '—')},${s.sent},${s.failed},${r}%`;
     }),
-    \`Total,\${totalSmsSent},\${totalSmsFailed},\${overallSmsRate}%\`,
+    `Total,${totalSmsSent},${totalSmsFailed},${overallSmsRate}%`,
     '',
     'SECTION 4 — DOCTOR WORKLOAD PER MONTH',
     'Doctor / Specialist,Avg,Weekend,Total Consults,Avg Duration,OT?',
-    ...doctorWorkload.map(d => \`\${escapeCSV("Dr. " + d.doctor)},\${d.patients},—,\${d.patients},—,—\`),
+    ...doctorWorkload.map(d => `${escapeCSV("Dr. " + d.doctor)},${d.patients},—,${d.patients},—,—`),
     '',
     'SECTION 5 — TOP VISIT REASON',
     '#,Visit Reason / Diagnosis,No. of Visits,% of Total,Trend vs Prior',
-    ...topVisitReasons.slice(0, 10).map((r, i) => \`\${i + 1},\${escapeCSV(r.reason)},\${r.count},\${r.pct}%,—\`),
+    ...topVisitReasons.slice(0, 10).map((r, i) => `${i + 1},${escapeCSV(r.reason)},${r.count},${r.pct}%,—`),
+
     '',
     'SECTION 6 — OVERALL REMARKS & NEXT STEPS',
     'Area,Remarks / Action Items',
