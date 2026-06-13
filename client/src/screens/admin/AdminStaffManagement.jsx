@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { UserPlus, Search, Stethoscope, Building2, Eye, EyeOff, Plus, Key, Copy, Check, ShieldCheck, UserCog, User, Pencil } from "lucide-react";
+import { UserPlus, Search, Stethoscope, Building2, Eye, EyeOff, Plus, Key, Copy, Check, ShieldCheck, UserCog, User, Pencil, X } from "lucide-react";
 import { staffApi } from "../../lib/api/staff.js";
 import ConfirmationModal from "../../components/ConfirmationModal";
 
@@ -356,8 +356,8 @@ export default function AdminStaffManagement() {
                 {editingId ? <Pencil size={20} color="#6b21a8" /> : <UserPlus size={20} color="#6b21a8" />} 
                 {editingId ? "Edit Staff Details" : "Add New Staff"}
               </h2>
-              <button onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#8a9bb0" }}>
-                <EyeOff size={20} />
+              <button type="button" onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#8a9bb0" }}>
+                <X size={20} />
               </button>
             </div>
             
