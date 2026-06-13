@@ -301,11 +301,10 @@ exports.create = async (req, res) => {
     if (female_health && sex_name === 'Female') {
       await conn.query(
         `INSERT INTO patient_female_health
-           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+           (patient_id, lmp, period_duration_days, cycle_length_days,
             fp_method, menopausal_age, recorded_by_staff_id)
-         VALUES (?,?,?,?,?,?,?,?)
+         VALUES (?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
-           no_of_children=VALUES(no_of_children),
            lmp=VALUES(lmp),
            period_duration_days=VALUES(period_duration_days),
            cycle_length_days=VALUES(cycle_length_days),
@@ -314,7 +313,6 @@ exports.create = async (req, res) => {
            recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
         [
           patient_id,
-          female_health.no_of_children        || null,
           female_health.lmp                   || null,
           female_health.period_duration_days  || null,
           female_health.cycle_length_days     || null,
@@ -433,17 +431,17 @@ exports.update = async (req, res) => {
     if (female_health && sex_name === 'Female') {
       await conn.query(
         `INSERT INTO patient_female_health
-           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+           (patient_id, lmp, period_duration_days, cycle_length_days,
             fp_method, menopausal_age, recorded_by_staff_id)
-         VALUES (?,?,?,?,?,?,?,?)
+         VALUES (?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
-           no_of_children=VALUES(no_of_children), lmp=VALUES(lmp),
+           lmp=VALUES(lmp),
            period_duration_days=VALUES(period_duration_days), cycle_length_days=VALUES(cycle_length_days),
            fp_method=VALUES(fp_method), menopausal_age=VALUES(menopausal_age),
            recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
         [
           req.params.id,
-          female_health.no_of_children || null, female_health.lmp || null,
+          female_health.lmp || null,
           female_health.period_duration_days || null, female_health.cycle_length_days || null,
           female_health.fp_method || null, female_health.menopausal_age || null,
           staff_id,
@@ -542,17 +540,17 @@ exports.createVisit = async (req, res) => {
     if (female_health && sex_name === 'Female') {
       await conn.query(
         `INSERT INTO patient_female_health
-           (patient_id, no_of_children, lmp, period_duration_days, cycle_length_days,
+           (patient_id, lmp, period_duration_days, cycle_length_days,
             fp_method, menopausal_age, recorded_by_staff_id)
-         VALUES (?,?,?,?,?,?,?,?)
+         VALUES (?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
-           no_of_children=VALUES(no_of_children), lmp=VALUES(lmp),
+           lmp=VALUES(lmp),
            period_duration_days=VALUES(period_duration_days), cycle_length_days=VALUES(cycle_length_days),
            fp_method=VALUES(fp_method), menopausal_age=VALUES(menopausal_age),
            recorded_by_staff_id=VALUES(recorded_by_staff_id)`,
         [
           patient_id,
-          female_health.no_of_children || null, female_health.lmp || null,
+          female_health.lmp || null,
           female_health.period_duration_days || null, female_health.cycle_length_days || null,
           female_health.fp_method || null, female_health.menopausal_age || null,
           staff_id,

@@ -643,33 +643,25 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                 <div style={{ fontSize: 14, color: "#7a8fb0", marginBottom: 10 }}>Update any existing medical conditions or history below. Changes will be saved to the patient's record.</div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  {[
-                    { key: "has_hypertension", label: "Hypertension" },
-                    { key: "has_heart_disease", label: "Heart Disease" },
-                    { key: "has_diabetes", label: "Diabetes" },
-                    { key: "has_stroke", label: "Stroke" },
-                    { key: "has_asthma", label: "Asthma" },
-                    { key: "has_tuberculosis", label: "Tuberculosis" },
-                    { key: "has_copd", label: "COPD" },
-                    { key: "has_allergies", label: "Allergies" },
-                    { key: "has_smoking_hx", label: "Smoking History" },
-                  ].map(c => (
-                    <label key={c.key} style={{ display: "flex", alignItems: "center", gap: 10, background: "white", padding: "12px 14px", borderRadius: 10, border: "1px solid #e0e7ef", cursor: "pointer" }}>
-                      <input type="checkbox" checked={!!form.mh[c.key]} onChange={e => {
-                        const val = e.target.checked;
-                        setForm(f => ({ ...f, mh: { ...f.mh, [c.key]: val } }));
-                      }} style={{ width: 16, height: 16, accentColor: "#2a9d8f" }} />
-                      <span style={{ fontSize: 14, fontWeight: 500, color: "#1e2d40" }}>{c.label}</span>
-                    </label>
-                  ))}
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, background: "white", padding: "12px 14px", borderRadius: 10, border: "1px solid #e0e7ef", cursor: "pointer" }}>
+                    <input type="checkbox" checked={!!form.mh.social_smoking} onChange={e => {
+                      const val = e.target.checked;
+                      setForm(f => ({ ...f, mh: { ...f.mh, social_smoking: val } }));
+                    }} style={{ width: 16, height: 16, accentColor: "#2a9d8f" }} />
+                    <span style={{ fontSize: 14, fontWeight: 500, color: "#1e2d40" }}>Smoking History</span>
+                  </label>
+
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, background: "white", padding: "12px 14px", borderRadius: 10, border: "1px solid #e0e7ef", cursor: "pointer" }}>
+                    <input type="checkbox" checked={!!form.mh.social_alcohol} onChange={e => {
+                      const val = e.target.checked;
+                      setForm(f => ({ ...f, mh: { ...f.mh, social_alcohol: val } }));
+                    }} style={{ width: 16, height: 16, accentColor: "#2a9d8f" }} />
+                    <span style={{ fontSize: 14, fontWeight: 500, color: "#1e2d40" }}>Drinking History</span>
+                  </label>
                 </div>
                 
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 4 }}>
                   <Input label="Other Conditions" value={form.mh.other_conditions || ""} onChange={v => setForm(f => ({ ...f, mh: { ...f.mh, other_conditions: v } }))} placeholder="Specify other conditions..." />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                    <Input label="Social Smoking" value={form.mh.social_smoking || ""} onChange={v => setForm(f => ({ ...f, mh: { ...f.mh, social_smoking: v } }))} placeholder="e.g. 5 sticks/day" />
-                    <Input label="Social Alcohol" value={form.mh.social_alcohol || ""} onChange={v => setForm(f => ({ ...f, mh: { ...f.mh, social_alcohol: v } }))} placeholder="e.g. Occasional" />
-                  </div>
                 </div>
 
                 <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
