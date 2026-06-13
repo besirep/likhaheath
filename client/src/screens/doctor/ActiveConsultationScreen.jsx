@@ -472,7 +472,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
               visits.map((visit, i) => (
                 <div 
                   key={i} 
-                  onClick={() => setShowFullRecord(visit.id)}
+                  onClick={() => setShowFullRecord(visit.appointment_id || visit.record_id)}
                   style={{ 
                     padding: "12px", 
                     borderRadius: "10px", 
@@ -484,10 +484,10 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "#0047AB"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,71,171,0.08)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "#e0e7ef"; e.currentTarget.style.boxShadow = "none"; }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1a2540", marginBottom: 4 }}>{visit.diagnosis || visit.reason || "Check-up"}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1a2540", marginBottom: 4 }}>{visit.diagnosis || visit.notes || "Check-up"}</div>
                   <div style={{ fontSize: 12, color: "#7a8fb0", display: "flex", justifyContent: "space-between" }}>
-                    <span>{visit.date?.split(",")[0] || "—"}</span>
-                    <span style={{ fontWeight: 500 }}>{visit.doctor ? `Dr. ${visit.doctor.split(' ').pop()}` : "—"}</span>
+                    <span>{visit.scheduled_date ? new Date(visit.scheduled_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
+                    <span style={{ fontWeight: 500 }}>{visit.doctor_name ? `Dr. ${visit.doctor_name.split(' ').pop()}` : "—"}</span>
                   </div>
                 </div>
               ))
