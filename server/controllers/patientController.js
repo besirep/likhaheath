@@ -701,9 +701,8 @@ exports.updateMedicalHistory = async (req, res) => {
       `INSERT INTO patient_medical_history 
         (patient_id, has_hypertension, has_heart_disease, has_diabetes, has_stroke,
          has_asthma, has_tuberculosis, has_copd, has_allergies, has_smoking_hx, has_none,
-         other_conditions, social_smoking, social_alcohol, general_survey,
-         no_of_children, lmp, period_duration_days, cycle_length_days, fp_method, menopausal_age)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         other_conditions, social_smoking, social_alcohol, general_survey)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          has_hypertension = VALUES(has_hypertension),
          has_heart_disease = VALUES(has_heart_disease),
@@ -719,19 +718,12 @@ exports.updateMedicalHistory = async (req, res) => {
          social_smoking = VALUES(social_smoking),
          social_alcohol = VALUES(social_alcohol),
          general_survey = VALUES(general_survey),
-         no_of_children = VALUES(no_of_children),
-         lmp = VALUES(lmp),
-         period_duration_days = VALUES(period_duration_days),
-         cycle_length_days = VALUES(cycle_length_days),
-         fp_method = VALUES(fp_method),
-         menopausal_age = VALUES(menopausal_age),
          updated_at = CURRENT_TIMESTAMP`,
       [
         patientId,
         mh.has_hypertension ? 1 : 0, mh.has_heart_disease ? 1 : 0, mh.has_diabetes ? 1 : 0, mh.has_stroke ? 1 : 0,
         mh.has_asthma ? 1 : 0, mh.has_tuberculosis ? 1 : 0, mh.has_copd ? 1 : 0, mh.has_allergies ? 1 : 0, mh.has_smoking_hx ? 1 : 0, mh.has_none ? 1 : 0,
-        mh.other_conditions || null, mh.social_smoking || null, mh.social_alcohol || null, mh.general_survey || null,
-        mh.no_of_children || null, mh.lmp || null, mh.period_duration_days || null, mh.cycle_length_days || null, mh.fp_method || null, mh.menopausal_age || null
+        mh.other_conditions || null, mh.social_smoking || null, mh.social_alcohol || null, mh.general_survey || null
       ]
     );
 
