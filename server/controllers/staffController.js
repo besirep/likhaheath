@@ -15,15 +15,17 @@ exports.getAll = async (req, res) => {
   try {
     // Only select columns that actually exist in the schema
     let query = `
-      SELECT id, health_center_id, first_name, last_name, suffix,
-             position, prc_license_number, prc_expiry_date,
-             employment_status, is_active, created_at
-      FROM staff
-      WHERE (first_name LIKE ? OR last_name LIKE ? OR prc_license_number LIKE ?)`;
+      SELECT s.id, s.health_center_id, s.first_name, s.last_name, s.suffix,
+             s.position, s.prc_license_number, s.prc_expiry_date,
+             s.employment_status, s.is_active, s.created_at,
+             u.role
+      FROM staff s
+      LEFT JOIN users u ON u.staff_id = s.id
+      WHERE (s.first_name LIKE ? OR s.last_name LIKE ? OR s.prc_license_number LIKE ?)`;
     const params = [like, like, like];
-    if (position) { query += ' AND position = ?'; params.push(position); }
-    if (req.query.active !== undefined) { query += ' AND is_active = ?'; params.push(req.query.active ? 1 : 0); }
-    query += ' ORDER BY last_name ASC';
+    if (position) { query += ' AND s.position = ?'; params.push(position); }
+    if (req.query.active !== undefined) { query += ' AND s.is_active = ?'; params.push(req.query.active ? 1 : 0); }
+    query += ' ORDER BY s.last_name ASC';
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) { internalError(res, err); }
@@ -33,10 +35,13 @@ exports.getAll = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, health_center_id, first_name, last_name, suffix,
-              position, prc_license_number, prc_expiry_date,
-              employment_status, is_active, created_at
-       FROM staff WHERE id = ?`,
+      `SELECT s.id, s.health_center_id, s.first_name, s.last_name, s.suffix,
+              s.position, s.prc_license_number, s.prc_expiry_date,
+              s.employment_status, s.is_active, s.created_at,
+              u.role
+       FROM staff s 
+       LEFT JOIN users u ON u.staff_id = s.id
+       WHERE s.id = ?`,
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Staff not found.' });
