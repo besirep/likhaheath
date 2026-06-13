@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { UserPlus, Search, Stethoscope, Building2, Eye, EyeOff, Plus, Key, Copy, Check, ShieldCheck, UserCog, User } from "lucide-react";
+import { UserPlus, Search, Stethoscope, Building2, Eye, EyeOff, Plus, Key, Copy, Check, ShieldCheck, UserCog, User, Pencil } from "lucide-react";
 import { staffApi } from "../../lib/api/staff.js";
 import ConfirmationModal from "../../components/ConfirmationModal";
 
@@ -19,6 +19,7 @@ export default function AdminStaffManagement() {
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   
   // Confirmation states
@@ -97,17 +98,46 @@ export default function AdminStaffManagement() {
       setSaving(true);
       // health_center_id is 1
       const payload = { ...form, health_center_id: 1 };
-      const res = await staffApi.create(payload);
-      setNewUser({ username: res.username, password: "LikhaHealth2025!" });
+      
+      if (editingId) {
+        await staffApi.update(editingId, payload);
+        showToast("Staff updated successfully");
+      } else {
+        const res = await staffApi.create(payload);
+        setNewUser({ username: res.username, password: "LikhaHealth2025!" });
+        showToast("Staff created successfully");
+      }
+      
       loadStaff();
       setModalOpen(false);
+      setEditingId(null);
       setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", prc_license_number: "", prc_expiry_date: "" });
     } catch (err) {
       console.error(err);
-      showToast("Failed to create staff: " + err.message);
+      showToast("Failed to save staff: " + err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (staff) => {
+    setForm({
+      first_name: staff.first_name,
+      last_name: staff.last_name,
+      suffix: staff.suffix || "",
+      position: staff.position,
+      role: staff.role,
+      prc_license_number: staff.prc_license_number || "",
+      prc_expiry_date: staff.prc_expiry_date ? staff.prc_expiry_date.substring(0, 10) : ""
+    });
+    setEditingId(staff.id);
+    setModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setForm({ first_name: "", last_name: "", suffix: "", position: "Doctor", role: "Doctor", prc_license_number: "", prc_expiry_date: "" });
+    setEditingId(null);
+    setModalOpen(true);
   };
 
   const copyCreds = () => {
@@ -140,7 +170,7 @@ export default function AdminStaffManagement() {
           <p style={{ margin: "4px 0 0", fontSize: 14, color: "#7a8fb0" }}>Manage accounts, access levels, and credentials for clinic personnel</p>
         </div>
         <button 
-          onClick={() => setModalOpen(true)}
+          onClick={openCreateModal}
           style={{ background: "#6b21a8", color: "white", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(107,33,168,0.2)" }}
         >
           <UserPlus size={16} strokeWidth={2} /> Add New Staff
@@ -291,6 +321,12 @@ export default function AdminStaffManagement() {
                   <td style={{ padding: "16px 24px", textAlign: "right" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
                       <button 
+                        onClick={() => handleEdit(s)}
+                        style={{ background: "none", border: "1px solid #e0e7ef", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#4a5d75", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        <Pencil size={14} /> Edit
+                      </button>
+                      <button 
                         onClick={() => handleResetPassword(s.id)}
                         style={{ background: "none", border: "1px solid #d8b4fe", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 600, color: "#9333ea", cursor: "pointer" }}
                       >
@@ -316,9 +352,10 @@ export default function AdminStaffManagement() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(26,37,64,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)", animation: "fadeIn 0.2s ease" }}>
           <div style={{ background: "white", width: "100%", maxWidth: 500, borderRadius: 20, boxShadow: "0 20px 40px rgba(0,0,0,0.15)", overflow: "hidden", animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <div style={{ padding: "20px 24px", background: "#f8fdfc", borderBottom: "1px solid #e0e7ef", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2540", display: "flex", alignItems: "center", gap: 8 }}>
-                <UserPlus size={20} color="#6b21a8" /> Add New Staff
-              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a2540", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                {editingId ? <Pencil size={20} color="#6b21a8" /> : <UserPlus size={20} color="#6b21a8" />} 
+                {editingId ? "Edit Staff Details" : "Add New Staff"}
+              </h2>
               <button onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#8a9bb0" }}>
                 <EyeOff size={20} />
               </button>
@@ -379,8 +416,8 @@ export default function AdminStaffManagement() {
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
                 <button type="button" onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", padding: "10px 16px", fontSize: 14, fontWeight: 600, color: "#7a8fb0", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" disabled={saving} style={{ background: "#6b21a8", color: "white", border: "none", borderRadius: 10, padding: "10px 24px", fontSize: 14, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>
-                  {saving ? "Registering..." : "Register"}
+                <button type="submit" disabled={saving} style={{ background: "#6b21a8", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+                  {saving ? "Saving..." : (editingId ? "Save Changes" : "Create Account")}
                 </button>
               </div>
             </form>
