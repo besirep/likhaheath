@@ -4,6 +4,8 @@ const db     = require('../config/db');
 const { logAudit } = require('../helpers/auditLogger');
 const { sendSMS } = require('../helpers/smsHelper');
 
+const isValidPassword = (pw) => pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+
 // POST /api/auth/login
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -90,6 +92,9 @@ exports.changePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: 'Current password and new password are required.' });
+  }
+  if (!isValidPassword(newPassword)) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number.' });
   }
 
   try {
@@ -189,6 +194,9 @@ exports.resetPassword = async (req, res) => {
   const { newPassword, resetToken } = req.body;
   if (!newPassword || !resetToken) {
     return res.status(400).json({ error: 'New password and reset token are required.' });
+  }
+  if (!isValidPassword(newPassword)) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number.' });
   }
 
   try {

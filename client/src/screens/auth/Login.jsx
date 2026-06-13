@@ -139,6 +139,12 @@ export default function Login({ onLogin }) {
   const handleResetPassword = async () => {
     setForgotError("");
     setForgotSuccess(false);
+
+    const isValidPassword = (pw) => pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+    if (!isValidPassword(forgotPassword)) {
+      return setForgotError("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number.");
+    }
+
     setForgotLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/auth/reset-password", {

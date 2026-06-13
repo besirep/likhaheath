@@ -3,6 +3,9 @@ import { KeyRound } from "lucide-react";
 import { authApi } from "../lib/api/auth";
 import ConfirmationModal from "./ConfirmationModal";
 
+const isValidPassword = (pw) => pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+
+
 export default function ChangePasswordModal({ onClose }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -17,8 +20,8 @@ export default function ChangePasswordModal({ onClose }) {
     if (newPassword !== confirmPassword) {
       return setError("New passwords do not match.");
     }
-    if (newPassword.length < 8) {
-      return setError("New password must be at least 8 characters long.");
+    if (!isValidPassword(newPassword)) {
+      return setError("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number.");
     }
     
     setSaving(true);
@@ -42,8 +45,8 @@ export default function ChangePasswordModal({ onClose }) {
     if (newPassword !== confirmPassword) {
       return setError("New passwords do not match.");
     }
-    if (newPassword.length < 8) {
-      return setError("New password must be at least 8 characters long.");
+    if (!isValidPassword(newPassword)) {
+      return setError("Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a number.");
     }
     
     setShowConfirm(true);
