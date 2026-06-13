@@ -403,10 +403,52 @@ export default function Reports() {
 
   const exportCSV = () => {
     const rows = [
-      ["Date", "Total", "Completed", "Skipped"],
-      ...weeklyQueue.map(r => [r.day, r.total, r.completed, r.skipped]),
-      [], ["Priority", "Count"], ...priorityBreakdown.map(r => [r.name, r.value]),
-      [], ["Hour", "Patients"], ...hourlyFlow.map(r => [r.hour, r.patients]),
+      ["LikhaHealth Dashboard Report - " + periodLabel[period].toUpperCase()],
+      ["Generated On", new Date().toLocaleString()],
+      [],
+      ["--- KEY PERFORMANCE INDICATORS ---"],
+      ["Metric", "Value"],
+      ["Total Patients Seen", totalAppts],
+      ["Completed", completedAppts],
+      ["Avg. Wait Time (min)", avgWait],
+      ["Skipped", skippedCount],
+      ["New Patients", newPatients],
+      ["SMS Sent", smsSent],
+      ["SMS Failed", smsFailed],
+      ["Priority Patients", totalPriority],
+      ["Medical Records Updated", recordsCount],
+      [],
+      ["--- QUEUE VOLUME BY DAY ---"],
+      ["Date", "Total", "Completed", "Skipped", "Completion %"],
+      ...weeklyQueue.map(r => [r.day, r.total, r.completed, r.skipped, r.total > 0 ? Math.round(r.completed / r.total * 100) + "%" : "0%"]),
+      [],
+      ["--- HOURLY PATIENT FLOW ---"],
+      ["Hour", "Patients"],
+      ...hourlyFlow.map(r => [r.hour, r.patients]),
+      [],
+      ["--- PATIENT CLASSIFICATION ---"],
+      ["Category", "Count"],
+      ...priorityBreakdown.map(r => [r.name, r.value]),
+      [],
+      ["--- TOP VISIT REASONS ---"],
+      ["Reason", "Count", "Percentage"],
+      ...topReasons.map(r => [r.reason, r.count, r.pct + "%"]),
+      [],
+      ["--- DOCTOR WORKLOAD ---"],
+      ["Doctor", "Patients Seen"],
+      ...doctorLoad.map(r => [r.doctor, r.patients]),
+      [],
+      ["--- AVERAGE WAIT TIME BY DAY ---"],
+      ["Date", "Avg Wait (min)"],
+      ...waitTimeWeek.map(r => [r.day, r.avg]),
+      [],
+      ["--- SMS DELIVERY LOG ---"],
+      ["Date", "Sent", "Failed", "Delivery %"],
+      ...smsWeekly.map(r => {
+         const t = r.sent + r.failed;
+         const pct = t > 0 ? Math.round(r.sent / t * 100) : 100;
+         return [r.day, r.sent, r.failed, pct + "%"];
+      }),
     ];
     const csv  = rows.map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
