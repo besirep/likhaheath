@@ -41,6 +41,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
   const [visits, setVisits] = useState([]);
   const [patientData, setPatientData] = useState(null);
   const [showFullRecord, setShowFullRecord] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
   
   const [form, setForm] = useState({
     hpi: patient?.visitReason || "",
@@ -472,7 +473,7 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
               visits.map((visit, i) => (
                 <div 
                   key={i} 
-                  onClick={() => setShowFullRecord(visit.appointment_id || visit.record_id)}
+                  onClick={() => setSelectedVisit(visit)}
                   style={{ 
                     padding: "12px", 
                     borderRadius: "10px", 
@@ -610,6 +611,69 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
           </div>
           <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column" }}>
              <DoctorPatientRecords navState={{ patientId: patient.patientId, visitId: showFullRecord !== true ? showFullRecord : undefined }} />
+          </div>
+        </div>
+      )}
+
+      {/* Past Consultation Summary Modal */}
+      {selectedVisit && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s ease" }}>
+          <div style={{ background: "white", borderRadius: 16, width: 600, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e0e7ef", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18, color: "#1a2540" }}>Past Consultation</h2>
+                <div style={{ fontSize: 13, color: "#7a8fb0", marginTop: 4 }}>
+                  {selectedVisit.scheduled_date ? new Date(selectedVisit.scheduled_date).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" }) : "—"} • Dr. {selectedVisit.doctor_name ? selectedVisit.doctor_name.split(' ').pop() : "—"}
+                </div>
+              </div>
+              <button onClick={() => setSelectedVisit(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9aabc0" }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Vitals Summary */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                 <div style={{ background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                   <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}>BP</div>
+                   <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{selectedVisit.blood_pressure || "—"}</div>
+                 </div>
+                 <div style={{ background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                   <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}>Temp</div>
+                   <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{selectedVisit.temperature ? `${selectedVisit.temperature} °C` : "—"}</div>
+                 </div>
+                 <div style={{ background: "#f8fafc", padding: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                   <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}>Weight</div>
+                   <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{selectedVisit.weight_kg ? `${selectedVisit.weight_kg} kg` : "—"}</div>
+                 </div>
+              </div>
+
+              {/* Notes / HPI */}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Chief Complaint / Notes</div>
+                <div style={{ background: "#f8fafc", padding: 16, borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  {selectedVisit.notes || "—"}
+                </div>
+              </div>
+
+              {/* Treatment */}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Diagnosis & Treatment</div>
+                <div style={{ background: "#f8fafc", padding: 16, borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  {selectedVisit.treatment || selectedVisit.diagnosis || "—"}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ padding: "16px 24px", borderTop: "1px solid #e0e7ef", display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                onClick={() => {
+                  setSelectedVisit(null);
+                  setShowFullRecord(selectedVisit.appointment_id || selectedVisit.record_id);
+                }} 
+                style={{ background: "#EBF0FA", color: "#0047AB", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              >
+                View Full Patient History →
+              </button>
+            </div>
           </div>
         </div>
       )}
