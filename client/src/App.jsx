@@ -233,8 +233,13 @@ function Sidebar({ user, screens, activeId, onSelect, onLogout }) {
 export default function App() {
   // useAuth hydrates from localStorage on mount — no flash of login screen on refresh
   const { user, login, logout } = useAuth();
-  const [activeId, setActiveId] = useState(null);
-  const [navState, setNavState] = useState(null);
+  const [activeId, setActiveId] = useState(() => sessionStorage.getItem('lh_active_id') || null);
+  const [navState, setNavState] = useState(() => {
+    try {
+      const s = sessionStorage.getItem('lh_nav_state');
+      return s ? JSON.parse(s) : null;
+    } catch { return null; }
+  });
   const [savingConsultation, setSavingConsultation] = useState(false);
 
   const [toast, setToast] = useState(null);
@@ -242,8 +247,19 @@ export default function App() {
 
   const handleNavigate = useCallback((id, state = null) => {
     setActiveId(id);
+    if (id) sessionStorage.setItem('lh_active_id', id);
+    else sessionStorage.removeItem('lh_active_id');
+
     setNavState(state);
+    if (state) sessionStorage.setItem('lh_nav_state', JSON.stringify(state));
+    else sessionStorage.removeItem('lh_nav_state');
   }, []);
+
+  const handleLogout = useCallback(() => {
+    sessionStorage.removeItem('lh_active_id');
+    sessionStorage.removeItem('lh_nav_state');
+    logout();
+  }, [logout]);
 
   // ── Registration session: persists form draft across tab switches ─────────
   const [registrationDraft, setRegistrationDraft] = useState(null);
@@ -289,7 +305,11 @@ export default function App() {
       throw new Error(`This account belongs to the ${portalLabel} portal.`);
     }
 
-    setActiveId(SCREEN_MAP[userObj.role][0].id);
+    const defaultId = SCREEN_MAP[userObj.role][0].id;
+    setActiveId(defaultId);
+    sessionStorage.setItem('lh_active_id', defaultId);
+    setNavState(null);
+    sessionStorage.removeItem('lh_nav_state');
     return userObj;
   };
 
@@ -313,8 +333,8 @@ export default function App() {
         user={user}
         screens={screens}
         activeId={resolvedActiveId}
-        onSelect={setActiveId}
-        onLogout={logout}
+        onSelect={handleNavigate}
+        onLogout={handleLogout}
       />
 
       {/* Page content */}
