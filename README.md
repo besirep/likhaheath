@@ -23,19 +23,22 @@ A full-stack web application that automates patient record-keeping, queue manage
 
 ### Receptionist Portal
 - **Dashboard** — Live queue overview, stats, now-serving banner
-- **Patient Registration** — Multi-step form (demographics → address → contacts → cluster)
+- **Patient Registration** — Multi-step form (demographics → address → contacts)
 - **Queue Management** — View all patients, call next, update status, send SMS, filter by status
 - **Patient Records** — Search, view, and manage patient master records
 - **Appointments** — Create, view, confirm, and cancel scheduled appointments
 - **SMS Logs** — View history of all outbound SMS notifications with delivery status
-- **Reports** — Daily/weekly/monthly patient and queue statistics
+- **Reports** — Daily/weekly/monthly patient and queue statistics with CSV/PDF export
 
 ### Doctor Portal
 - **Dashboard** — Active queue, scheduled appointments, completion stats
 - **My Queue** — Assigned patients, vitals view, start consultation
 - **Consultations** — Diagnosis form, treatment plan, clinical notes, follow-up scheduling
 - **Patient Records** — Full medical history with vitals trends
-- **Appointments** — Personal schedule management
+
+### Admin Portal
+- **Staff Management** — Add, edit, and manage staff accounts and roles
+- **Audit Logs** — View all system activity with role and date filters
 
 ---
 
@@ -45,16 +48,18 @@ A full-stack web application that automates patient record-keeping, queue manage
 likhahealth/
 ├── client/       # React frontend (Vite)
 │   └── src/
-│       ├── lib/api/         # API service modules
-│       ├── lib/utils/       # Utility helpers
-│       ├── screens/auth/    # Login
-│       ├── screens/receptionist/  # 7 receptionist screens
-│       └── screens/doctor/        # 5 doctor screens
+│       ├── lib/api/              # API service modules
+│       ├── lib/utils/            # Utility helpers
+│       ├── screens/auth/         # Login
+│       ├── screens/receptionist/ # Receptionist screens
+│       ├── screens/doctor/       # Doctor screens
+│       └── screens/admin/        # Admin screens
 ├── server/       # Node.js + Express backend
 │   ├── controllers/  # Business logic
-│   ├── middleware/    # JWT auth
-│   ├── routes/        # REST endpoints
-│   └── config/        # Database pool
+│   ├── middleware/   # JWT auth
+│   ├── routes/       # REST endpoints
+│   ├── jobs/         # Scheduled background tasks (cron)
+│   └── config/       # Database pool
 ├── database/     # SQL schema and seed files
 └── start.bat     # Quick-start script (Windows)
 ```
@@ -63,18 +68,23 @@ likhahealth/
 
 ## Getting Started
 
+### Prerequisites
+- **Node.js** v20 LTS
+- **XAMPP** (Apache + MySQL running on default ports)
+
 ### 1. Database Setup (XAMPP)
 1. Start **Apache** and **MySQL** in XAMPP
 2. Open `http://localhost/phpmyadmin`
-3. Create database `likhahealth`
+3. Create a database named `likhahealth`
 4. Run `database/schema.sql` to create all tables
-5. Run `database/seed.sql` to load sample data
+5. Run `database/seed.sql` to load initial data
+6. Run any migration scripts in `server/migrations/` in order
 
 ### 2. Environment
 ```bash
-# Copy and configure server environment
+# Copy and configure the server environment file
 cp server/.env.example server/.env
-# Edit server/.env with your MySQL credentials, JWT_SECRET, etc.
+# Edit server/.env with your MySQL credentials, JWT_SECRET, Semaphore API key, etc.
 ```
 
 ### 3. Install & Run
@@ -93,30 +103,14 @@ Or use the Windows batch script:
 start.bat
 ```
 
----
-
-## Default Credentials (Seed Data)
-
-| Role | Username | Password |
-|------|----------|----------|
-| Doctor | `drreyes` | *(see seed.sql)* |
-| Receptionist | `ana.staff` | *(see seed.sql)* |
-
-> **Note:** Passwords must meet complexity requirements (min 8 chars, uppercase, lowercase, number, special character). Check `database/seed.sql` for the hashed values used in seeding.
+> **Note:** Default login credentials are defined in `database/seed.sql`. Passwords must meet complexity requirements (min 8 characters, uppercase, lowercase, number, and special character).
 
 ---
 
-## Current Phase
+## Documentation
 
-> ✅ Phase 1: Database Design & Normalization  
-> ✅ Phase 2: UI Development (all screens)  
-> ✅ Phase 2.5: API Data Binding  
-> ✅ Phase 3a: Bug Fixes & UI Stabilization  
-> ✅ Phase 3b: SMS Gateway & Scheduled Jobs  
-> 🔲 Phase 3c: Final Polish & Data Validation  
-> 🔲 Phase 4: Deployment & UAT
-
-See [LikhaHealth_Handoff.md](LikhaHealth_Handoff.md) and [mhc_phase1_diagrams.md](mhc_phase1_diagrams.md) for detailed documentation.
+- [LikhaHealth_Handoff.md](LikhaHealth_Handoff.md) — Detailed project handoff, architecture, and next steps
+- [mhc_phase1_diagrams.md](mhc_phase1_diagrams.md) — ERD, DFDs, and role-access matrix
 
 ---
 
