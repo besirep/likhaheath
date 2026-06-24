@@ -99,8 +99,10 @@ start.bat
 
 | Role | Username | Password |
 |------|----------|----------|
-| Doctor | `drreyes` | `password123` |
-| Receptionist | `ana.staff` | `password123` |
+| Doctor | `drreyes` | *(see seed.sql)* |
+| Receptionist | `ana.staff` | *(see seed.sql)* |
+
+> **Note:** Passwords must meet complexity requirements (min 8 chars, uppercase, lowercase, number, special character). Check `database/seed.sql` for the hashed values used in seeding.
 
 ---
 
@@ -110,10 +112,11 @@ start.bat
 > ✅ Phase 2: UI Development (all screens)  
 > ✅ Phase 2.5: API Data Binding  
 > ✅ Phase 3a: Bug Fixes & UI Stabilization  
-> 🔲 Phase 3b: SMS Gateway & Final Polish  
+> ✅ Phase 3b: SMS Gateway & Scheduled Jobs  
+> 🔲 Phase 3c: Final Polish & Data Validation  
 > 🔲 Phase 4: Deployment & UAT
 
-See [LikhaHealth_Handoff.md](LikhaHealth_Handoff.md) for detailed documentation.
+See [LikhaHealth_Handoff.md](LikhaHealth_Handoff.md) and [mhc_phase1_diagrams.md](mhc_phase1_diagrams.md) for detailed documentation.
 
 ---
 
