@@ -86,7 +86,7 @@ CREATE TABLE users (
   staff_id      INT NOT NULL,
   username      VARCHAR(100) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role          ENUM('Admin','Doctor','Nurse','Midwife','BHW') NOT NULL,
+  role          ENUM('Admin','Doctor','Nurse','Midwife') NOT NULL,
   is_active     TINYINT(1) DEFAULT 1,
   last_login    TIMESTAMP NULL,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

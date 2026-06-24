@@ -240,7 +240,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
       .then(data => { setDoctors(Array.isArray(data) ? data : []); setDoctorsLoading(false); })
       .catch(() => { setDoctors([]); setDoctorsLoading(false); });
     staffApi.getAll({ active: true })
-      .then(data => { if (Array.isArray(data)) setAssignedStaffList(data.filter(s => s.position === "BHW" || s.position === "Midwife")); })
+      .then(data => { if (Array.isArray(data)) setAssignedStaffList(data.filter(s => s.position === "Midwife")); })
       .catch(console.error);
   }, []);
 
@@ -545,7 +545,7 @@ export default function PatientRegistration({ onNavigate, draft, onDraftChange, 
                 </div>
                 <Input label="Emergency Contact" value={form.emergencyContact} onChange={v => update("emergencyContact", v)} placeholder="Name – 09XXXXXXXXX" />
                 <div>
-                  <label style={labelStyle}>Assigned BHW / Midwife (Optional)</label>
+                  <label style={labelStyle}>Assigned Midwife (Optional)</label>
                   <select value={form.assignedStaffId || ""} onChange={e => update("assignedStaffId", e.target.value)}
                     style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #dde8e5", borderRadius: 11, fontSize: 14, color: "#1e2d40", background: "white", outline: "none", boxSizing: "border-box", appearance: "none" }}>
                     <option value="">-- No Assignment --</option>

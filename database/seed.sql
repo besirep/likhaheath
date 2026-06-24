@@ -23,24 +23,19 @@ INSERT INTO health_centers (id, name, municipality, province, contact_number) VA
 
 -- ─── 3. STAFF ────────────────────────────────────────────────
 -- Unified staff table — no separate doctors/medical_staff tables
--- prc_license_number / prc_expiry_date are NULL for BHWs (non-licensed)
-
 INSERT INTO staff (id, health_center_id, first_name, last_name, suffix, position, prc_license_number, prc_expiry_date, employment_status, is_active) VALUES
   -- Admin / MHO
-  (1,  1, 'Ricardo', 'Mendoza',    NULL, 'Municipal Health Officer', 'PRC-MED-00112', '2027-06-30', 'Regular',     1),
+  (1, 1, 'Ricardo', 'Mendoza',    NULL, 'Municipal Health Officer', 'PRC-MED-00112', '2027-06-30', 'Regular',     1),
   -- Doctors
-  (2,  1, 'Ramon',   'Dela Cruz',  NULL, 'Doctor',                   'PRC-MED-00123', '2026-06-30', 'Regular',     1),
-  (3,  1, 'Maria',   'Santos',     NULL, 'Doctor',                   'PRC-MED-00456', '2025-12-31', 'Regular',     1),
-  (4,  1, 'Jose',    'Reyes',      NULL, 'Doctor',                   'PRC-MED-00789', '2027-03-01', 'Contractual', 1),
+  (2, 1, 'Ramon',   'Dela Cruz',  NULL, 'Doctor',                   'PRC-MED-00123', '2026-06-30', 'Regular',     1),
+  (3, 1, 'Maria',   'Santos',     NULL, 'Doctor',                   'PRC-MED-00456', '2025-12-31', 'Regular',     1),
+  (4, 1, 'Jose',    'Reyes',      NULL, 'Doctor',                   'PRC-MED-00789', '2027-03-01', 'Contractual', 1),
   -- Nurses
-  (5,  1, 'Ana',     'Bautista',   NULL, 'Nurse',                    'PRC-RN-11223',  '2026-01-15', 'Regular',     1),
-  (6,  1, 'Cynthia', 'Flores',     NULL, 'Nurse',                    'PRC-RN-77889',  '2027-05-01', 'Contractual', 1),
+  (5, 1, 'Ana',     'Bautista',   NULL, 'Nurse',                    'PRC-RN-11223',  '2026-01-15', 'Regular',     1),
+  (6, 1, 'Cynthia', 'Flores',     NULL, 'Nurse',                    'PRC-RN-77889',  '2027-05-01', 'Contractual', 1),
   -- Midwives
-  (7,  1, 'Luisa',   'Garcia',     NULL, 'Midwife',                  'PRC-RM-44556',  '2025-11-30', 'Regular',     1),
-  (8,  1, 'Maribel', 'Torres',     NULL, 'Midwife',                  'PRC-RM-00112',  '2026-08-20', 'Regular',     1),
-  -- BHWs (no PRC license)
-  (9,  1, 'Pedro',   'Cruz',       NULL, 'BHW',                      NULL,            NULL,         'Volunteer',   1),
-  (10, 1, 'Gloria',  'Villanueva', NULL, 'BHW',                      NULL,            NULL,         'Volunteer',   1);
+  (7, 1, 'Luisa',   'Garcia',     NULL, 'Midwife',                  'PRC-RM-44556',  '2025-11-30', 'Regular',     1),
+  (8, 1, 'Maribel', 'Torres',     NULL, 'Midwife',                  'PRC-RM-00112',  '2026-08-20', 'Regular',     1);
 
 -- ─── 4. USERS (Login Accounts) ───────────────────────────────
 -- Default password for ALL accounts: LikhaHealth2025!
@@ -49,20 +44,17 @@ INSERT INTO staff (id, health_center_id, first_name, last_name, suffix, position
 
 INSERT INTO users (id, staff_id, username, password_hash, role, is_active) VALUES
   -- Admin (MHO)
-  (1,  1,  'admin',             '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Admin',   1),
+  (1, 1, 'admin',          '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Admin',   1),
   -- Doctors
-  (2,  2,  'ramon.delacruz',    '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
-  (3,  3,  'maria.santos',      '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
-  (4,  4,  'jose.reyes',        '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
+  (2, 2, 'ramon.delacruz', '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
+  (3, 3, 'maria.santos',   '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
+  (4, 4, 'jose.reyes',     '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Doctor',  1),
   -- Nurses
-  (5,  5,  'ana.bautista',      '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Nurse',   1),
-  (6,  6,  'cynthia.flores',    '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Nurse',   1),
+  (5, 5, 'ana.bautista',   '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Nurse',   1),
+  (6, 6, 'cynthia.flores', '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Nurse',   1),
   -- Midwives
-  (7,  7,  'luisa.garcia',      '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Midwife', 1),
-  (8,  8,  'maribel.torres',    '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Midwife', 1),
-  -- BHWs
-  (9,  9,  'pedro.cruz',        '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'BHW',     1),
-  (10, 10, 'gloria.villanueva', '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'BHW',     1);
+  (7, 7, 'luisa.garcia',   '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Midwife', 1),
+  (8, 8, 'maribel.torres', '$2b$12$hJNFX.6jaagU2/zQv03DVOTp7.0g.7SCifR/LoRoei761m8vmCZw6', 'Midwife', 1);
 
 -- ─── 5. ADDRESSES ────────────────────────────────────────────
 -- Extracted from patients.address TEXT — normalized to structured rows
@@ -94,23 +86,23 @@ INSERT INTO patients
    blood_type_id, nationality, occupation, philhealth_no, emergency_contact,
    address_id, assigned_staff_id, registered_by_staff_id)
 VALUES
-  -- Dela Cruz family (address 1, BHW=9, reg'd by nurse 5)
-  (1,  'Juan',     'Dela Cruz',  NULL,  '1990-03-15', 1, 1, 7, 'Filipino', 'Tricycle Driver',   'PH-001001001', 'Maria Dela Cruz – 09171002002',  1,    9, 5),
-  (2,  'Maria',    'Dela Cruz',  NULL,  '1992-07-22', 2, 2, 1, 'Filipino', 'Housewife',         'PH-001001002', 'Juan Dela Cruz – 09171001001',   1,    9, 5),
-  (3,  'Jose',     'Dela Cruz',  NULL,  '2015-01-10', 1, 1, 3, 'Filipino', 'Student',           NULL,           'Maria Dela Cruz – 09171001001',  1,    9, 5),
+  -- Dela Cruz family (address 1, reg'd by nurse 5)
+  (1,  'Juan',     'Dela Cruz',  NULL,  '1990-03-15', 1, 1, 7, 'Filipino', 'Tricycle Driver',   'PH-001001001', 'Maria Dela Cruz – 09171002002',  1,    NULL, 5),
+  (2,  'Maria',    'Dela Cruz',  NULL,  '1992-07-22', 2, 2, 1, 'Filipino', 'Housewife',         'PH-001001002', 'Juan Dela Cruz – 09171001001',   1,    NULL, 5),
+  (3,  'Jose',     'Dela Cruz',  NULL,  '2015-01-10', 1, 1, 3, 'Filipino', 'Student',           NULL,           'Maria Dela Cruz – 09171001001',  1,    NULL, 5),
 
-  -- Santos family (address 2, BHW=10, reg'd by midwife 7)
-  (4,  'Rosa',     'Santos',     NULL,  '1978-11-05', 2, 2, 4, 'Filipino', 'Teacher',           'PH-004004004', 'Carlo Santos – 09281002003',     2,    10, 7),
-  (5,  'Carlo',    'Santos',     NULL,  '1975-06-18', 1, 2, 7, 'Filipino', 'Carpenter',         'PH-004004005', 'Rosa Santos – 09281001002',      2,    10, 7),
-  (6,  'Nena',     'Santos',     NULL,  '2005-09-30', 2, 1, 2, 'Filipino', 'Student',           NULL,           'Rosa Santos – 09281001002',      2,    10, 7),
+  -- Santos family (address 2, reg'd by midwife 7)
+  (4,  'Rosa',     'Santos',     NULL,  '1978-11-05', 2, 2, 4, 'Filipino', 'Teacher',           'PH-004004004', 'Carlo Santos – 09281002003',     2,    NULL, 7),
+  (5,  'Carlo',    'Santos',     NULL,  '1975-06-18', 1, 2, 7, 'Filipino', 'Carpenter',         'PH-004004005', 'Rosa Santos – 09281001002',      2,    NULL, 7),
+  (6,  'Nena',     'Santos',     NULL,  '2005-09-30', 2, 1, 2, 'Filipino', 'Student',           NULL,           'Rosa Santos – 09281001002',      2,    NULL, 7),
 
-  -- Reyes family (address 3, BHW=9, reg'd by nurse 5)
-  (7,  'Pedro',    'Reyes',      NULL,  '1980-02-14', 1, 2, 3, 'Filipino', 'Farmer',            'PH-007007007', 'Lina Reyes – 09391002004',       3,    9, 5),
-  (8,  'Lina',     'Reyes',      NULL,  '1983-04-20', 2, 2, 2, 'Filipino', 'Market Vendor',     'PH-007007008', 'Pedro Reyes – 09391001003',      3,    9, 5),
+  -- Reyes family (address 3, reg'd by nurse 5)
+  (7,  'Pedro',    'Reyes',      NULL,  '1980-02-14', 1, 2, 3, 'Filipino', 'Farmer',            'PH-007007007', 'Lina Reyes – 09391002004',       3,    NULL, 5),
+  (8,  'Lina',     'Reyes',      NULL,  '1983-04-20', 2, 2, 2, 'Filipino', 'Market Vendor',     'PH-007007008', 'Pedro Reyes – 09391001003',      3,    NULL, 5),
 
-  -- Baluyot family — senior patients (address 5, BHW=10, reg'd by midwife 7)
-  (9,  'Esteban',  'Baluyot',    'Sr.', '1948-03-17', 1, 2, 1, 'Filipino', 'Retired',           'PH-009009009', 'Jun Baluyot Jr. – 09611002013',  5,    10, 7),
-  (10, 'Cora',     'Baluyot',    NULL,  '1950-12-25', 2, 2, 7, 'Filipino', 'Housewife',         'PH-009009010', 'Jun Baluyot Jr. – 09611002013',  5,    10, 7),
+  -- Baluyot family — senior patients (address 5, reg'd by midwife 7)
+  (9,  'Esteban',  'Baluyot',    'Sr.', '1948-03-17', 1, 2, 1, 'Filipino', 'Retired',           'PH-009009009', 'Jun Baluyot Jr. – 09611002013',  5,    NULL, 7),
+  (10, 'Cora',     'Baluyot',    NULL,  '1950-12-25', 2, 2, 7, 'Filipino', 'Housewife',         'PH-009009010', 'Jun Baluyot Jr. – 09611002013',  5,    NULL, 7),
 
   -- Unaffiliated patients (no assigned staff)
   (11, 'Fernando', 'Padilla',    NULL,  '1960-05-05', 1, 4, 7, 'Filipino', 'Watchman',          'PH-011011011', 'Tess Padilla – 09501002012',     6, NULL, 5),
