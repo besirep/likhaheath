@@ -29,7 +29,6 @@ DROP TABLE IF EXISTS
   patient_medical_history,
   contact_info,
   patients,
-  family_clusters,
   addresses,
   users,
   staff,
@@ -129,18 +128,6 @@ CREATE TABLE addresses (
   zip_code     VARCHAR(20)
 );
 
-CREATE TABLE family_clusters (
-  id                  INT AUTO_INCREMENT PRIMARY KEY,
-  label               VARCHAR(255) NOT NULL,
-  head_patient_id     INT,
-  health_center_id    INT NOT NULL,
-  created_by_staff_id INT NOT NULL,
-  notes               TEXT,
-  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (health_center_id)    REFERENCES health_centers(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by_staff_id) REFERENCES staff(id)          ON DELETE CASCADE
-);
-
 CREATE TABLE patients (
   id                      INT AUTO_INCREMENT PRIMARY KEY,
   first_name              VARCHAR(100) NOT NULL,
@@ -156,7 +143,6 @@ CREATE TABLE patients (
   philhealth_no           VARCHAR(50),
   emergency_contact       VARCHAR(255),
   address_id              INT  NOT NULL,
-  family_cluster_id       INT,
   assigned_staff_id       INT,
   registered_by_staff_id  INT NOT NULL,
   is_deleted              TINYINT(1) DEFAULT 0,
@@ -167,15 +153,9 @@ CREATE TABLE patients (
   FOREIGN KEY (civil_status_id)         REFERENCES civil_statuses(id),
   FOREIGN KEY (blood_type_id)           REFERENCES blood_types(id)      ON DELETE SET NULL,
   FOREIGN KEY (address_id)              REFERENCES addresses(id),
-  FOREIGN KEY (family_cluster_id)       REFERENCES family_clusters(id)  ON DELETE SET NULL,
   FOREIGN KEY (assigned_staff_id)       REFERENCES staff(id)            ON DELETE SET NULL,
   FOREIGN KEY (registered_by_staff_id)  REFERENCES staff(id)
 );
-
--- Resolve circular FK now that patients exists
-ALTER TABLE family_clusters
-  ADD CONSTRAINT fk_cluster_head_patient
-  FOREIGN KEY (head_patient_id) REFERENCES patients(id) ON DELETE SET NULL;
 
 -- Medical history per patient (migration 004)
 CREATE TABLE IF NOT EXISTS patient_medical_history (
@@ -321,7 +301,6 @@ CREATE TABLE IF NOT EXISTS sms_notifications (
 -- ─── 5. INDEXES ─────────────────────────────────────────────
 
 CREATE INDEX idx_patients_last_name      ON patients(last_name);
-CREATE INDEX idx_patients_family_cluster ON patients(family_cluster_id);
 CREATE INDEX idx_addresses_barangay      ON addresses(barangay);
 CREATE INDEX idx_appts_scheduled_date    ON appointments(scheduled_date);
 CREATE INDEX idx_appts_patient_id        ON appointments(patient_id);

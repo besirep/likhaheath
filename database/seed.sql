@@ -84,16 +84,7 @@ INSERT INTO addresses (id, street, barangay, municipality, province) VALUES
   (14, 'Zone 1',          'Santo Niño',   'Angono', 'Rizal'),
   (15, 'Sitio San Pedro', 'San Isidro',   'Angono', 'Rizal');
 
--- ─── 6. FAMILY CLUSTERS ──────────────────────────────────────
--- head_patient_id is NULL here; set after patients are inserted (see step 8)
-
-INSERT INTO family_clusters (id, label, head_patient_id, health_center_id, created_by_staff_id, notes) VALUES
-  (1, 'Dela Cruz Family', NULL, 1, 5, 'Barangay San Isidro household'),
-  (2, 'Santos Family',    NULL, 1, 7, 'Prenatal follow-up cluster'),
-  (3, 'Reyes Family',     NULL, 1, 5, ''),
-  (4, 'Baluyot Family',   NULL, 1, 7, 'Elderly senior cluster');
-
--- ─── 7. PATIENTS ─────────────────────────────────────────────
+-- ─── 6. PATIENTS ─────────────────────────────────────────────
 -- sex_id:          1=Male, 2=Female, 3=Other
 -- civil_status_id: 1=Single, 2=Married, 3=Widowed, 4=Separated, 5=Annulled
 -- blood_type_id:   1=A+, 2=A-, 3=B+, 4=B-, 5=AB+, 6=AB-, 7=O+, 8=O-
@@ -101,46 +92,39 @@ INSERT INTO family_clusters (id, label, head_patient_id, health_center_id, creat
 INSERT INTO patients
   (id, first_name, last_name, suffix, date_of_birth, sex_id, civil_status_id,
    blood_type_id, nationality, occupation, philhealth_no, emergency_contact,
-   address_id, family_cluster_id, assigned_staff_id, registered_by_staff_id)
+   address_id, assigned_staff_id, registered_by_staff_id)
 VALUES
-  -- Dela Cruz family (cluster 1, address 1, BHW=9, reg'd by nurse 5)
-  (1,  'Juan',     'Dela Cruz',  NULL,  '1990-03-15', 1, 1, 7, 'Filipino', 'Tricycle Driver',   'PH-001001001', 'Maria Dela Cruz – 09171002002',  1, 1,    9, 5),
-  (2,  'Maria',    'Dela Cruz',  NULL,  '1992-07-22', 2, 2, 1, 'Filipino', 'Housewife',         'PH-001001002', 'Juan Dela Cruz – 09171001001',   1, 1,    9, 5),
-  (3,  'Jose',     'Dela Cruz',  NULL,  '2015-01-10', 1, 1, 3, 'Filipino', 'Student',           NULL,           'Maria Dela Cruz – 09171001001',  1, 1,    9, 5),
+  -- Dela Cruz family (address 1, BHW=9, reg'd by nurse 5)
+  (1,  'Juan',     'Dela Cruz',  NULL,  '1990-03-15', 1, 1, 7, 'Filipino', 'Tricycle Driver',   'PH-001001001', 'Maria Dela Cruz – 09171002002',  1,    9, 5),
+  (2,  'Maria',    'Dela Cruz',  NULL,  '1992-07-22', 2, 2, 1, 'Filipino', 'Housewife',         'PH-001001002', 'Juan Dela Cruz – 09171001001',   1,    9, 5),
+  (3,  'Jose',     'Dela Cruz',  NULL,  '2015-01-10', 1, 1, 3, 'Filipino', 'Student',           NULL,           'Maria Dela Cruz – 09171001001',  1,    9, 5),
 
-  -- Santos family (cluster 2, address 2, BHW=10, reg'd by midwife 7)
-  (4,  'Rosa',     'Santos',     NULL,  '1978-11-05', 2, 2, 4, 'Filipino', 'Teacher',           'PH-004004004', 'Carlo Santos – 09281002003',     2, 2,    10, 7),
-  (5,  'Carlo',    'Santos',     NULL,  '1975-06-18', 1, 2, 7, 'Filipino', 'Carpenter',         'PH-004004005', 'Rosa Santos – 09281001002',      2, 2,    10, 7),
-  (6,  'Nena',     'Santos',     NULL,  '2005-09-30', 2, 1, 2, 'Filipino', 'Student',           NULL,           'Rosa Santos – 09281001002',      2, 2,    10, 7),
+  -- Santos family (address 2, BHW=10, reg'd by midwife 7)
+  (4,  'Rosa',     'Santos',     NULL,  '1978-11-05', 2, 2, 4, 'Filipino', 'Teacher',           'PH-004004004', 'Carlo Santos – 09281002003',     2,    10, 7),
+  (5,  'Carlo',    'Santos',     NULL,  '1975-06-18', 1, 2, 7, 'Filipino', 'Carpenter',         'PH-004004005', 'Rosa Santos – 09281001002',      2,    10, 7),
+  (6,  'Nena',     'Santos',     NULL,  '2005-09-30', 2, 1, 2, 'Filipino', 'Student',           NULL,           'Rosa Santos – 09281001002',      2,    10, 7),
 
-  -- Reyes family (cluster 3, address 3, BHW=9, reg'd by nurse 5)
-  (7,  'Pedro',    'Reyes',      NULL,  '1980-02-14', 1, 2, 3, 'Filipino', 'Farmer',            'PH-007007007', 'Lina Reyes – 09391002004',       3, 3,    9, 5),
-  (8,  'Lina',     'Reyes',      NULL,  '1983-04-20', 2, 2, 2, 'Filipino', 'Market Vendor',     'PH-007007008', 'Pedro Reyes – 09391001003',      3, 3,    9, 5),
+  -- Reyes family (address 3, BHW=9, reg'd by nurse 5)
+  (7,  'Pedro',    'Reyes',      NULL,  '1980-02-14', 1, 2, 3, 'Filipino', 'Farmer',            'PH-007007007', 'Lina Reyes – 09391002004',       3,    9, 5),
+  (8,  'Lina',     'Reyes',      NULL,  '1983-04-20', 2, 2, 2, 'Filipino', 'Market Vendor',     'PH-007007008', 'Pedro Reyes – 09391001003',      3,    9, 5),
 
-  -- Baluyot family — senior cluster (cluster 4, address 5, BHW=10, reg'd by midwife 7)
-  (9,  'Esteban',  'Baluyot',    'Sr.', '1948-03-17', 1, 2, 1, 'Filipino', 'Retired',           'PH-009009009', 'Jun Baluyot Jr. – 09611002013',  5, 4,    10, 7),
-  (10, 'Cora',     'Baluyot',    NULL,  '1950-12-25', 2, 2, 7, 'Filipino', 'Housewife',         'PH-009009010', 'Jun Baluyot Jr. – 09611002013',  5, 4,    10, 7),
+  -- Baluyot family — senior patients (address 5, BHW=10, reg'd by midwife 7)
+  (9,  'Esteban',  'Baluyot',    'Sr.', '1948-03-17', 1, 2, 1, 'Filipino', 'Retired',           'PH-009009009', 'Jun Baluyot Jr. – 09611002013',  5,    10, 7),
+  (10, 'Cora',     'Baluyot',    NULL,  '1950-12-25', 2, 2, 7, 'Filipino', 'Housewife',         'PH-009009010', 'Jun Baluyot Jr. – 09611002013',  5,    10, 7),
 
-  -- Unaffiliated patients (no cluster, no assigned staff)
-  (11, 'Fernando', 'Padilla',    NULL,  '1960-05-05', 1, 4, 7, 'Filipino', 'Watchman',          'PH-011011011', 'Tess Padilla – 09501002012',     6, NULL, NULL, 5),
-  (12, 'Patricia', 'Hernandez',  NULL,  '2003-06-03', 2, 1, 3, 'Filipino', 'Student',           NULL,           'Vic Hernandez – 09281002017',    7, NULL, NULL, 5),
-  (13, 'Eduardo',  'Torres',     NULL,  '1970-06-25', 1, 2, 6, 'Filipino', 'Electrician',       'PH-013013013', 'Cora Torres – 09831002008',      8, NULL, NULL, 7),
-  (14, 'Liza',     'Vargas',     NULL,  '1988-02-14', 2, 3, 7, 'Filipino', 'Saleslady',         'PH-014014014', 'Bert Vargas – 09171002009',      9, NULL, NULL, 7),
-  (15, 'Rodrigo',  'Mendoza',    NULL,  '1992-12-01', 1, 1, 1, 'Filipino', 'Security Guard',    NULL,           'Ella Mendoza – 09281002010',    10, NULL, NULL, 5),
-  (16, 'Carla',    'Navarro',    NULL,  '2010-08-19', 2, 1, 8, 'Filipino', 'Student',           'PH-016016016', 'Leo Navarro – 09391002011',     11, NULL, NULL, 5),
-  (17, 'Marco',    'Villanueva', NULL,  '1998-10-08', 1, 1, 3, 'Filipino', 'Call Center Agent', NULL,           'Rita Villanueva – 09721002014', 12, NULL, NULL, 7),
-  (18, 'Josefina', 'Castillo',   NULL,  '1982-07-14', 2, 2, 1, 'Filipino', 'Nurse (private)',   'PH-018018018', 'Dante Castillo – 09831002015',  13, NULL, NULL, 7),
-  (19, 'Andres',   'Aguilar',    NULL,  '1975-01-28', 1, 2, 2, 'Filipino', 'Fisherman',         'PH-019019019', 'Nora Aguilar – 09171002016',    14, NULL, NULL, 5),
-  (20, 'Maricel',  'Pascual',    NULL,  '1999-11-22', 2, 1, 7, 'Filipino', 'Food Vendor',       'PH-020020020', 'Boy Pascual – 09721002021',     15, NULL, NULL, 5);
+  -- Unaffiliated patients (no assigned staff)
+  (11, 'Fernando', 'Padilla',    NULL,  '1960-05-05', 1, 4, 7, 'Filipino', 'Watchman',          'PH-011011011', 'Tess Padilla – 09501002012',     6, NULL, 5),
+  (12, 'Patricia', 'Hernandez',  NULL,  '2003-06-03', 2, 1, 3, 'Filipino', 'Student',           NULL,           'Vic Hernandez – 09281002017',    7, NULL, 5),
+  (13, 'Eduardo',  'Torres',     NULL,  '1970-06-25', 1, 2, 6, 'Filipino', 'Electrician',       'PH-013013013', 'Cora Torres – 09831002008',      8, NULL, 7),
+  (14, 'Liza',     'Vargas',     NULL,  '1988-02-14', 2, 3, 7, 'Filipino', 'Saleslady',         'PH-014014014', 'Bert Vargas – 09171002009',      9, NULL, 7),
+  (15, 'Rodrigo',  'Mendoza',    NULL,  '1992-12-01', 1, 1, 1, 'Filipino', 'Security Guard',    NULL,           'Ella Mendoza – 09281002010',    10, NULL, 5),
+  (16, 'Carla',    'Navarro',    NULL,  '2010-08-19', 2, 1, 8, 'Filipino', 'Student',           'PH-016016016', 'Leo Navarro – 09391002011',     11, NULL, 5),
+  (17, 'Marco',    'Villanueva', NULL,  '1998-10-08', 1, 1, 3, 'Filipino', 'Call Center Agent', NULL,           'Rita Villanueva – 09721002014', 12, NULL, 7),
+  (18, 'Josefina', 'Castillo',   NULL,  '1982-07-14', 2, 2, 1, 'Filipino', 'Nurse (private)',   'PH-018018018', 'Dante Castillo – 09831002015',  13, NULL, 7),
+  (19, 'Andres',   'Aguilar',    NULL,  '1975-01-28', 1, 2, 2, 'Filipino', 'Fisherman',         'PH-019019019', 'Nora Aguilar – 09171002016',    14, NULL, 5),
+  (20, 'Maricel',  'Pascual',    NULL,  '1999-11-22', 2, 1, 7, 'Filipino', 'Food Vendor',       'PH-020020020', 'Boy Pascual – 09721002021',     15, NULL, 5);
 
--- ─── 8. SET FAMILY CLUSTER HEADS ─────────────────────────────
-
-UPDATE family_clusters SET head_patient_id = 1  WHERE id = 1; -- Juan Dela Cruz
-UPDATE family_clusters SET head_patient_id = 4  WHERE id = 2; -- Rosa Santos
-UPDATE family_clusters SET head_patient_id = 7  WHERE id = 3; -- Pedro Reyes
-UPDATE family_clusters SET head_patient_id = 9  WHERE id = 4; -- Esteban Baluyot
-
--- ─── 9. CONTACT INFO ─────────────────────────────────────────
+-- ─── 7. CONTACT INFO ─────────────────────────────────────────
 -- Normalized from patients.contact_number + patients.email TEXT fields
 
 INSERT INTO contact_info (patient_id, type, value, is_primary) VALUES
