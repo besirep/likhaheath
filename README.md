@@ -75,10 +75,10 @@ likhahealth/
 ### 1. Database Setup (XAMPP)
 1. Start **Apache** and **MySQL** in XAMPP
 2. Open `http://localhost/phpmyadmin`
-3. Create a database named `likhahealth`
-4. Run `database/schema.sql` to create all tables
-5. Run `database/seed.sql` to load initial data
-6. Run any migration scripts in `server/migrations/` in order
+3. Run `database/schema.sql` — creates the database and all tables
+4. Run `database/seed.sql` — loads initial staff accounts and sample data
+
+> The schema file is fully consolidated. You do **not** need to run any files from `server/migrations/` separately.
 
 ### 2. Environment
 ```bash
