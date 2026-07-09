@@ -140,9 +140,12 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
         NAME: <span style="border-bottom: 1px solid black; display: inline-block; width: 400px; padding-left: 10px;">${patient.name}</span>
       </div>
       <div style="display: flex; gap: 10px; margin-bottom: 30px;">
-        <div style="flex:1">ADD: <span style="border-bottom: 1px solid black; display: inline-block; width: 80%;">—</span></div>
+        <div style="flex:1">ADD: <span style="border-bottom: 1px solid black; display: inline-block; width: 80%;">${
+          [patientData?.street, patientData?.barangay, patientData?.municipality]
+            .filter(Boolean).join(", ") || "—"
+        }</span></div>
         <div>Age: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patient.age}</span></div>
-        <div>Sex: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patient.sex}</span></div>
+        <div>Sex: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patientData?.sex_label || patientData?.sex || patient.gender || "—"}</span></div>
       </div>
 
       <div style="margin-bottom: 20px;">
@@ -215,9 +218,12 @@ export default function ActiveConsultationScreen({ patient, onSave, onCancel, sa
         NAME: <span style="border-bottom: 1px solid black; display: inline-block; width: 400px; padding-left: 10px;">${patient.name}</span>
       </div>
       <div style="display: flex; gap: 10px; margin-bottom: 30px;">
-        <div style="flex:1">ADD: <span style="border-bottom: 1px solid black; display: inline-block; width: 80%;">—</span></div>
+        <div style="flex:1">ADD: <span style="border-bottom: 1px solid black; display: inline-block; width: 80%;">${
+          [patientData?.street, patientData?.barangay, patientData?.municipality]
+            .filter(Boolean).join(", ") || "—"
+        }</span></div>
         <div>Age: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patient.age}</span></div>
-        <div>Sex: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patient.sex}</span></div>
+        <div>Sex: <span style="border-bottom: 1px solid black; display: inline-block; width: 50px; text-align:center;">${patientData?.sex_label || patientData?.sex || patient.gender || "—"}</span></div>
       </div>
       
       <h2 style="text-align:center; font-style: italic; margin-bottom: 30px;">Laboratory</h2>

@@ -11,9 +11,18 @@
     "client": "npm run dev --workspace=client -- --host",
     "server": "npm run dev --workspace=server",
     "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"cyan,magenta\" \"npm run server\" \"npm run client\"",
-    "start": "npm run dev"
+    "start": "npm run dev",
+    "build": "npm run build --workspace=client",
+    "start:prod": "cross-env NODE_ENV=production node server/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop likhahealth-api",
+    "pm2:restart": "pm2 restart likhahealth-api",
+    "pm2:logs": "pm2 logs likhahealth-api",
+    "pm2:status": "pm2 status"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
   }
 }
+

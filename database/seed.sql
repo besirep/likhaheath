@@ -3,7 +3,7 @@
 -- Angono Municipal Health Center
 -- Run AFTER schema.sql
 -- ============================================================
-USE likhaheath;
+USE likhahealth;
 
 -- ─── 1. LOOKUP DATA ─────────────────────────────────────────
 

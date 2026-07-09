@@ -5,7 +5,7 @@ async function seed() {
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'likhaheath'
+    database: 'likhahealth'
   });
 
   try {

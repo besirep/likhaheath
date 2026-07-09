@@ -1,4 +1,4 @@
-USE likhaheath;
+USE likhahealth;
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,

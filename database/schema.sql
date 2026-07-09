@@ -1,17 +1,18 @@
-1-- ============================================================
+-- ============================================================
 -- LikhaHealth — Patient Management System
 -- Angono Municipal Health Center
--- Full Consolidated Schema (schema + all migrations)
--- Last updated: June 2026
+-- Full Consolidated Schema v1.1
+-- Last updated: July 2026
 --
 -- HOW TO USE:
---   1. Run this file first (schema.sql)
+--   1. Run this file in phpMyAdmin (SQL tab) or MySQL CLI
 --   2. Then run seed.sql for initial data
---   No separate migration files needed.
+--   This is the ONLY schema file — no separate migration
+--   files are needed. All changes are merged here.
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS likhaheath CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE likhaheath;
+CREATE DATABASE IF NOT EXISTS likhahealth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE likhahealth;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -276,6 +277,7 @@ CREATE TABLE medical_records (
   diagnosis      TEXT NOT NULL,
   treatment      TEXT NOT NULL,
   notes          TEXT,
+  lab_results    JSON NULL COMMENT 'Structured lab orders and results as JSON array',
   record_date    DATE NOT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (patient_id)     REFERENCES patients(id)     ON DELETE CASCADE,
@@ -283,7 +285,8 @@ CREATE TABLE medical_records (
   FOREIGN KEY (doctor_id)      REFERENCES staff(id)        ON DELETE SET NULL
 );
 
--- SMS notifications (migration_sms_notifications)
+-- ─── 5. SMS NOTIFICATIONS ───────────────────────────────────
+
 CREATE TABLE IF NOT EXISTS sms_notifications (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   patient_id     INT NOT NULL,
@@ -298,7 +301,7 @@ CREATE TABLE IF NOT EXISTS sms_notifications (
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
 
--- ─── 5. INDEXES ─────────────────────────────────────────────
+-- ─── 6. INDEXES ─────────────────────────────────────────────
 
 CREATE INDEX idx_patients_last_name      ON patients(last_name);
 CREATE INDEX idx_addresses_barangay      ON addresses(barangay);
